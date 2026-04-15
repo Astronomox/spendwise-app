@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
 import { CategoryPicker, CategoryId, CATEGORIES } from '@/src/components/logger/CategoryPicker';
-import { CloseIcon, TrashIcon } from '@/src/components/ui/icons';
+import { CloseIcon } from '@/src/components/ui/icons';
 import { Transaction } from '@/src/types/transactions';
 import { supabase } from '@/src/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
@@ -45,7 +45,7 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditModal
           amount: Number(amount),
           category: categoryId,
           description: description || `Spent on ${categoryId}`,
-          date: new Date(date).toISOString(),
+          date: date,
         })
         .eq('id', transaction.id);
 

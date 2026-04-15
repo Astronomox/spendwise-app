@@ -26,12 +26,17 @@ export default function GoalsPage() {
 
   const handleSave = async (goalData: Omit<SavingsGoal, 'id' | 'user_id' | 'created_at' | 'current_amount'>) => {
     if (!user) return;
-    if (editingGoal) {
-      await updateGoal({ id: editingGoal.id, ...goalData });
-    } else {
-      await addGoal({ user_id: user.id, ...goalData });
+    try {
+      if (editingGoal) {
+        await updateGoal({ id: editingGoal.id, ...goalData });
+      } else {
+        await addGoal({ user_id: user.id, ...goalData });
+      }
+      setIsModalOpen(false);
+    } catch (err: unknown) {
+      // Re-throw to be caught by the modal
+      throw err;
     }
-    setIsModalOpen(false);
   };
 
   const handleDelete = async (id: string) => {

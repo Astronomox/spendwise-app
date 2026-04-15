@@ -12,7 +12,7 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
-  const percent = Math.min(100, Math.round((goal.current_amount / goal.target_amount) * 100));
+  const percent = goal.target_amount > 0 ? Math.min(100, Math.round((goal.current_amount / goal.target_amount) * 100)) : 0;
   const isComplete = percent >= 100;
 
   const iconItem = CATEGORIES.find(c => c.id === goal.icon) || CATEGORIES[0];

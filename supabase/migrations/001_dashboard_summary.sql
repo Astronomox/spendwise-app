@@ -4,6 +4,7 @@ CREATE OR REPLACE FUNCTION get_dashboard_summary()
 RETURNS json
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, auth
 AS $$
 DECLARE
   result json;
@@ -79,10 +80,10 @@ BEGIN
     v_spend_by_category := '{}'::json;
   END IF;
 
-  -- Weekly spend (last 7 days, Mon-Sun style array of 7 numbers)
+  -- Weekly spend (rolling last 7 days)
   -- We'll aggregate sum for the last 7 days.
   -- To make it simple, we return an array of 7 numbers for the last 7 days.
-  SELECT json_agg(COALESCE(daily_total, 0)) INTO v_weekly_spend
+  SELECT json_agg(COALESCE(daily_total, 0) ORDER BY days.d ASC) INTO v_weekly_spend
   FROM (
     SELECT generate_series(CURRENT_DATE - interval '6 days', CURRENT_DATE, interval '1 day')::date as d
   ) days

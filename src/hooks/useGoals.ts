@@ -14,7 +14,7 @@ export function useGoals() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        if (error.code === '42P01') return []; // table does not exist yet (development)
+        if (error.code === '42P01' && import.meta.env.DEV) return []; // table does not exist yet (development)
         throw error;
       }
       return (data || []) as SavingsGoal[];

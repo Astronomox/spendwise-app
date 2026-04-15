@@ -40,6 +40,10 @@ export function GoalModal({ goal, isOpen, onClose, onSave }: GoalModalProps) {
       setError('Please fill in all required fields');
       return;
     }
+    if (Number(targetAmount) <= 0) {
+      setError('Target amount must be greater than 0');
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -48,11 +52,15 @@ export function GoalModal({ goal, isOpen, onClose, onSave }: GoalModalProps) {
         name,
         icon,
         target_amount: Number(targetAmount),
-        deadline: new Date(deadline).toISOString()
+        deadline: deadline // Raw YYYY-MM-DD
       });
-      onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to save goal.');
+      // Modal closed by parent on success
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || 'Failed to save goal.');
+      } else {
+        setError('Failed to save goal.');
+      }
     } finally {
       setIsSubmitting(false);
     }

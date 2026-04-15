@@ -50,8 +50,12 @@ export default function OnboardingPage() {
       if (updateError) throw updateError;
 
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Failed to save preferences. Please try again.');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || 'Failed to save preferences. Please try again.');
+      } else {
+        setError('Failed to save preferences. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
