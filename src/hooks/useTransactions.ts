@@ -2,8 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/src/lib/supabase';
 import { Transaction } from '@/src/types/transactions';
 
+import { useToastStore } from '@/src/components/ui/Toast';
+
 export function useTransactions() {
   const queryClient = useQueryClient();
+  const { addToast } = useToastStore();
 
   const transactionsQuery = useQuery({
     queryKey: ['transactions'],
@@ -32,7 +35,11 @@ export function useTransactions() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      addToast('Transaction added successfully!', 'success');
     },
+    onError: (err) => {
+      addToast(err.message || 'Failed to add transaction', 'error');
+    }
   });
 
   return {

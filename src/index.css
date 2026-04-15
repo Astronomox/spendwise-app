@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -17,26 +18,35 @@
   
   --color-danger: #E11D48;
   --color-warning: #E6B00F;
+  --color-success: #10B981;
+  --color-slate: #64748B;
+  --color-border: #E5E7EB;
+  --color-accent-glow: rgba(0, 135, 81, 0.4);
   
   /* Typography */
-  --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-body: Arial, sans-serif;
+  --font-display: "Syne", sans-serif;
+  --font-body: "DM Sans", sans-serif;
 
-  /* Spacing Scale (Base-4) */
-  --spacing-space-1: 4px;
-  --spacing-space-2: 8px;
-  --spacing-space-3: 12px;
-  --spacing-space-4: 16px;
-  --spacing-space-5: 20px;
-  --spacing-space-6: 24px;
-  --spacing-space-8: 32px;
-  --spacing-space-10: 40px;
+  /* Spacing Scale (8px Grid) */
+  --spacing-space-1: 8px;
+  --spacing-space-2: 16px;
+  --spacing-space-3: 24px;
+  --spacing-space-4: 32px;
+  --spacing-space-5: 40px;
+  --spacing-space-6: 48px;
 
   /* Border Radius */
+  --radius-radius-xs: 4px;
   --radius-radius-sm: 8px;
   --radius-radius-md: 12px;
-  --radius-radius-lg: 24px;
-  --radius-radius-xl: 40px;
+  --radius-radius-lg: 16px;
+  --radius-radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-shadow-accent: 0 0 20px var(--color-accent-glow);
 }
 
 @layer base {
@@ -61,8 +71,8 @@
     max-height: 800px;
     background-color: var(--color-bg-secondary);
     border-radius: var(--radius-radius-xl);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    border: 8px solid #121212;
+    box-shadow: var(--shadow-shadow-lg);
+    border: 8px solid var(--color-text-primary);
     display: flex;
     flex-direction: column;
     position: relative;
@@ -81,7 +91,7 @@
   }
   
   .naira::before {
-    content: "₦";
+    content: "NGN ";
     margin-right: 0.1em;
   }
 }
