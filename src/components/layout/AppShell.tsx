@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { cn } from '@/src/lib/utils';
@@ -20,9 +20,6 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const { user, setUser } = useAppStore();
-  const { alerts } = useAlerts();
-
-  const unreadAlerts = alerts?.filter(a => !a.read).length || 0;
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -31,16 +28,26 @@ export function AppShell({ children }: AppShellProps) {
   // Hide bottom nav on logger page for full focus
   const isLoggerPage = location.pathname === '/logger';
 
+  const { alerts } = useAlerts(!isAuthPage);
+
+  const unreadAlerts = alerts?.filter(a => !a.read).length || 0;
+
   if (isAuthPage) {
     return <div className="app-container">{children}</div>;
   }
 
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const handleScroll = (e: React.UIEvent<HTMLElement, UIEvent>) => {
+    setIsScrolled(e.currentTarget.scrollTop > 10);
+  };
+
   return (
     <div className="app-container">
       {/* Status Bar (Mock) */}
-      <div className="h-10 px-6 flex justify-between items-center text-[12px] font-semibold shrink-0">
+      <div className="h-[40px] px-[24px] flex justify-between items-center text-[12px] font-[600] shrink-0">
         <span>9:41</span>
-        <div className="flex gap-2">
+        <div className="flex gap-[8px]">
           <span>LTE</span>
           <span>100%</span>
         </div>
@@ -48,13 +55,18 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Header - Hidden on Logger */}
       {!isLoggerPage && (
-        <header className="h-[56px] px-6 flex justify-between items-center shrink-0 border-b border-gray-100">
-          <h1 className="text-[20px] font-black text-accent">SpendWise.</h1>
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/alerts')} className="relative p-1">
-              <NotificationIcon size={22} hasDot={unreadAlerts > 0} className="text-text-secondary" />
+        <header className="h-[56px] px-[24px] flex justify-between items-center shrink-0">
+          <h1 className="text-[20px] font-black text-[var(--color-accent)] font-display">SpendWise.</h1>
+          <div className="flex items-center gap-[16px]">
+            <button onClick={() => navigate('/alerts')} className="relative p-[4px] text-[var(--color-text-secondary)]">
+              <NotificationIcon size={22} />
+              {unreadAlerts > 0 && (
+                <span className="absolute top-0 right-0 bg-[var(--color-danger)] text-white text-[9px] font-bold h-[16px] min-w-[16px] flex items-center justify-center rounded-full px-[4px]">
+                  {unreadAlerts > 9 ? '9+' : unreadAlerts}
+                </span>
+              )}
             </button>
-            <div className="w-9 h-9 bg-bg-elevated rounded-full flex items-center justify-center border border-gray-200 text-[12px] font-bold">
+            <div className="w-[36px] h-[36px] bg-[var(--color-bg-elevated)] rounded-full flex items-center justify-center border-[1px] border-[var(--color-border)] text-[12px] font-bold">
               {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'AD'}
             </div>
           </div>
@@ -62,26 +74,33 @@ export function AppShell({ children }: AppShellProps) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto relative">
+      <main className="flex-1 overflow-y-auto relative pb-[72px]" onScroll={handleScroll}>
         {children}
       </main>
 
       {/* Bottom Navigation */}
       {!isLoggerPage && (
-        <nav className="absolute bottom-0 w-full h-[72px] bg-white border-t border-gray-100 flex justify-around items-center pb-4 z-40">
-          <NavTab to="/dashboard" icon={<HomeIcon size={22} />} label="Home" />
-          <NavTab to="/history" icon={<HistoryIcon size={22} />} label="History" />
+        <nav
+          className={cn(
+            "absolute bottom-0 w-full h-[72px] bg-[var(--color-bg-secondary)] flex justify-around items-center pb-[16px] z-40 transition-all duration-200",
+            isScrolled ? "border-t-[1px] border-[var(--color-border)] shadow-[var(--shadow-shadow-lg)]" : "border-t-transparent"
+          )}
+        >
+          <NavTab to="/dashboard" icon={<HomeIcon size={24} />} label="Home" />
+          <NavTab to="/history" icon={<HistoryIcon size={24} />} label="History" />
           
           {/* Central Plus Button */}
           <button 
             onClick={() => navigate('/logger')}
-            className="relative -mt-10 active:scale-90 transition-transform"
+            className="relative -mt-[16px] active:scale-[0.97] transition-transform flex items-center justify-center"
           >
-            <PlusCircleIcon size={56} className="text-accent shadow-lg rounded-full border-4 border-white" />
+            <div className="w-[52px] h-[52px] bg-[var(--color-accent)] rounded-full flex items-center justify-center text-white shadow-[var(--shadow-shadow-accent)] ring-[4px] ring-[var(--color-bg-secondary)]">
+              <PlusCircleIcon size={24} />
+            </div>
           </button>
 
-          <NavTab to="/goals" icon={<GoalsIcon size={22} />} label="Goals" />
-          <NavTab to="/alerts" icon={<AlertsIcon size={22} />} label="Alerts" />
+          <NavTab to="/goals" icon={<GoalsIcon size={24} />} label="Goals" />
+          <NavTab to="/alerts" icon={<AlertsIcon size={24} />} label="Alerts" />
         </nav>
       )}
     </div>

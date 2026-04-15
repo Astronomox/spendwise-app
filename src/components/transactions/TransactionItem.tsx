@@ -35,19 +35,19 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
   const Icon = category.Icon;
 
   return (
-    <div className="relative overflow-hidden group">
+    <div className="relative overflow-hidden group border-b-[1px] border-[var(--color-border)] last:border-b-0">
       {/* Actions behind the row */}
-      <div className="absolute inset-0 flex justify-between items-center px-6">
+      <div className="absolute inset-0 flex justify-between items-center px-[24px]">
         <motion.div 
           style={{ opacity: editOpacity }}
-          className="flex items-center gap-2 text-accent font-bold"
+          className="flex items-center gap-[8px] text-[var(--color-accent)] font-bold h-full"
         >
           <EditIcon size={20} />
           <span>Edit</span>
         </motion.div>
         <motion.div 
           style={{ opacity: deleteOpacity }}
-          className="flex items-center gap-2 text-danger font-bold"
+          className="flex items-center gap-[8px] text-[var(--color-danger)] font-bold h-full"
         >
           <span>Delete</span>
           <TrashIcon size={20} />
@@ -61,38 +61,38 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         style={{ x }}
-        className="relative bg-white flex items-center gap-3 py-4 px-6 border-b border-gray-100 active:bg-gray-50 transition-colors cursor-grab active:cursor-grabbing"
+        className={cn(
+          "relative bg-[var(--color-bg-secondary)] flex items-center gap-[12px] h-[64px] pl-[16px] pr-[24px] ml-[8px] hover:bg-[var(--color-bg-elevated)] transition-colors cursor-grab active:cursor-grabbing",
+          transaction.status === 'pending' ? "border-l-[4px] border-[var(--color-warning)] pl-[12px]" : ""
+        )}
       >
         <div 
-          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+          className="w-[40px] h-[40px] rounded-full flex items-center justify-center shrink-0"
           style={{ 
-            backgroundColor: `${category.color}15`,
+            backgroundColor: `color-mix(in srgb, ${category.color} 15%, transparent)`,
           }}
         >
           <Icon size={20} style={{ color: category.color }} />
         </div>
         
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-[14px] font-semibold truncate">
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          <div className="flex items-center gap-[8px]">
+            <p className="text-[15px] font-[500] truncate text-[var(--color-text-primary)]">
               {transaction.merchant || transaction.description}
             </p>
-            {transaction.status === 'pending' && (
-              <Badge variant="warning" className="text-[9px] px-1 py-0">Pending</Badge>
-            )}
             {transaction.source === 'sms' && (
-              <Badge variant="neutral" className="text-[9px] px-1 py-0">SMS</Badge>
+              <span className="text-[9px] px-[6px] py-[2px] bg-[var(--color-slate)] text-white rounded-[4px] font-bold uppercase tracking-wider">SMS</span>
             )}
           </div>
-          <p className="text-[11px] text-text-secondary">
+          <p className="text-[12px] text-[var(--color-text-secondary)] mt-[2px]">
             {new Date(transaction.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
         </div>
 
-        <div className="text-right shrink-0">
+        <div className="text-right shrink-0 flex flex-col justify-center">
           <p className={cn(
             "text-[15px] font-bold",
-            isCredit ? "text-accent" : "text-text-primary"
+            isCredit ? "text-[var(--color-accent)]" : "text-[var(--color-text-primary)]"
           )}>
             {isCredit ? '+' : '-'} {formatNaira(transaction.amount).replace('NGN', '').trim()}
           </p>

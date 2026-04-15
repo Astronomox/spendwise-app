@@ -12,6 +12,7 @@ import AlertsPage from './pages/Alerts';
 import SmsQueuePage from './pages/SmsQueue';
 import { useAppStore } from './lib/store';
 import { supabase } from './lib/supabase';
+import { ToastContainer } from '@/src/components/ui/Toast';
 
 export default function App() {
   const { isAuthenticated, setUser } = useAppStore();
@@ -89,6 +90,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </AppShell>
+      <ToastContainer />
     </Router>
   );
 }

@@ -32,7 +32,7 @@ interface CategoryPickerProps {
 
 export function CategoryPicker({ selectedId, onSelect }: CategoryPickerProps) {
   return (
-    <div className="grid grid-cols-3 gap-y-8 gap-x-4">
+    <div className="grid grid-cols-3 gap-y-[32px] gap-x-[16px] px-[8px]">
       {CATEGORIES.map((cat) => {
         const isSelected = selectedId === cat.id;
         const Icon = cat.Icon;
@@ -40,16 +40,16 @@ export function CategoryPicker({ selectedId, onSelect }: CategoryPickerProps) {
           <button
             key={cat.id}
             onClick={() => onSelect(cat.id)}
-            className="flex flex-col items-center gap-3 transition-all duration-200 active:scale-95"
+            className="flex flex-col items-center gap-[12px] transition-all duration-200 active:scale-95"
           >
             <div 
               className={cn(
-                "w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200",
-                isSelected ? "ring-2 ring-offset-2" : "border border-gray-100"
+                "min-w-[80px] min-h-[80px] rounded-[24px] flex items-center justify-center transition-all duration-200 relative",
+                isSelected ? "scale-105" : ""
               )}
               style={{ 
-                backgroundColor: `${cat.color}15`,
-                boxShadow: isSelected ? `0 0 0 2px ${cat.color}` : 'none'
+                backgroundColor: `color-mix(in srgb, ${cat.color} 10%, transparent)`,
+                boxShadow: isSelected ? `0 0 0 3px var(--color-bg-secondary), 0 0 0 5px ${cat.color}` : 'none'
               }}
             >
               <Icon size={32} style={{ color: cat.color }} />
@@ -57,8 +57,9 @@ export function CategoryPicker({ selectedId, onSelect }: CategoryPickerProps) {
             <span 
               className={cn(
                 "text-[11px] font-bold uppercase tracking-widest text-center",
-                isSelected ? "text-text-primary" : "text-text-muted"
+                isSelected ? "" : "text-[var(--color-text-secondary)]"
               )}
+              style={{ color: isSelected ? cat.color : undefined }}
             >
               {cat.label}
             </span>

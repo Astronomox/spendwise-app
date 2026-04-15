@@ -55,8 +55,12 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditModal
       queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
 
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to update transaction.');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || 'Failed to update transaction.');
+      } else {
+        setError('Failed to update transaction.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -74,45 +78,46 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditModal
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 z-50"
+            className="fixed inset-0 bg-[rgba(0,0,0,0.5)] backdrop-blur-[4px] z-50"
           />
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={0.2}
             onDragEnd={(e, info) => {
               if (info.offset.y > 100) onClose();
             }}
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-radius-xl z-50 h-[85vh] flex flex-col"
+            className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-secondary)] rounded-t-[24px] z-50 h-[85vh] flex flex-col shadow-[var(--shadow-shadow-lg)]"
           >
-            <div className="flex justify-center p-3 shrink-0">
-              <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
+            <div className="flex justify-center py-[8px] shrink-0">
+              <div className="w-[30px] h-[3px] bg-[var(--color-border)] rounded-full" />
             </div>
 
-            <div className="flex justify-between items-center px-6 pb-4 border-b border-gray-100 shrink-0">
-              <h2 className="text-[18px] font-black">Edit Transaction</h2>
-              <button onClick={onClose} className="p-2 -mr-2 text-text-secondary">
-                <CloseIcon size={20} />
+            <div className="flex justify-between items-center px-[24px] pb-[16px] border-b border-[var(--color-border)] shrink-0">
+              <h2 className="text-[18px] font-bold font-display">Edit Transaction</h2>
+              <button onClick={onClose} className="p-[8px] -mr-[8px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+                <CloseIcon size={24} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              <div className="space-y-4">
+            <div className="flex-1 overflow-y-auto px-[24px] py-[24px] space-y-[32px]">
+              <div className="space-y-[16px]">
                 <Input
                   label="Amount"
                   type="number"
+                  isCurrency
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="font-bold text-[24px] h-14"
                 />
                 <Input
                   label="Description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  onClear={() => setDescription('')}
                 />
                 <Input
                   label="Date"
@@ -122,31 +127,34 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditModal
                 />
               </div>
 
-              <div className="space-y-3">
-                <label className="text-[12px] font-bold text-text-secondary uppercase tracking-widest">Category</label>
-                <div className="p-4 bg-bg-elevated rounded-radius-lg border border-gray-100 mb-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${selectedCategory?.color}15` }}>
+              <div className="space-y-[16px]">
+                <label className="text-[13px] font-[500] text-[var(--color-text-secondary)] uppercase tracking-widest block">Category</label>
+                <div className="p-[16px] bg-[var(--color-bg-elevated)] rounded-[16px] border border-[var(--color-border)] flex items-center gap-[12px]">
+                  <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `color-mix(in srgb, ${selectedCategory?.color} 15%, transparent)` }}>
                     {CategoryIcon && <CategoryIcon size={24} style={{ color: selectedCategory?.color }} />}
                   </div>
                   <div className="flex-1">
-                    <p className="text-[14px] font-bold uppercase tracking-wider" style={{ color: selectedCategory?.color }}>
+                    <p className="text-[15px] font-bold uppercase tracking-wider" style={{ color: selectedCategory?.color }}>
                       {selectedCategory?.label}
                     </p>
                   </div>
                 </div>
-                <CategoryPicker selectedId={categoryId} onSelect={setCategoryId} />
+                <div className="pt-[16px]">
+                  <CategoryPicker selectedId={categoryId} onSelect={setCategoryId} />
+                </div>
               </div>
 
               {error && (
-                <p className="text-danger text-[13px] font-bold text-center">
+                <p className="text-[var(--color-danger)] text-[13px] font-[600] text-center">
                   {error}
                 </p>
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-100 shrink-0 bg-white pb-10">
+            <div className="p-[24px] border-t border-[var(--color-border)] shrink-0 bg-[var(--color-bg-secondary)] pb-[40px]">
               <Button
-                className="w-full h-14"
+                className="w-full"
+                size="lg"
                 onClick={handleSave}
                 isLoading={isSubmitting}
               >

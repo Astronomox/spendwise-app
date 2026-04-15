@@ -71,29 +71,29 @@ export default function HistoryPage() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full bg-white"
+      className="flex flex-col h-full bg-[var(--color-bg-secondary)]"
     >
       {/* Search & Filter Header */}
-      <div className="px-6 py-4 space-y-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+      <div className="px-[24px] py-[16px] space-y-[16px] border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-bg-secondary)] z-10 shadow-[var(--shadow-shadow-sm)]">
         <div className="relative">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+          <SearchIcon className="absolute left-[12px] top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" size={20} />
           <input 
             type="text"
             placeholder="Search transactions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-11 pl-10 pr-4 bg-bg-elevated rounded-radius-md border border-transparent focus:border-accent focus:bg-white transition-all outline-none text-[14px]"
+            className="w-full h-[48px] pl-[40px] pr-[16px] bg-[var(--color-bg-elevated)] rounded-[12px] border border-transparent focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)] focus:shadow-[var(--shadow-shadow-accent)] transition-all outline-none text-[15px] font-[500] placeholder-[var(--color-text-muted)]"
           />
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex gap-[8px] overflow-x-auto pb-[4px] scrollbar-hide">
           {(['all', 'today', 'week', 'month'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setTimeFilter(f)}
               className={cn(
-                "px-4 py-1.5 rounded-full text-[12px] font-bold capitalize transition-all whitespace-nowrap",
-                timeFilter === f ? "bg-accent text-white" : "bg-bg-elevated text-text-secondary border border-gray-100"
+                "px-[16px] py-[8px] rounded-[9999px] text-[13px] font-bold capitalize transition-all whitespace-nowrap",
+                timeFilter === f ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-shadow-sm)]" : "bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-border)]"
               )}
             >
               {f}
@@ -101,15 +101,15 @@ export default function HistoryPage() {
           ))}
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex gap-[8px] overflow-x-auto pb-[4px] scrollbar-hide">
           <button
             onClick={() => setCategoryFilter('all')}
             className={cn(
-              "px-3 py-1.5 rounded-radius-sm text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border",
-              categoryFilter === 'all' ? "bg-text-primary text-white border-text-primary" : "bg-white text-text-secondary border-gray-200"
+              "px-[16px] py-[8px] rounded-[12px] text-[12px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border-[1px]",
+              categoryFilter === 'all' ? "bg-[var(--color-text-primary)] text-[var(--color-bg-secondary)] border-[var(--color-text-primary)]" : "bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border)]"
             )}
           >
-            All Categories
+            All
           </button>
           {CATEGORIES.map((cat) => {
             const Icon = cat.Icon;
@@ -118,10 +118,10 @@ export default function HistoryPage() {
                 key={cat.id}
                 onClick={() => setCategoryFilter(cat.id)}
                 className={cn(
-                  "px-3 py-1.5 rounded-radius-sm text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border flex items-center gap-1.5",
+                  "px-[16px] py-[8px] rounded-[12px] text-[12px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border-[1px] flex items-center gap-[6px]",
                   categoryFilter === cat.id 
-                    ? "bg-white border-accent text-text-primary shadow-sm" 
-                    : "bg-white text-text-secondary border-gray-200"
+                    ? "bg-[rgba(0,135,81,0.05)] border-[var(--color-accent)] text-[var(--color-text-primary)] shadow-[var(--shadow-shadow-sm)]"
+                    : "bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)]"
                 )}
                 style={{ 
                   borderColor: categoryFilter === cat.id ? cat.color : undefined,
@@ -137,13 +137,13 @@ export default function HistoryPage() {
       </div>
       
       {isLoading ? (
-        <div className="flex-1 flex flex-col items-center justify-center space-y-4">
-          <RefreshIcon className="animate-spin text-accent" size={32} />
-          <p className="text-text-secondary font-medium">Loading history...</p>
+        <div className="flex-1 flex flex-col items-center justify-center space-y-[16px]">
+          <RefreshIcon className="animate-spin text-[var(--color-accent)]" size={32} />
+          <p className="text-[var(--color-text-secondary)] font-[500]">Loading history...</p>
         </div>
       ) : error ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <p className="text-danger font-bold">Failed to load transactions.</p>
+        <div className="flex-1 flex flex-col items-center justify-center p-[24px] text-center">
+          <p className="text-[var(--color-danger)] font-bold">Failed to load transactions.</p>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">

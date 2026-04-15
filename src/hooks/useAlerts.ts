@@ -2,11 +2,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/src/lib/supabase';
 import { Alert } from '@/src/types/alerts';
 
-export function useAlerts() {
+import { useToastStore } from '@/src/components/ui/Toast';
+
+export function useAlerts(enabled: boolean = true) {
   const queryClient = useQueryClient();
+  const { addToast } = useToastStore();
 
   const alertsQuery = useQuery({
     queryKey: ['alerts'],
+    enabled,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('alerts')
@@ -32,6 +36,9 @@ export function useAlerts() {
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['alerts'] }),
+    onError: (err) => {
+      addToast(err.message || 'Failed to mark alert as read', 'error');
+    }
   });
 
   return {

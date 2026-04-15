@@ -22,45 +22,49 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
   const dailySave = daysRemaining > 0 ? (goal.target_amount - goal.current_amount) / daysRemaining : 0;
 
   return (
-    <Card className="p-5 space-y-4">
+    <Card className="p-[20px] space-y-[16px] border-[var(--color-border)]">
       <div className="flex justify-between items-start">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-bg-elevated text-accent">
-            <Icon size={24} />
+        <div className="flex items-center gap-[12px]">
+          <div className="w-[48px] h-[48px] rounded-[16px] flex items-center justify-center text-[var(--color-text-primary)]" style={{ backgroundColor: `color-mix(in srgb, ${iconItem.color} 15%, transparent)` }}>
+            <Icon size={24} style={{ color: iconItem.color }} />
           </div>
           <div>
-            <h3 className="font-black text-[18px]">{goal.name}</h3>
-            <p className="text-text-secondary text-[13px]">{daysRemaining} days left</p>
+            <h3 className="font-bold font-display text-[16px] text-[var(--color-text-primary)]">{goal.name}</h3>
+            <div className="inline-flex items-center px-[8px] py-[2px] mt-[4px] bg-[var(--color-bg-elevated)] rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] text-[11px] font-bold uppercase tracking-wider">
+              {daysRemaining} days left
+            </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button onClick={onEdit} className="p-1.5 text-text-secondary hover:text-accent rounded-full bg-bg-elevated transition-colors"><EditIcon size={16} /></button>
-          <button onClick={onDelete} className="p-1.5 text-danger/80 hover:text-danger rounded-full bg-danger/10 transition-colors"><TrashIcon size={16} /></button>
+        <div className="flex gap-[8px]">
+          <button onClick={onEdit} className="p-[8px] -mt-[4px] -mr-[4px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors rounded-full active:scale-95"><EditIcon size={20} /></button>
+          <button onClick={onDelete} className="p-[8px] -mt-[4px] -mr-[4px] text-[var(--color-text-secondary)] hover:text-[var(--color-danger)] transition-colors rounded-full active:scale-95"><TrashIcon size={20} /></button>
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-[8px]">
         <div className="flex justify-between items-end">
-          <span className="font-bold text-[18px]">{formatNaira(goal.current_amount)}</span>
-          <span className="text-text-secondary text-[12px] font-medium">of {formatNaira(goal.target_amount)}</span>
+          <span className="font-bold text-[20px] text-[var(--color-text-primary)] font-display tracking-tight leading-none">{formatNaira(goal.current_amount)}</span>
+          <span className="text-[var(--color-text-secondary)] text-[13px] font-[500]">of {formatNaira(goal.target_amount)}</span>
         </div>
-        <div className="h-2 w-full bg-bg-elevated rounded-full overflow-hidden">
+        <div className="h-[8px] w-full bg-[var(--color-bg-elevated)] rounded-full overflow-hidden border border-[var(--color-border)]/50">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${isComplete ? 'bg-success' : 'bg-accent'}`}
+            className={`h-full rounded-full transition-all duration-1000 ease-out ${isComplete ? 'bg-[var(--color-success)]' : 'bg-[var(--color-accent)]'}`}
             style={{ width: `${percent}%` }}
           />
         </div>
       </div>
 
       {!isComplete && dailySave > 0 && (
-        <div className="pt-2 border-t border-gray-100 flex justify-between items-center">
-          <span className="text-[12px] text-text-secondary font-medium">Daily save required</span>
-          <span className="text-[13px] font-bold text-accent">{formatNaira(dailySave)}</span>
+        <div className="pt-[16px] border-t border-[var(--color-border)] flex justify-between items-center">
+          <span className="text-[13px] text-[var(--color-text-secondary)] font-[500]">Daily save needed</span>
+          <span className="text-[14px] font-bold text-[var(--color-accent)]">{formatNaira(dailySave)}</span>
         </div>
       )}
       {isComplete && (
-        <div className="pt-2 border-t border-gray-100 flex items-center gap-1.5 text-success">
-          <span className="text-[13px] font-bold">Goal Reached!</span>
+        <div className="pt-[16px] border-t border-[var(--color-border)] flex justify-center items-center">
+          <div className="flex items-center gap-[6px] px-[12px] py-[4px] bg-[rgba(16,185,129,0.1)] text-[var(--color-success)] rounded-full">
+            <span className="text-[13px] font-bold tracking-wide uppercase">Goal Reached!</span>
+          </div>
         </div>
       )}
     </Card>

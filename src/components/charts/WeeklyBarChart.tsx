@@ -22,7 +22,7 @@ export function WeeklyBarChart({ data }: WeeklyBarChartProps) {
             dataKey="name" 
             axisLine={false} 
             tickLine={false} 
-            tick={{ fontSize: 10, fontWeight: 600, fill: '#9CA3AF' }}
+            tick={{ fontSize: 10, fontWeight: 600, fill: 'var(--color-text-muted)' }}
             dy={10}
           />
           <YAxis hide domain={[0, 'auto']} />
@@ -43,7 +43,7 @@ export function WeeklyBarChart({ data }: WeeklyBarChartProps) {
             {chartData.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
-                fill={entry.isToday ? '#008751' : '#00875140'} 
+                fill={entry.isToday ? 'var(--color-accent)' : 'var(--color-accent-border)'}
               />
             ))}
           </Bar>

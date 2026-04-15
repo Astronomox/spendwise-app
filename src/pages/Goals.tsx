@@ -50,32 +50,32 @@ export default function GoalsPage() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full bg-white relative pb-20"
+      className="flex flex-col h-full bg-[var(--color-bg-secondary)] relative pb-[72px]"
     >
-      <div className="px-6 pt-8 pb-4 flex justify-between items-center bg-white sticky top-0 z-10 border-b border-gray-100">
+      <div className="px-[24px] pt-[32px] pb-[16px] flex justify-between items-center bg-[var(--color-bg-secondary)] sticky top-0 z-10 border-b border-[var(--color-border)] shadow-[var(--shadow-shadow-sm)]">
         <div>
-          <h1 className="text-[28px] font-black tracking-tight">Savings Goals</h1>
-          <p className="text-text-secondary text-[14px]">What are we building towards?</p>
+          <h1 className="text-[28px] font-bold font-display tracking-tight leading-tight">Savings Goals</h1>
+          <p className="text-[var(--color-text-secondary)] text-[15px] font-[500]">What are we building towards?</p>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="flex-1 flex flex-col items-center justify-center space-y-4">
-          <RefreshIcon className="animate-spin text-accent" size={32} />
+        <div className="flex-1 flex flex-col items-center justify-center space-y-[16px]">
+          <RefreshIcon className="animate-spin text-[var(--color-accent)]" size={32} />
         </div>
       ) : goals.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-6">
-          <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center text-accent">
-            <GoalsIcon size={32} />
+        <div className="flex-1 flex flex-col items-center justify-center p-[24px] text-center space-y-[24px]">
+          <div className="w-[80px] h-[80px] bg-[rgba(0,135,81,0.1)] rounded-full flex items-center justify-center text-[var(--color-accent)]">
+            <GoalsIcon size={40} />
           </div>
-          <div>
-            <h3 className="font-bold text-[18px]">No goals yet</h3>
-            <p className="text-text-secondary text-[14px]">Start saving for that vacation or emergency fund today.</p>
+          <div className="space-y-[8px]">
+            <h3 className="font-bold text-[20px] font-display text-[var(--color-text-primary)]">No goals yet</h3>
+            <p className="text-[var(--color-text-secondary)] text-[15px] font-[500] max-w-[280px] mx-auto">Start saving for that vacation or emergency fund today.</p>
           </div>
-          <Button onClick={handleCreate}>Create First Goal</Button>
+          <Button onClick={handleCreate} size="lg" className="px-[32px]">Create First Goal</Button>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-[24px] space-y-[16px]">
           {goals.map((goal: SavingsGoal) => (
             <div key={goal.id}>
               <GoalCard
@@ -89,12 +89,13 @@ export default function GoalsPage() {
       )}
 
       {goals.length > 0 && (
-        <div className="absolute bottom-6 right-6 z-20">
+        <div className="absolute bottom-[88px] right-[24px] z-20">
           <Button
-            className="rounded-full shadow-lg h-14 px-6 gap-2"
+            className="rounded-full shadow-[var(--shadow-shadow-lg)] hover:shadow-[var(--shadow-shadow-accent)] h-[56px] px-[24px] gap-[8px]"
             onClick={handleCreate}
           >
-            <span className="text-[20px]">+</span> New Goal
+            <span className="text-[24px] leading-none mb-[2px]">+</span>
+            <span className="font-bold text-[15px]">New Goal</span>
           </Button>
         </div>
       )}

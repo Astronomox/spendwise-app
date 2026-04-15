@@ -2,8 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/src/lib/supabase';
 import { SavingsGoal } from '@/src/types/goals';
 
+import { useToastStore } from '@/src/components/ui/Toast';
+
 export function useGoals() {
   const queryClient = useQueryClient();
+  const { addToast } = useToastStore();
 
   const goalsQuery = useQuery({
     queryKey: ['savings_goals'],
@@ -32,7 +35,13 @@ export function useGoals() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['savings_goals'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['savings_goals'] });
+      addToast('Goal added successfully!', 'success');
+    },
+    onError: (err) => {
+      addToast(err.message || 'Failed to add goal', 'error');
+    }
   });
 
   const updateGoalMutation = useMutation({
@@ -47,7 +56,13 @@ export function useGoals() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['savings_goals'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['savings_goals'] });
+      addToast('Goal updated successfully!', 'success');
+    },
+    onError: (err) => {
+      addToast(err.message || 'Failed to update goal', 'error');
+    }
   });
 
   const deleteGoalMutation = useMutation({
@@ -59,7 +74,13 @@ export function useGoals() {
 
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['savings_goals'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['savings_goals'] });
+      addToast('Goal deleted successfully!', 'success');
+    },
+    onError: (err) => {
+      addToast(err.message || 'Failed to delete goal', 'error');
+    }
   });
 
   return {

@@ -59,6 +59,7 @@ export default function LoggerPage() {
 
       setIsSubmitting(false);
       setShowSuccess(true);
+      if (navigator.vibrate) navigator.vibrate(50);
       
       // Reset and navigate after success
       setTimeout(() => {
@@ -78,21 +79,21 @@ export default function LoggerPage() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full bg-white"
+      className="flex flex-col h-full bg-[var(--color-bg-secondary)]"
     >
       {/* Header */}
-      <header className="px-6 h-[56px] flex items-center justify-between border-b border-gray-100 shrink-0">
+      <header className="px-[24px] h-[56px] flex items-center justify-between border-b border-[var(--color-border)] shrink-0">
         <button 
           onClick={() => step === 2 ? setStep(1) : navigate(-1)}
-          className="p-2 -ml-2 text-text-secondary"
+          className="p-[8px] -ml-[8px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
         >
-          <ArrowLeftIcon size={20} />
+          <ArrowLeftIcon size={24} />
         </button>
-        <h1 className="text-[16px] font-bold">Log Expense</h1>
-        <div className="w-10" /> {/* Spacer */}
+        <h1 className="text-[18px] font-bold font-display">Log Expense</h1>
+        <div className="w-[40px]" /> {/* Spacer */}
       </header>
 
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-[24px]">
         <AnimatePresence mode="wait">
           {step === 1 ? (
             <motion.div
@@ -100,11 +101,11 @@ export default function LoggerPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="space-y-6"
+              className="space-y-[32px]"
             >
-              <div className="space-y-1">
-                <h2 className="text-[24px] font-black">What did you spend on?</h2>
-                <p className="text-text-secondary">Select a category to continue.</p>
+              <div className="space-y-[8px]">
+                <h2 className="text-[28px] font-bold font-display tracking-tight leading-tight">What did you spend on?</h2>
+                <p className="text-[var(--color-text-secondary)] text-[15px] font-[500]">Select a category to continue.</p>
               </div>
               <CategoryPicker selectedId={categoryId} onSelect={handleCategorySelect} />
             </motion.div>
@@ -114,47 +115,51 @@ export default function LoggerPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-8"
+              className="space-y-[32px] flex flex-col h-full"
             >
-              <div className="flex items-center gap-3 p-4 bg-bg-elevated rounded-radius-lg border border-gray-100">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${selectedCategory?.color}15` }}>
+              <div className="flex items-center gap-[12px] p-[16px] bg-[var(--color-bg-elevated)] rounded-[16px] border border-[var(--color-border)] shadow-[var(--shadow-shadow-sm)] shrink-0">
+                <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `color-mix(in srgb, ${selectedCategory?.color} 15%, transparent)` }}>
                   {CategoryIcon && <CategoryIcon size={24} style={{ color: selectedCategory?.color }} />}
                 </div>
                 <div className="flex-1">
-                  <p className="text-[14px] font-bold uppercase tracking-wider" style={{ color: selectedCategory?.color }}>
+                  <p className="text-[15px] font-bold uppercase tracking-wider" style={{ color: selectedCategory?.color }}>
                     {selectedCategory?.label}
                   </p>
-                  <p className="text-[11px] text-text-secondary">Tap to change category</p>
+                  <p className="text-[12px] text-[var(--color-text-secondary)] font-[500]">Tap to change category</p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setStep(1)}>Change</Button>
+                <Button variant="ghost" size="sm" onClick={() => setStep(1)} className="rounded-full">Change</Button>
               </div>
 
-              <AmountInput 
-                value={amount} 
-                onChange={(val) => {
-                  setAmount(val);
-                  if (error) setError(null);
-                }} 
-              />
+              <div className="flex-1 flex flex-col justify-center">
+                <AmountInput
+                  value={amount}
+                  onChange={(val) => {
+                    setAmount(val);
+                    if (error) setError(null);
+                  }}
+                />
+              </div>
 
               {error && (
-                <p className="text-danger text-[12px] font-bold text-center animate-in fade-in slide-in-from-top-1">
+                <p className="text-[var(--color-danger)] text-[13px] font-[600] text-center animate-in fade-in slide-in-from-top-1 shrink-0">
                   {error}
                 </p>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-[16px] shrink-0 mt-auto pt-[16px]">
                 <Input 
                   label="Note (Optional)" 
                   placeholder="What was this for?" 
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
+                  onClear={() => setNote('')}
                 />
                 <Button 
                   className="w-full" 
                   size="lg"
                   isLoading={isSubmitting}
                   onClick={handleSubmit}
+                  disabled={!amount || Number(amount) <= 0}
                 >
                   Log Expense
                 </Button>
