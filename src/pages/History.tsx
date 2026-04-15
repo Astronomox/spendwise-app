@@ -4,14 +4,38 @@ import { useTransactions } from '@/src/hooks/useTransactions';
 import { CATEGORIES, CategoryId } from '@/src/components/logger/CategoryPicker';
 import { cn } from '@/src/lib/utils';
 import { SearchIcon, RefreshIcon } from '@/src/components/ui/icons';
+import { EditTransactionModal } from '@/src/components/transactions/EditTransactionModal';
+import { Transaction } from '@/src/types/transactions';
+import { supabase } from '@/src/lib/supabase';
+import { useQueryClient } from '@tanstack/react-query';
+import { motion } from 'motion/react';
 
 type TimeFilter = 'all' | 'today' | 'week' | 'month';
 
 export default function HistoryPage() {
+  const queryClient = useQueryClient();
   const { transactions, isLoading, error } = useTransactions();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<CategoryId | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+
+  const handleEdit = (id: string) => {
+    const transaction = transactions.find(t => t.id === id);
+    if (transaction) setEditingTransaction(transaction);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this transaction?')) return;
+    try {
+      const { error } = await supabase.from('transactions').delete().eq('id', id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+    } catch (e) {
+      console.error('Failed to delete transaction', e);
+    }
+  };
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
@@ -43,7 +67,12 @@ export default function HistoryPage() {
   }, [timeFilter, categoryFilter, searchQuery, transactions]);
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex flex-col h-full bg-white"
+    >
       {/* Search & Filter Header */}
       <div className="px-6 py-4 space-y-4 border-b border-gray-100 sticky top-0 bg-white z-10">
         <div className="relative">
@@ -120,11 +149,17 @@ export default function HistoryPage() {
         <div className="flex-1 overflow-y-auto">
           <TransactionFeed 
             transactions={filteredTransactions} 
-            onEdit={(id) => console.log('Edit', id)}
-            onDelete={(id) => console.log('Delete', id)}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         </div>
       )}
-    </div>
+
+      <EditTransactionModal
+        transaction={editingTransaction}
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+      />
+    </motion.div>
   );
 }

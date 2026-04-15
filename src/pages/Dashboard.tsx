@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/src/components/ui/Card';
 import { Badge } from '@/src/components/ui/Badge';
@@ -9,12 +8,16 @@ import { TopCategories } from '@/src/components/dashboard/TopCategories';
 import { TransactionItem } from '@/src/components/transactions/TransactionItem';
 import { useDashboardSummary } from '@/src/hooks/useDashboard';
 import { useTransactions } from '@/src/hooks/useTransactions';
+import { ShareableSummaryCard } from '@/src/components/dashboard/ShareableSummaryCard';
 import { 
   FlameIcon, 
   TrendingUpIcon, 
   CalendarIcon, 
-  RefreshIcon 
+  RefreshIcon,
+  ShareIcon
 } from '@/src/components/ui/icons';
+import { useState } from 'react';
+import { motion } from 'motion/react';
 
 export default function Dashboard() {
   const { user } = useAppStore();
@@ -22,6 +25,7 @@ export default function Dashboard() {
   
   const { data, isLoading, error, refetch } = useDashboardSummary();
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
+  const [showSummary, setShowSummary] = useState(false);
 
   if (isLoading) {
     return (
@@ -50,13 +54,29 @@ export default function Dashboard() {
   const recentTransactions = transactions.slice(0, 3);
 
   return (
-    <div className="space-y-8 pb-10">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-8 pb-10"
+    >
       {/* Greeting Section */}
-      <header className="px-6 pt-6 space-y-1">
-        <p className="text-[14px] text-text-secondary font-medium">
-          Good evening, {user?.name?.split(' ')[0] || 'Adeola'}
-        </p>
-        <h2 className="text-[28px] font-black tracking-tight">Your Overview</h2>
+      <header className="px-6 pt-6 flex justify-between items-end">
+        <div className="space-y-1">
+          <p className="text-[14px] text-text-secondary font-medium">
+            Good evening, {user?.name?.split(' ')[0] || 'Adeola'}
+          </p>
+          <h2 className="text-[28px] font-black tracking-tight">Your Overview</h2>
+        </div>
+        {data && (
+          <button
+            onClick={() => setShowSummary(true)}
+            className="p-2 text-text-secondary hover:bg-gray-100 rounded-full transition-colors"
+            title="Share Summary"
+          >
+            <ShareIcon size={24} />
+          </button>
+        )}
       </header>
 
       {/* Main Balance Card */}
@@ -147,6 +167,14 @@ export default function Dashboard() {
           ))}
         </div>
       </section>
-    </div>
+
+      {showSummary && data && (
+        <ShareableSummaryCard
+          data={data}
+          user={user}
+          onClose={() => setShowSummary(false)}
+        />
+      )}
+    </motion.div>
   );
 }

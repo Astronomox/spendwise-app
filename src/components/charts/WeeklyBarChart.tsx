@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Cell, Tooltip } from 'recharts';
+import { formatNaira } from '@/src/lib/utils';
 
 interface WeeklyBarChartProps {
   data: number[]; // Array of 7 numbers for Mon-Sun
@@ -31,7 +32,7 @@ export function WeeklyBarChart({ data }: WeeklyBarChartProps) {
               if (active && payload && payload.length) {
                 return (
                   <div className="bg-bg-charcoal text-white px-2 py-1 rounded text-[10px] font-bold">
-                    ₦{payload[0].value.toLocaleString()}
+                    {formatNaira(Number(payload[0].value))}
                   </div>
                 );
               }

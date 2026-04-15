@@ -7,6 +7,9 @@ import OnboardingPage from './pages/auth/Onboarding';
 import Dashboard from './pages/Dashboard';
 import LoggerPage from './pages/Logger';
 import HistoryPage from './pages/History';
+import GoalsPage from './pages/Goals';
+import AlertsPage from './pages/Alerts';
+import SmsQueuePage from './pages/SmsQueue';
 import { useAppStore } from './lib/store';
 import { supabase } from './lib/supabase';
 
@@ -67,6 +70,18 @@ export default function App() {
           <Route 
             path="/logger" 
             element={isAuthenticated ? <LoggerPage /> : <Navigate to="/auth/login" />} 
+          />
+          <Route
+            path="/goals"
+            element={isAuthenticated ? <GoalsPage /> : <Navigate to="/auth/login" />}
+          />
+          <Route
+            path="/alerts"
+            element={isAuthenticated ? <AlertsPage /> : <Navigate to="/auth/login" />}
+          />
+          <Route
+            path="/sms-queue"
+            element={isAuthenticated ? <SmsQueuePage /> : <Navigate to="/auth/login" />}
           />
 
           {/* Fallback */}

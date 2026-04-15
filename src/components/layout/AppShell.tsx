@@ -12,6 +12,7 @@ import {
   NotificationIcon
 } from '@/src/components/ui/icons';
 import { supabase } from '@/src/lib/supabase';
+import { useAlerts } from '@/src/hooks/useAlerts';
 
 interface AppShellProps {
   children: ReactNode;
@@ -19,6 +20,9 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const { user, setUser } = useAppStore();
+  const { alerts } = useAlerts();
+
+  const unreadAlerts = alerts?.filter(a => !a.read).length || 0;
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -47,7 +51,9 @@ export function AppShell({ children }: AppShellProps) {
         <header className="h-[56px] px-6 flex justify-between items-center shrink-0 border-b border-gray-100">
           <h1 className="text-[20px] font-black text-accent">SpendWise.</h1>
           <div className="flex items-center gap-4">
-            <NotificationIcon size={22} hasDot className="text-text-secondary" />
+            <button onClick={() => navigate('/alerts')} className="relative p-1">
+              <NotificationIcon size={22} hasDot={unreadAlerts > 0} className="text-text-secondary" />
+            </button>
             <div className="w-9 h-9 bg-bg-elevated rounded-full flex items-center justify-center border border-gray-200 text-[12px] font-bold">
               {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'AD'}
             </div>
@@ -95,14 +101,16 @@ function NavTab({ to, icon, label }: { to: string; icon: ReactNode; label: strin
     >
       {({ isActive }) => (
         <>
-          {icon}
-          <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
-          {isActive && (
-            <motion.div 
-              layoutId="nav-dot"
-              className="absolute -bottom-2 w-[3px] h-[3px] bg-accent rounded-full"
-            />
-          )}
+          <div className="relative flex flex-col items-center gap-1">
+            {icon}
+            <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
+            {isActive && (
+              <motion.div
+                layoutId="nav-dot"
+                className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[3px] h-[3px] bg-accent rounded-full"
+              />
+            )}
+          </div>
         </>
       )}
     </NavLink>

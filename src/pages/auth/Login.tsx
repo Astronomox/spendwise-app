@@ -5,7 +5,7 @@ import { Input } from '@/src/components/ui/Input';
 import { useAppStore } from '@/src/lib/store';
 
 import { supabase } from '@/src/lib/supabase';
-
+import { motion } from 'motion/react';
 import { GoogleIcon } from '@/src/components/ui/icons';
 
 export default function LoginPage() {
@@ -101,7 +101,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col h-full p-6 justify-center space-y-8">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex flex-col h-full p-6 justify-center space-y-8"
+    >
       <div className="space-y-2 text-center">
         <h1 className="text-[32px] font-black text-accent">Welcome Back.</h1>
         <p className="text-text-secondary">Log in to track your naira.</p>
@@ -170,6 +175,6 @@ export default function LoginPage() {
           Sign up free
         </Link>
       </p>
-    </div>
+    </motion.div>
   );
 }

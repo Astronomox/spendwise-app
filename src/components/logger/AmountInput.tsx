@@ -28,7 +28,7 @@ export function AmountInput({ value, onChange }: AmountInputProps) {
       <div className="text-center space-y-1">
         <p className="text-[13px] text-text-secondary font-medium uppercase tracking-widest">Amount</p>
         <div className="flex items-center justify-center gap-1">
-          <span className="text-[32px] font-bold text-accent">₦</span>
+          <span className="text-[32px] font-bold text-accent">NGN</span>
           <span className="text-[48px] font-black font-display tracking-tighter">
             {value || '0'}
           </span>

@@ -5,7 +5,7 @@ import { Input } from '@/src/components/ui/Input';
 import { useAppStore } from '@/src/lib/store';
 
 import { supabase } from '@/src/lib/supabase';
-
+import { motion } from 'motion/react';
 import { GoogleIcon } from '@/src/components/ui/icons';
 
 export default function SignupPage() {
@@ -116,7 +116,12 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex flex-col h-full p-6 justify-center space-y-8 overflow-y-auto">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex flex-col h-full p-6 justify-center space-y-8 overflow-y-auto"
+    >
       <div className="space-y-2 text-center">
         <h1 className="text-[32px] font-black text-accent">Join SpendWise.</h1>
         <p className="text-text-secondary">Start building real wealth today.</p>
@@ -148,7 +153,7 @@ export default function SignupPage() {
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           />
           <Input
-            label="Monthly Budget (₦)"
+            label="Monthly Budget (NGN)"
             type="number"
             placeholder="e.g. 150000"
             value={formData.budget}
@@ -192,6 +197,6 @@ export default function SignupPage() {
           Log in
         </Link>
       </p>
-    </div>
+    </motion.div>
   );
 }

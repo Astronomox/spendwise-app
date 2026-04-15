@@ -17,6 +17,7 @@
   
   --color-danger: #E11D48;
   --color-warning: #E6B00F;
+  --color-success: #10B981;
   
   /* Typography */
   --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -81,7 +82,7 @@
   }
   
   .naira::before {
-    content: "₦";
+    content: "NGN ";
     margin-right: 0.1em;
   }
 }
