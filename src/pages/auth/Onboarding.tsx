@@ -119,7 +119,6 @@ export default function OnboardingPage() {
                         ? "border-[var(--color-accent)] bg-[rgba(0,135,81,0.05)] ring-[1px] ring-[var(--color-accent)]"
                         : "border-[var(--color-border)] hover:border-[var(--color-text-muted)]"
                     )}
-                    )}
                   >
                     <span className={cn(
                       "font-bold text-[14px]",
@@ -160,7 +159,6 @@ export default function OnboardingPage() {
                       selectedCategories.includes(cat)
                         ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-white shadow-[var(--shadow-shadow-sm)]"
                         : "border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-text-muted)]"
-                    )}
                     )}
                   >
                     {cat}
