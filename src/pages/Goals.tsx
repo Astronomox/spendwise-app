@@ -59,7 +59,6 @@ export default function GoalsPage() {
         </div>
       </div>
 
-      {isLoading ? (
         <div className="flex-1 flex flex-col items-center justify-center space-y-[16px]">
           <RefreshIcon className="animate-spin text-[var(--color-accent)]" size={32} />
         </div>
@@ -88,7 +87,6 @@ export default function GoalsPage() {
         </div>
       )}
 
-      {goals.length > 0 && (
         <div className="absolute bottom-[88px] right-[24px] z-20">
           <Button
             className="rounded-full shadow-[var(--shadow-shadow-lg)] hover:shadow-[var(--shadow-shadow-accent)] h-[56px] px-[24px] gap-[8px]"
