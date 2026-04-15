@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/src/components/ui/Card';
 import { Badge } from '@/src/components/ui/Badge';
@@ -9,19 +8,24 @@ import { TopCategories } from '@/src/components/dashboard/TopCategories';
 import { TransactionItem } from '@/src/components/transactions/TransactionItem';
 import { useDashboardSummary } from '@/src/hooks/useDashboard';
 import { useTransactions } from '@/src/hooks/useTransactions';
+import { ShareableSummaryCard } from '@/src/components/dashboard/ShareableSummaryCard';
 import { 
   FlameIcon, 
   TrendingUpIcon, 
   CalendarIcon, 
-  RefreshIcon 
+  RefreshIcon,
+  ShareIcon
 } from '@/src/components/ui/icons';
+import { useState } from 'react';
+import { motion } from 'motion/react';
 
 export default function Dashboard() {
   const { user } = useAppStore();
   const navigate = useNavigate();
   
   const { data, isLoading, error, refetch } = useDashboardSummary();
-  const { transactions, isLoading: isTransactionsLoading } = useTransactions();
+  const { transactions } = useTransactions();
+  const [showSummary, setShowSummary] = useState(false);
 
   if (isLoading) {
     return (
@@ -46,107 +50,134 @@ export default function Dashboard() {
     );
   }
 
-  const budgetProgress = (data.total_spent / data.monthly_budget) * 100;
+  const budgetProgress = data.monthly_budget > 0 ? (data.total_spent / data.monthly_budget) * 100 : 0;
   const recentTransactions = transactions.slice(0, 3);
 
-  return (
-    <div className="space-y-8 pb-10">
-      {/* Greeting Section */}
-      <header className="px-6 pt-6 space-y-1">
-        <p className="text-[14px] text-text-secondary font-medium">
-          Good evening, {user?.name?.split(' ')[0] || 'Adeola'}
-        </p>
-        <h2 className="text-[28px] font-black tracking-tight">Your Overview</h2>
-      </header>
+  const getProgressColor = (progress: number) => {
+    if (progress >= 90) return 'bg-[var(--color-danger)]';
+    if (progress >= 70) return 'bg-[var(--color-warning)]';
+    return 'bg-white';
+  };
 
-      {/* Main Balance Card */}
-      <section className="px-6">
-        <Card variant="glow" className="space-y-6 overflow-hidden relative">
-          <div className="space-y-1 relative z-10">
-            <p className="text-[13px] opacity-80 font-medium uppercase tracking-wider">Spent this month</p>
-            <p className="text-[40px] font-black naira leading-none">{data.total_spent.toLocaleString()}</p>
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-[32px] pb-[40px] pt-[8px]"
+    >
+      {/* Hero Section */}
+      <section className="px-[24px]">
+        <div className="relative rounded-[24px] bg-[var(--color-text-primary)] p-[24px] text-white shadow-[var(--shadow-shadow-lg)] overflow-hidden">
+          {/* Radial Glow */}
+          <div className="absolute top-[-30%] right-[-20%] w-[200px] h-[200px] bg-[var(--color-accent)] rounded-full blur-[80px] opacity-40 pointer-events-none" />
+
+          <div className="relative z-10 flex justify-between items-start mb-[32px]">
+            <div>
+              <p className="text-[14px] text-[var(--color-text-muted)] font-[500] mb-[4px]">
+                Good evening, {user?.name?.split(' ')[0] || 'Adeola'}
+              </p>
+              <h2 className="text-[14px] font-bold uppercase tracking-widest opacity-80">Spent this month</h2>
+            </div>
+            {data && (
+              <button
+                onClick={() => setShowSummary(true)}
+                className="p-[8px] bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
+                title="Share Summary"
+              >
+                <ShareIcon size={20} />
+              </button>
+            )}
           </div>
           
-          <div className="space-y-3 relative z-10">
-            <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${budgetProgress}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full bg-white" 
-              />
-            </div>
-            <div className="flex justify-between items-center text-[12px] font-bold">
-              <span className="opacity-90">{Math.round(budgetProgress)}% of budget used</span>
-              <div className="flex items-center gap-1.5 opacity-90">
-                <CalendarIcon size={14} />
+          <div className="relative z-10 space-y-[24px]">
+            <p className="text-[40px] font-black font-display tracking-tight naira leading-none">{data.total_spent.toLocaleString()}</p>
+
+            <div className="space-y-[12px]">
+              <div className="h-[8px] bg-white/10 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, budgetProgress)}%` }}
+                  transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+                  className={`h-full rounded-full ${getProgressColor(budgetProgress)}`}
+                />
+              </div>
+              <div className="flex justify-between items-center text-[13px] font-[600] opacity-80">
+                <span>{Math.round(budgetProgress)}% of budget used</span>
                 <span>{data.days_left_in_month} days left</span>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Streak Badge */}
-          <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-full border border-white/10 backdrop-blur-sm">
-            <FlameIcon size={16} className="text-warning" />
-            <span className="text-[12px] font-bold text-white">{data.streak_count} day streak</span>
+      {/* Daily Safe Spend */}
+      <section className="px-[24px]">
+        <Card className="border-[var(--color-accent-border)] bg-[rgba(0,135,81,0.05)] flex justify-between items-center">
+          <div className="space-y-[4px]">
+            <p className="text-[13px] font-[500] text-[var(--color-text-secondary)]">Daily Safe Spend</p>
+            <p className="text-[28px] font-black font-display text-[var(--color-text-primary)] naira leading-none">{data.daily_safe_spend.toLocaleString()}</p>
+          </div>
+          <div className="w-[48px] h-[48px] rounded-full bg-[var(--color-accent)]/10 flex items-center justify-center text-[var(--color-accent)]">
+            <TrendingUpIcon size={24} />
           </div>
         </Card>
       </section>
 
-      {/* Daily Safe Spend & Weekly Chart */}
-      <section className="px-6 space-y-4">
-        <div className="grid grid-cols-1 gap-4">
-          <Card className="border-accent/20 bg-accent/5 flex justify-between items-center p-5">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <TrendingUpIcon size={16} className="text-accent" />
-                <p className="text-[12px] font-bold uppercase tracking-widest text-accent">Daily Safe Spend</p>
-              </div>
-              <p className="text-[32px] font-black naira leading-none">{data.daily_safe_spend.toLocaleString()}</p>
-            </div>
-            <Badge variant="success" className="h-fit">Healthy</Badge>
-          </Card>
-        </div>
-
-        <Card className="p-6 space-y-6">
+      {/* Weekly Chart */}
+      <section className="px-[24px]">
+        <Card className="space-y-[24px]">
           <div className="flex justify-between items-center">
-            <h3 className="text-[14px] font-bold uppercase tracking-widest text-text-secondary">Weekly Spending</h3>
-            <span className="text-[12px] font-bold text-accent">Last 7 Days</span>
+            <h3 className="text-[16px] font-black font-display">Weekly Spend</h3>
+            <span className="text-[13px] font-[600] text-[var(--color-text-secondary)]">Last 7 Days</span>
           </div>
           <WeeklyBarChart data={data.weekly_spend} />
         </Card>
       </section>
 
       {/* Top Categories */}
-      <section className="space-y-4">
-        <div className="px-6">
-          <h3 className="text-[14px] font-bold uppercase tracking-widest text-text-secondary">Top Categories</h3>
+      <section className="space-y-[16px]">
+        <div className="px-[24px]">
+          <h3 className="text-[16px] font-black font-display">Top Categories</h3>
         </div>
         <TopCategories spendByCategory={data.spend_by_category} />
       </section>
 
       {/* Recent Transactions */}
-      <section className="space-y-4">
-        <div className="px-6 flex justify-between items-center">
-          <h3 className="text-[14px] font-bold uppercase tracking-widest text-text-secondary">Recent Transactions</h3>
+      <section className="space-y-[16px]">
+        <div className="px-[24px] flex justify-between items-center">
+          <h3 className="text-[16px] font-black font-display">Recent Transactions</h3>
           <button 
             onClick={() => navigate('/history')}
-            className="text-[12px] text-accent font-bold hover:underline"
+            className="text-[14px] text-[var(--color-accent)] font-bold hover:underline"
           >
-            See All
+            View all
           </button>
         </div>
-        <div className="bg-white border-y border-gray-100">
-          {recentTransactions.map((t) => (
-            <div key={t.id}>
+        <div className="bg-[var(--color-bg-card)] border-y-[1px] border-[var(--color-border)]">
+          {recentTransactions.map((t, index) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
               <TransactionItem 
                 transaction={t} 
                 onEdit={(id) => navigate(`/history?edit=${id}`)}
               />
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
-    </div>
+
+      {showSummary && data && (
+        <ShareableSummaryCard
+          data={data}
+          user={user}
+          onClose={() => setShowSummary(false)}
+        />
+      )}
+    </motion.div>
   );
 }
