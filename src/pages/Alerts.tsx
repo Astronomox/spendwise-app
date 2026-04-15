@@ -56,7 +56,11 @@ export default function AlertsPage() {
             return (
               <div
                 key={alert.id}
-                onClick={() => !alert.read && markRead(alert.id)}
+                onClick={() => {
+                  if (!alert.read) {
+                    void markRead(alert.id).catch(() => {});
+                  }
+                }}
                 className={cn(
                   "p-[20px] rounded-[16px] border-[1px] transition-all cursor-pointer flex gap-[16px]",
                   alert.read
@@ -64,7 +68,7 @@ export default function AlertsPage() {
                     : "bg-[var(--color-bg-elevated)] border-l-[4px] border-l-[var(--color-accent)] border-y-[var(--color-border)] border-r-[var(--color-border)] shadow-[var(--shadow-shadow-sm)] hover:shadow-[var(--shadow-shadow-md)]"
                 )}
               >
-                <div className={cn("w-[40px] h-[40px] rounded-full flex items-center justify-center shrink-0 border border-black/5")} style={{ backgroundColor: styles.bg, color: styles.color }}>
+                <div className={cn("w-[40px] h-[40px] rounded-full flex items-center justify-center shrink-0 border border-black/5", styles.bg)} style={{ color: styles.color }}>
                   {styles.icon}
                 </div>
                 <div className="flex-1">

@@ -20,9 +20,6 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const { user, setUser } = useAppStore();
-  const { alerts } = useAlerts();
-
-  const unreadAlerts = alerts?.filter(a => !a.read).length || 0;
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -30,6 +27,10 @@ export function AppShell({ children }: AppShellProps) {
   const isAuthPage = location.pathname.startsWith('/auth');
   // Hide bottom nav on logger page for full focus
   const isLoggerPage = location.pathname === '/logger';
+
+  const { alerts } = useAlerts(!isAuthPage);
+
+  const unreadAlerts = alerts?.filter(a => !a.read).length || 0;
 
   if (isAuthPage) {
     return <div className="app-container">{children}</div>;

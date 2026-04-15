@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { Button } from '@/src/components/ui/Button';
 import { CATEGORIES } from '@/src/components/logger/CategoryPicker';
-import { formatNaira } from '@/src/lib/utils';
 import { ShareIcon, CloseIcon, FlameIcon } from '@/src/components/ui/icons';
 
 interface ShareableSummaryProps {

@@ -24,7 +24,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   
   const { data, isLoading, error, refetch } = useDashboardSummary();
-  const { transactions, isLoading: isTransactionsLoading } = useTransactions();
+  const { transactions } = useTransactions();
   const [showSummary, setShowSummary] = useState(false);
 
   if (isLoading) {
@@ -50,7 +50,7 @@ export default function Dashboard() {
     );
   }
 
-  const budgetProgress = (data.total_spent / data.monthly_budget) * 100;
+  const budgetProgress = data.monthly_budget > 0 ? (data.total_spent / data.monthly_budget) * 100 : 0;
   const recentTransactions = transactions.slice(0, 3);
 
   const getProgressColor = (progress: number) => {

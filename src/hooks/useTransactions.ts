@@ -37,8 +37,12 @@ export function useTransactions() {
       queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
       addToast('Transaction added successfully!', 'success');
     },
-    onError: (err) => {
-      addToast(err.message || 'Failed to add transaction', 'error');
+    onError: (err: unknown) => {
+      if (err instanceof Error) {
+        addToast(err.message || 'Failed to add transaction', 'error');
+      } else {
+        addToast('Failed to add transaction', 'error');
+      }
     }
   });
 

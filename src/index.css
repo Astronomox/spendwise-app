@@ -70,7 +70,7 @@
     height: 100vh;
     max-height: 800px;
     background-color: var(--color-bg-secondary);
-    border-radius: var(--radius-radius-xl);
+    border-radius: var(--radius-radius-lg);
     box-shadow: var(--shadow-shadow-lg);
     border: 8px solid var(--color-text-primary);
     display: flex;

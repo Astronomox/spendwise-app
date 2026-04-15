@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircleIcon, WarningIcon } from './icons';
 import { create } from 'zustand';
@@ -44,16 +44,16 @@ export function ToastContainer() {
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className={`pointer-events-auto flex items-center gap-[12px] px-[16px] py-[12px] rounded-[12px] shadow-[var(--shadow-shadow-lg)] w-full max-w-[320px] ${
-              toast.type === 'success' ? 'bg-[#0B132B] text-white border border-[var(--color-success)]' :
+              toast.type === 'success' ? 'bg-[var(--color-text-primary)] text-white border border-[var(--color-success)]' :
               toast.type === 'error' ? 'bg-[var(--color-danger)] text-white' :
-              'bg-[var(--color-warning)] text-[#121212]'
+              'bg-[var(--color-warning)] text-[var(--color-text-primary)]'
             }`}
             onClick={() => removeToast(toast.id)}
           >
             <div className="shrink-0">
               {toast.type === 'success' && <CheckCircleIcon size={20} className="text-[var(--color-success)]" />}
               {toast.type === 'error' && <WarningIcon size={20} className="text-white" />}
-              {toast.type === 'warning' && <WarningIcon size={20} className="text-[#121212]" />}
+              {toast.type === 'warning' && <WarningIcon size={20} className="text-[var(--color-text-primary)]" />}
             </div>
             <p className="text-[14px] font-[600] flex-1 leading-snug">{toast.message}</p>
           </motion.div>

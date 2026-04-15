@@ -4,12 +4,13 @@ import { Alert } from '@/src/types/alerts';
 
 import { useToastStore } from '@/src/components/ui/Toast';
 
-export function useAlerts() {
+export function useAlerts(enabled: boolean = true) {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
 
   const alertsQuery = useQuery({
     queryKey: ['alerts'],
+    enabled,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('alerts')
