@@ -29,7 +29,7 @@ export function AppShell({ children }: AppShellProps) {
   // Hide bottom nav on logger page for full focus
   const isLoggerPage = location.pathname === '/logger';
 
-  const { alerts } = useAlerts({ enabled: !isAuthPage });
+  const { alerts } = useAlerts(!isAuthPage);
 
   const unreadAlerts = alerts?.filter(a => !a.read).length || 0;
 
