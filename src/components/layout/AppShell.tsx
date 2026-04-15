@@ -22,6 +22,7 @@ export function AppShell({ children }: AppShellProps) {
   const { user, setUser } = useAppStore();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isScrolled, setIsScrolled] = useState(false);
   
   // Don't show shell on auth pages
   const isAuthPage = location.pathname.startsWith('/auth');
@@ -32,15 +33,13 @@ export function AppShell({ children }: AppShellProps) {
 
   const unreadAlerts = alerts?.filter(a => !a.read).length || 0;
 
-  if (isAuthPage) {
-    return <div className="app-container">{children}</div>;
-  }
-
-  const [isScrolled, setIsScrolled] = useState(false);
-
   const handleScroll = (e: React.UIEvent<HTMLElement, UIEvent>) => {
     setIsScrolled(e.currentTarget.scrollTop > 10);
   };
+
+  if (isAuthPage) {
+    return <div className="app-container">{children}</div>;
+  }
 
   return (
     <div className="app-container">
