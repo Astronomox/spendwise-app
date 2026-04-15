@@ -12,6 +12,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useTransactions } from '@/src/hooks/useTransactions';
 import { useAppStore } from '@/src/lib/store';
+import { formatNaira } from '@/src/lib/utils';
 
 export default function LoggerPage() {
   const navigate = useNavigate();
@@ -73,7 +74,12 @@ export default function LoggerPage() {
   const CategoryIcon = selectedCategory?.Icon;
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex flex-col h-full bg-white"
+    >
       {/* Header */}
       <header className="px-6 h-[56px] flex items-center justify-between border-b border-gray-100 shrink-0">
         <button 
@@ -177,12 +183,12 @@ export default function LoggerPage() {
             <div className="mt-6 space-y-2">
               <h2 className="text-[32px] font-black">Logged!</h2>
               <p className="text-[18px] opacity-90 font-medium">
-                ₦{amount} added to {selectedCategory?.label}
+                {formatNaira(Number(amount))} added to {selectedCategory?.label}
               </p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

@@ -12,15 +12,15 @@ import {
 } from '@/src/components/ui/icons';
 
 export const CATEGORIES = [
-  { id: 'food', label: 'Food', Icon: FoodCategoryIcon, color: '#F59E0B' },
-  { id: 'transport', label: 'Transport', Icon: TransportCategoryIcon, color: '#3B82F6' },
-  { id: 'airtime', label: 'Airtime', Icon: AirtimeCategoryIcon, color: '#8B5CF6' },
-  { id: 'shopping', label: 'Shopping', Icon: ShoppingCategoryIcon, color: '#EC4899' },
-  { id: 'utilities', label: 'Utilities', Icon: UtilitiesCategoryIcon, color: '#06B6D4' },
-  { id: 'health', label: 'Health', Icon: HealthCategoryIcon, color: '#10B981' },
-  { id: 'entertainment', label: 'Entertainment', Icon: EntertainmentCategoryIcon, color: '#F43F5E' },
-  { id: 'savings', label: 'Savings', Icon: SavingsCategoryIcon, color: '#00E5A0' },
-  { id: 'other', label: 'Other', Icon: OtherCategoryIcon, color: '#94A3B8' },
+  { id: 'food', label: 'Food', Icon: FoodCategoryIcon, color: 'var(--color-food, #F59E0B)' },
+  { id: 'transport', label: 'Transport', Icon: TransportCategoryIcon, color: 'var(--color-transport, #3B82F6)' },
+  { id: 'airtime', label: 'Airtime', Icon: AirtimeCategoryIcon, color: 'var(--color-airtime, #8B5CF6)' },
+  { id: 'shopping', label: 'Shopping', Icon: ShoppingCategoryIcon, color: 'var(--color-shopping, #EC4899)' },
+  { id: 'utilities', label: 'Utilities', Icon: UtilitiesCategoryIcon, color: 'var(--color-utilities, #06B6D4)' },
+  { id: 'health', label: 'Health', Icon: HealthCategoryIcon, color: 'var(--color-health, #10B981)' },
+  { id: 'entertainment', label: 'Entertainment', Icon: EntertainmentCategoryIcon, color: 'var(--color-entertainment, #F43F5E)' },
+  { id: 'savings', label: 'Savings', Icon: SavingsCategoryIcon, color: 'var(--color-savings, #00E5A0)' },
+  { id: 'other', label: 'Other', Icon: OtherCategoryIcon, color: 'var(--color-other, #94A3B8)' },
 ] as const;
 
 export type CategoryId = typeof CATEGORIES[number]['id'];

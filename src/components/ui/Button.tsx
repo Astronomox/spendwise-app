@@ -11,7 +11,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, disabled, children, ...props }, ref) => {
     const variants = {
-      primary: 'bg-accent text-white hover:brightness-110 active:scale-[0.97]',
+      primary: 'bg-accent text-white hover:brightness-110 active:scale-[0.97] hover:shadow-[0_0_20px_var(--color-accent-border)]',
       ghost: 'bg-bg-elevated text-text-primary border border-gray-200 hover:bg-gray-200 active:scale-[0.97]',
       danger: 'bg-danger/10 text-danger border border-danger/20 hover:bg-danger/20 active:scale-[0.97]',
       outline: 'bg-white text-text-primary border border-gray-200 hover:bg-gray-50 active:scale-[0.97]',
