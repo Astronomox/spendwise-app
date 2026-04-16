@@ -1,0 +1,13 @@
+node_modules/
+
+.env
+
+/generated/prisma
+
+dist
+
+build
+
+.prisma
+
+.DS_Store
