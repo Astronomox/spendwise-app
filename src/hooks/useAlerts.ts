@@ -4,7 +4,7 @@ import { Alert } from '@/src/types/alerts';
 
 import { useToastStore } from '@/src/components/ui/Toast';
 
-export function useAlerts({ enabled }: { enabled?: boolean } = { enabled: true }) {
+export function useAlerts(enabled: boolean = true) {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
 
