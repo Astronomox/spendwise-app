@@ -1,7 +1,7 @@
 import { getTotalSpending } from "./spendingService.js";
 import { getCategoryBreakdown } from "./categoryService.js";
 import { calculateDays } from "./analyticsUtils.js";
-import { safeNumber, toNaira } from "./analyticsUtils.js";
+import { safeNumber, toNaira } from "../../utils/money.js";
 
 export const getSpendingAnalytics = async (userId, startDate, endDate) => {
     const [total, categories] = await Promise.all([

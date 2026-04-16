@@ -1,5 +1,5 @@
 import prisma from "../../config/prisma.js";
-import { safeNumber } from "./analyticsUtils.js";
+import { safeNumber } from "../../utils/money.js";
 
 export const getTotalSpending = async (userId, startDate, endDate) => {
     const result = await prisma.transaction.aggregate({

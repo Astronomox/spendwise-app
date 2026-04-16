@@ -1,5 +1,5 @@
 import prisma from "../../config/prisma.js";
-import { safeNumber, toNaira } from "./analyticsUtils.js";
+import { safeNumber, toNaira } from "../../utils/money.js";
 
 export const getBurnRate = async (userId, days = 30) => {
     const startDate = new Date();

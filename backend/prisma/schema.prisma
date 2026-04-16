@@ -22,22 +22,37 @@ model Category {
   isSystem     Boolean       @default(false)
   userId       String?
   transactions Transaction[]
+
+  keywords CategoryKeyword[]
+}
+
+model CategoryKeyword {
+  id          String   @id @default(uuid())
+  keyword     String
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  @@index([keyword])
 }
 
 model Transaction {
-  id              String          @id @default(uuid())
-  userId          String
-  categoryId      String?
-  amountKobo      Int
-  type            TransactionType
-  description     String?
-  transactionDate DateTime        @default(now())
-  createdAt       DateTime        @default(now())
+  id               String   @id @default(uuid())
+  userId           String
+  categoryId       String?
+  amountKobo       Int
+  type             TransactionType
+  description      String?
+  transactionDate  DateTime @default(now())
+  createdAt        DateTime @default(now())
 
-  category        Category?       @relation(fields: [categoryId], references: [id])
-  user            User            @relation(fields: [userId], references: [id])
+  user             User      @relation(fields: [userId], references: [id])
+  category         Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([userId, transactionDate])
+  @@index([userId, categoryId])
+  @@index([userId, type])
 }
-
 enum TransactionType {
   INCOME
   EXPENSE

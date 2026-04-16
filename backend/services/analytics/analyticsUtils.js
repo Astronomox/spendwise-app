@@ -1,6 +1,4 @@
-export const toNaira = (kobo = 0) => kobo / 100;
-
-export const safeNumber = (value) => value || 0;
+import { toNaira, safeNumber } from "../../utils/money.js";
 
 export const calculateDays = (startDate, endDate) => {
     const diffTime = Math.abs(endDate - startDate);

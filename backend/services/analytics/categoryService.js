@@ -1,5 +1,5 @@
 import prisma from "../../config/prisma.js";
-import { toNaira } from "./analyticsUtils.js";
+import { toNaira } from "../../utils/money.js";
 
 export const getCategoryBreakdown = async (userId, startDate, endDate) => {
     const data = await prisma.transaction.groupBy({

@@ -2,6 +2,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import { requestLogger } from "./middleware/requestLogger.js";
 
 dotenv.config();
 
@@ -15,7 +16,7 @@ import authRoutes from "./routes/authRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 
-
+app.use(requestLogger); // LOG ALL REQUESTS WITH TIMING AND SLOW REQUEST HIGHLIGHTING
 app.use("/api/auth", authRoutes); // AUTH ROUTES
 app.use("/api/transactions", transactionRoutes); // TRANSACTION ROUTES
 app.use("/api/analytics", analyticsRoutes); // ANALYTICS ROUTES
