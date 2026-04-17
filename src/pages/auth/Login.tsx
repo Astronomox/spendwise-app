@@ -5,8 +5,8 @@ import { Input } from '@/src/components/ui/Input';
 import { useAppStore } from '@/src/lib/store';
 
 import { supabase } from '@/src/lib/supabase';
-import { motion } from 'motion/react';
 import { GoogleIcon } from '@/src/components/ui/icons';
+import { AuthLayout } from '@/src/components/layout/AuthLayout';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -101,24 +101,16 @@ export default function LoginPage() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full bg-[var(--color-text-primary)] overflow-hidden"
-    >
-      {/* Top Section */}
-      <div className="relative pt-[60px] pb-[40px] px-[24px] shrink-0 text-center">
-        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] bg-[var(--color-accent)] rounded-full blur-[100px] opacity-20 pointer-events-none" />
-        <h1 className="text-[32px] font-black text-white font-display mb-[8px] relative z-10">SpendWise.</h1>
-        <p className="text-[var(--color-text-muted)] text-[15px] relative z-10">Welcome back. Let's track your wealth.</p>
-      </div>
+    <AuthLayout>
+      <div className="space-y-[32px]">
+        <h2 className="text-[28px] font-bold font-display text-[var(--color-text-inverse-primary)] mb-[32px]">
+          Log in to SpendWise
+        </h2>
 
-      {/* Form Section */}
-      <div className="flex-1 bg-white rounded-t-[24px] p-[24px] pt-[32px] space-y-[24px] shadow-[var(--shadow-shadow-lg)] z-10 overflow-y-auto">
-        <form onSubmit={handleSubmit} className="space-y-[20px]">
-          <div className="space-y-[16px]">
+        <form onSubmit={handleSubmit} className="space-y-[24px]">
+          <div className="space-y-[24px]">
             <Input
+              inverse
               label="Email Address"
               type="email"
               placeholder="adeola@spendwise.ng"
@@ -130,6 +122,7 @@ export default function LoginPage() {
               }}
             />
             <Input
+              inverse
               label="Password"
               type="password"
               placeholder="••••••••"
@@ -148,36 +141,36 @@ export default function LoginPage() {
             </div>
           )}
 
-          <Button type="submit" className="w-full mt-[8px]" isLoading={isLoading}>
+          <Button type="submit" className="w-full mt-[32px]" isLoading={isLoading}>
             Log In
           </Button>
         </form>
 
-        <div className="relative py-[8px]">
+        <div className="relative py-[24px]">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[var(--color-border)]"></div>
+            <div className="w-full border-t border-[var(--color-border-tertiary)]"></div>
           </div>
-          <div className="relative flex justify-center text-[11px] uppercase tracking-widest">
-            <span className="bg-white px-[8px] text-[var(--color-text-muted)] font-bold">Or continue with</span>
+          <div className="relative flex justify-center text-[12px] uppercase tracking-widest font-[500]">
+            <span className="bg-white px-[8px] text-[var(--color-text-inverse-secondary)]">OR CONTINUE WITH</span>
           </div>
         </div>
 
         <Button 
           variant="outline" 
-          className="w-full flex items-center justify-center gap-[12px]"
+          className="w-full flex items-center justify-center gap-[12px] bg-white border-[var(--color-border-tertiary)] text-[var(--color-text-inverse-primary)] hover:bg-gray-50"
           onClick={handleGoogleLogin}
         >
           <GoogleIcon size={20} />
-          <span className="font-bold">Google</span>
+          <span className="font-bold">Continue with Google</span>
         </Button>
 
-        <p className="text-center text-[14px] text-[var(--color-text-secondary)] pt-[8px]">
+        <p className="text-center text-[14px] text-[var(--color-text-inverse-secondary)] mt-[24px]">
           Don't have an account?{' '}
           <Link to="/auth/signup" className="text-[var(--color-accent)] font-bold hover:underline">
             Sign up free
           </Link>
         </p>
       </div>
-    </motion.div>
+    </AuthLayout>
   );
 }

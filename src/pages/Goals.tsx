@@ -45,6 +45,9 @@ export default function GoalsPage() {
     }
   };
 
+  const totalSaved = goals.reduce((sum, g) => sum + g.current_amount, 0);
+  const totalTarget = goals.reduce((sum, g) => sum + g.target_amount, 0);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -52,11 +55,24 @@ export default function GoalsPage() {
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="flex flex-col h-full bg-[var(--color-bg-secondary)] relative pb-[72px]"
     >
-      <div className="px-[24px] pt-[32px] pb-[16px] flex justify-between items-center bg-[var(--color-bg-secondary)] sticky top-0 z-10 border-b border-[var(--color-border)] shadow-[var(--shadow-shadow-sm)]">
+      <div className="px-[16px] pt-[32px] pb-[16px] bg-[var(--color-bg-secondary)] sticky top-0 z-20 border-b border-[var(--color-border)] shadow-[var(--shadow-shadow-sm)] space-y-[16px]">
         <div>
           <h1 className="text-[28px] font-bold font-display tracking-tight leading-tight">Savings Goals</h1>
           <p className="text-[var(--color-text-secondary)] text-[15px] font-[500]">What are we building towards?</p>
         </div>
+
+        {goals.length > 0 && (
+          <div className="flex justify-between items-center bg-[var(--color-bg-elevated)] rounded-[12px] p-[16px] border border-[var(--color-border)]">
+            <div>
+              <p className="text-[12px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Total Saved</p>
+              <p className="text-[20px] font-bold font-display text-[var(--color-accent)] naira leading-none mt-[4px]">{totalSaved.toLocaleString()}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[12px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Target</p>
+              <p className="text-[16px] font-bold font-display text-[var(--color-text-primary)] naira leading-none mt-[4px] opacity-80">{totalTarget.toLocaleString()}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {isLoading ? (

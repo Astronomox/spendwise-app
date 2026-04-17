@@ -74,7 +74,7 @@ export default function HistoryPage() {
       className="flex flex-col h-full bg-[var(--color-bg-secondary)]"
     >
       {/* Search & Filter Header */}
-      <div className="px-[24px] py-[16px] space-y-[16px] border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-bg-secondary)] z-10 shadow-[var(--shadow-shadow-sm)]">
+      <div className="px-[16px] py-[16px] space-y-[16px] border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-bg-secondary)] z-20 shadow-[var(--shadow-shadow-sm)]">
         <div className="relative">
           <SearchIcon className="absolute left-[12px] top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" size={20} />
           <input 
@@ -92,8 +92,8 @@ export default function HistoryPage() {
               key={f}
               onClick={() => setTimeFilter(f)}
               className={cn(
-                "px-[16px] py-[8px] rounded-[9999px] text-[13px] font-bold capitalize transition-all whitespace-nowrap",
-                timeFilter === f ? "bg-[var(--color-accent)] text-white shadow-[var(--shadow-shadow-sm)]" : "bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-border)]"
+                "px-[16px] py-[8px] rounded-[9999px] text-[13px] font-[600] capitalize transition-all whitespace-nowrap border-[1px]",
+                timeFilter === f ? "bg-[var(--color-accent)] text-[#121212] border-[var(--color-accent)] shadow-[var(--shadow-shadow-sm)]" : "bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)]"
               )}
             >
               {f}
@@ -146,7 +146,7 @@ export default function HistoryPage() {
           <p className="text-[var(--color-danger)] font-bold">Failed to load transactions.</p>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-[72px]">
           <TransactionFeed 
             transactions={filteredTransactions} 
             onEdit={handleEdit}

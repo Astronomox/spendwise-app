@@ -7,20 +7,27 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   isCurrency?: boolean;
   onClear?: () => void;
+  inverse?: boolean;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, disabled, isCurrency, value, onClear, ...props }, ref) => {
+  ({ className, label, error, disabled, isCurrency, value, onClear, inverse = false, ...props }, ref) => {
     return (
       <div className="w-full space-y-[8px] relative">
         {label && (
-          <label className="text-[13px] font-[500] text-[var(--color-text-secondary)] block">
+          <label className={cn(
+            "text-[13px] font-[500] block",
+            inverse ? "text-[var(--color-text-inverse-secondary)]" : "text-[var(--color-text-secondary)]"
+          )}>
             {label}
           </label>
         )}
         <div className="relative w-full">
           {isCurrency && (
-            <div className="absolute left-[16px] top-1/2 -translate-y-1/2 font-[600] text-[var(--color-text-primary)] pointer-events-none">
+            <div className={cn(
+              "absolute left-[16px] top-1/2 -translate-y-1/2 font-[600] pointer-events-none",
+              inverse ? "text-[var(--color-text-inverse-primary)]" : "text-[var(--color-text-primary)]"
+            )}>
               ₦
             </div>
           )}
@@ -29,7 +36,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             value={value}
             className={cn(
-              'flex min-h-[48px] w-full rounded-[12px] border-[1px] border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-[12px] text-[15px] text-[var(--color-text-primary)] transition-all duration-200 placeholder-[var(--color-text-muted)] focus:border-[var(--color-accent)] focus:shadow-[var(--shadow-shadow-accent)] focus:outline-none disabled:opacity-50 disabled:bg-[var(--color-bg-elevated)]',
+              'flex min-h-[48px] w-full rounded-[12px] border-[1px] py-[12px] text-[15px] transition-all duration-200 focus:border-[var(--color-accent)] focus:shadow-[0_0_0_3px_var(--color-accent-glow)] focus:outline-none disabled:opacity-50',
+              inverse
+                ? 'bg-white border-[var(--color-border-tertiary)] text-[var(--color-text-inverse-primary)] placeholder-[#9CA3AF] disabled:bg-gray-50'
+                : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] disabled:bg-[var(--color-bg-elevated)]',
               isCurrency ? 'pl-[40px]' : 'px-[16px]',
               error && 'border-[var(--color-danger)] focus:border-[var(--color-danger)] focus:shadow-[0_0_0_3px_rgba(225,29,72,0.2)]',
               className

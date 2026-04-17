@@ -53,15 +53,15 @@ export function TransactionFeed({ transactions, onEdit, onDelete }: TransactionF
   }
 
   return (
-    <div className="divide-y divide-[var(--color-border)]">
+    <div className="space-y-[16px] p-[16px]">
       {sortedLabels.map((label) => (
-        <div key={label} className="space-y-[4px]">
-          <div className="bg-[var(--color-bg-elevated)] px-[24px] py-[8px]">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
+        <div key={label} className="space-y-[8px]">
+          <div className="sticky top-[138px] z-10 bg-[var(--color-bg-secondary)] py-[4px]">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
               {label}
             </span>
           </div>
-          <div className="bg-[var(--color-bg-secondary)]">
+          <div className="bg-[var(--color-bg-card)] border-[1px] border-[var(--color-border)] rounded-[16px] overflow-hidden">
             {groups[label].map((t) => (
               <div key={t.id}>
                 <TransactionItem 

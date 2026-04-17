@@ -29,7 +29,7 @@ export function AppShell({ children }: AppShellProps) {
   // Hide bottom nav on logger page for full focus
   const isLoggerPage = location.pathname === '/logger';
 
-  const { alerts } = useAlerts(!isAuthPage);
+  const { alerts } = useAlerts({ enabled: !isAuthPage });
 
   const unreadAlerts = alerts?.filter(a => !a.read).length || 0;
 
@@ -38,7 +38,7 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   if (isAuthPage) {
-    return <div className="app-container">{children}</div>;
+    return <div className="auth-container">{children}</div>;
   }
 
   return (
@@ -73,7 +73,7 @@ export function AppShell({ children }: AppShellProps) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto relative pb-[72px]" onScroll={handleScroll}>
+      <main className="flex-1 overflow-y-auto relative pb-[calc(72px+env(safe-area-inset-bottom))]" onScroll={handleScroll}>
         {children}
       </main>
 
@@ -81,7 +81,7 @@ export function AppShell({ children }: AppShellProps) {
       {!isLoggerPage && (
         <nav
           className={cn(
-            "absolute bottom-0 w-full h-[72px] bg-[var(--color-bg-secondary)] flex justify-around items-center pb-[16px] z-40 transition-all duration-200",
+            "fixed bottom-0 left-0 right-0 h-[calc(72px+env(safe-area-inset-bottom))] bg-[var(--color-bg-secondary)] flex justify-around items-center pb-[calc(16px+env(safe-area-inset-bottom))] z-50 transition-all duration-200",
             isScrolled ? "border-t-[1px] border-[var(--color-border)] shadow-[var(--shadow-shadow-lg)]" : "border-t-transparent"
           )}
         >
@@ -91,9 +91,9 @@ export function AppShell({ children }: AppShellProps) {
           {/* Central Plus Button */}
           <button 
             onClick={() => navigate('/logger')}
-            className="relative -mt-[16px] active:scale-[0.97] transition-transform flex items-center justify-center"
+            className="relative -mt-[20px] active:scale-[0.97] transition-transform flex items-center justify-center"
           >
-            <div className="w-[52px] h-[52px] bg-[var(--color-accent)] rounded-full flex items-center justify-center text-white shadow-[var(--shadow-shadow-accent)] ring-[4px] ring-[var(--color-bg-secondary)]">
+            <div className="w-[52px] h-[52px] bg-[var(--color-accent)] rounded-full flex items-center justify-center text-[var(--color-text-primary)] shadow-[var(--shadow-shadow-accent)] ring-[4px] ring-[var(--color-bg-secondary)]">
               <PlusCircleIcon size={24} />
             </div>
           </button>

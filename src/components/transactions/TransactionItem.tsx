@@ -62,7 +62,7 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
         onDragEnd={handleDragEnd}
         style={{ x }}
         className={cn(
-          "relative bg-[var(--color-bg-secondary)] flex items-center gap-[12px] h-[64px] pl-[16px] pr-[24px] ml-[8px] hover:bg-[var(--color-bg-elevated)] transition-colors cursor-grab active:cursor-grabbing",
+          "relative bg-[var(--color-bg-card)] flex items-center gap-[12px] h-[64px] pl-[16px] pr-[16px] hover:bg-[var(--color-bg-elevated)] transition-colors cursor-grab active:cursor-grabbing",
           transaction.status === 'pending' ? "border-l-[4px] border-[var(--color-warning)] pl-[12px]" : ""
         )}
       >
@@ -77,22 +77,22 @@ export function TransactionItem({ transaction, onEdit, onDelete }: TransactionIt
         
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <div className="flex items-center gap-[8px]">
-            <p className="text-[15px] font-[500] truncate text-[var(--color-text-primary)]">
+            <p className="text-[15px] font-bold font-display truncate text-[var(--color-text-primary)]">
               {transaction.merchant || transaction.description}
             </p>
             {transaction.source === 'sms' && (
-              <span className="text-[9px] px-[6px] py-[2px] bg-[var(--color-slate)] text-white rounded-[4px] font-bold uppercase tracking-wider">SMS</span>
+              <span className="text-[9px] px-[6px] py-[2px] bg-[var(--color-bg-elevated)] border-[1px] border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-[4px] font-bold uppercase tracking-wider">SMS</span>
             )}
           </div>
-          <p className="text-[12px] text-[var(--color-text-secondary)] mt-[2px]">
+          <p className="text-[12px] font-[500] text-[var(--color-text-secondary)] mt-[2px]">
             {new Date(transaction.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
         </div>
 
         <div className="text-right shrink-0 flex flex-col justify-center">
           <p className={cn(
-            "text-[15px] font-bold",
-            isCredit ? "text-[var(--color-accent)]" : "text-[var(--color-text-primary)]"
+            "text-[15px] font-bold font-display",
+            isCredit ? "text-[var(--color-success)]" : "text-[var(--color-text-primary)]"
           )}>
             {isCredit ? '+' : '-'} {formatNaira(transaction.amount).replace('NGN', '').trim()}
           </p>

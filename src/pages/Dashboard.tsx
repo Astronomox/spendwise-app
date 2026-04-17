@@ -18,6 +18,7 @@ import {
 } from '@/src/components/ui/icons';
 import { useState } from 'react';
 import { motion } from 'motion/react';
+import { AnimatedNumber } from '@/src/components/ui/AnimatedNumber';
 
 export default function Dashboard() {
   const { user } = useAppStore();
@@ -51,7 +52,11 @@ export default function Dashboard() {
   }
 
   const budgetProgress = data.monthly_budget > 0 ? (data.total_spent / data.monthly_budget) * 100 : 0;
-  const recentTransactions = transactions.slice(0, 3);
+  const recentTransactions = transactions.slice(0, 5);
+
+  const spentToday = transactions
+    .filter(t => new Date(t.date).toDateString() === new Date().toDateString() && t.direction === 'debit')
+    .reduce((sum, t) => sum + t.amount, 0);
 
   const getProgressColor = (progress: number) => {
     if (progress >= 90) return 'bg-[var(--color-danger)]';
@@ -67,43 +72,46 @@ export default function Dashboard() {
       className="space-y-[32px] pb-[40px] pt-[8px]"
     >
       {/* Hero Section */}
-      <section className="px-[24px]">
-        <div className="relative rounded-[24px] bg-[var(--color-text-primary)] p-[24px] text-white shadow-[var(--shadow-shadow-lg)] overflow-hidden">
-          {/* Radial Glow */}
-          <div className="absolute top-[-30%] right-[-20%] w-[200px] h-[200px] bg-[var(--color-accent)] rounded-full blur-[80px] opacity-40 pointer-events-none" />
-
+      <section className="px-[16px]">
+        <div className="relative rounded-[24px] hero-gradient radial-glow p-[24px] text-white shadow-[var(--shadow-shadow-lg)] overflow-hidden w-full">
           <div className="relative z-10 flex justify-between items-start mb-[32px]">
             <div>
-              <p className="text-[14px] text-[var(--color-text-muted)] font-[500] mb-[4px]">
+              <p className="text-[14px] text-[var(--color-text-secondary)] font-[500] mb-[4px]">
                 Good evening, {user?.name?.split(' ')[0] || 'Adeola'}
               </p>
-              <h2 className="text-[14px] font-bold uppercase tracking-widest opacity-80">Spent this month</h2>
+              <h2 className="text-[12px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Spent this month</h2>
             </div>
             {data && (
               <button
                 onClick={() => setShowSummary(true)}
-                className="p-[8px] bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
+                className="p-[8px] bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-full text-white hover:bg-[rgba(255,255,255,0.1)] transition-colors"
                 title="Share Summary"
               >
-                <ShareIcon size={20} />
+                <ShareIcon size={18} />
               </button>
             )}
           </div>
           
           <div className="relative z-10 space-y-[24px]">
-            <p className="text-[40px] font-black font-display tracking-tight naira leading-none">{data.total_spent.toLocaleString()}</p>
+            <p className={cn(
+              "text-[48px] font-bold font-display tracking-tight leading-none",
+              budgetProgress >= 100 ? "text-[var(--color-danger)]" : "text-white naira"
+            )}>
+              {budgetProgress >= 100 && <span className="text-[32px] align-top mr-[4px]">₦</span>}
+              <AnimatedNumber value={data.total_spent} />
+            </p>
 
             <div className="space-y-[12px]">
-              <div className="h-[8px] bg-white/10 rounded-full overflow-hidden">
+              <div className="h-[6px] bg-[rgba(255,255,255,0.1)] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(100, budgetProgress)}%` }}
-                  transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+                  transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
                   className={`h-full rounded-full ${getProgressColor(budgetProgress)}`}
                 />
               </div>
-              <div className="flex justify-between items-center text-[13px] font-[600] opacity-80">
-                <span>{Math.round(budgetProgress)}% of budget used</span>
+              <div className="flex justify-between items-center text-[13px] font-[500] text-[var(--color-text-secondary)]">
+                <span><AnimatedNumber value={budgetProgress} format="percentage" />% of budget used</span>
                 <span>{data.days_left_in_month} days left</span>
               </div>
             </div>
@@ -111,64 +119,93 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* Daily Safe Spend */}
-      <section className="px-[24px]">
-        <Card className="border-[var(--color-accent-border)] bg-[rgba(0,135,81,0.05)] flex justify-between items-center">
-          <div className="space-y-[4px]">
-            <p className="text-[13px] font-[500] text-[var(--color-text-secondary)]">Daily Safe Spend</p>
-            <p className="text-[28px] font-black font-display text-[var(--color-text-primary)] naira leading-none">{data.daily_safe_spend.toLocaleString()}</p>
-          </div>
-          <div className="w-[48px] h-[48px] rounded-full bg-[var(--color-accent)]/10 flex items-center justify-center text-[var(--color-accent)]">
-            <TrendingUpIcon size={24} />
-          </div>
+      {/* 2-Column Quick Stats Row */}
+      <section className="px-[16px] grid grid-cols-2 gap-[12px]">
+        <Card className="flex flex-col p-[16px] border-[var(--color-border)] shadow-none">
+          <p className="text-[12px] font-[500] text-[var(--color-text-secondary)] mb-[8px]">Spent Today</p>
+          <p className="text-[20px] font-bold font-display text-[var(--color-text-primary)] naira leading-none">
+            <AnimatedNumber value={spentToday} />
+          </p>
+        </Card>
+        <Card className="flex flex-col p-[16px] border-[var(--color-accent-border)] bg-[rgba(0,135,81,0.02)] shadow-none">
+          <p className="text-[12px] font-[500] text-[var(--color-text-secondary)] mb-[8px]">Daily Safe Spend</p>
+          <p className="text-[20px] font-bold font-display text-[var(--color-accent)] naira leading-none">
+            <AnimatedNumber value={data.daily_safe_spend} />
+          </p>
         </Card>
       </section>
 
       {/* Weekly Chart */}
-      <section className="px-[24px]">
-        <Card className="space-y-[24px]">
-          <div className="flex justify-between items-center">
-            <h3 className="text-[16px] font-black font-display">Weekly Spend</h3>
-            <span className="text-[13px] font-[600] text-[var(--color-text-secondary)]">Last 7 Days</span>
+      <section className="px-[16px]">
+        <Card className="space-y-[24px] p-[20px] shadow-none">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-[18px] font-bold font-display text-[var(--color-text-primary)]">This Week</h3>
+            </div>
+            <div className="text-right">
+              <span className="text-[16px] font-bold font-display text-[var(--color-text-primary)] naira">
+                {data.weekly_spend.reduce((a: number, b: number) => a + b, 0).toLocaleString()}
+              </span>
+            </div>
           </div>
-          <WeeklyBarChart data={data.weekly_spend} />
+          <div className="-ml-[16px]">
+            <WeeklyBarChart data={data.weekly_spend} />
+          </div>
         </Card>
       </section>
 
       {/* Top Categories */}
-      <section className="space-y-[16px]">
-        <div className="px-[24px]">
-          <h3 className="text-[16px] font-black font-display">Top Categories</h3>
+      <section className="space-y-[12px]">
+        <div className="px-[16px]">
+          <h3 className="text-[18px] font-bold font-display text-[var(--color-text-primary)]">Top Categories</h3>
         </div>
         <TopCategories spendByCategory={data.spend_by_category} />
       </section>
 
       {/* Recent Transactions */}
-      <section className="space-y-[16px]">
-        <div className="px-[24px] flex justify-between items-center">
-          <h3 className="text-[16px] font-black font-display">Recent Transactions</h3>
+      <section className="space-y-[12px]">
+        <div className="px-[16px] flex justify-between items-center">
+          <h3 className="text-[18px] font-bold font-display text-[var(--color-text-primary)]">Recent</h3>
           <button 
             onClick={() => navigate('/history')}
-            className="text-[14px] text-[var(--color-accent)] font-bold hover:underline"
+            className="text-[13px] text-[var(--color-accent)] font-bold hover:underline"
           >
-            View all
+            See all
           </button>
         </div>
-        <div className="bg-[var(--color-bg-card)] border-y-[1px] border-[var(--color-border)]">
-          {recentTransactions.map((t, index) => (
-            <motion.div
-              key={t.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <TransactionItem 
-                transaction={t} 
-                onEdit={(id) => navigate(`/history?edit=${id}`)}
-              />
-            </motion.div>
-          ))}
+        <div className="bg-[var(--color-bg-secondary)] px-[16px]">
+          <div className="border-[1px] border-[var(--color-border)] rounded-[16px] overflow-hidden bg-[var(--color-bg-card)]">
+            {recentTransactions.map((t, index) => (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <TransactionItem
+                  transaction={t}
+                  onEdit={(id) => navigate(`/history?edit=${id}`)}
+                />
+              </motion.div>
+            ))}
+          </div>
         </div>
+      </section>
+
+      {/* Savings Snapshot */}
+      <section className="space-y-[12px] px-[16px] pb-[24px]">
+        <div className="flex justify-between items-center">
+          <h3 className="text-[18px] font-bold font-display text-[var(--color-text-primary)]">Savings</h3>
+          <button
+            onClick={() => navigate('/goals')}
+            className="text-[13px] text-[var(--color-accent)] font-bold hover:underline"
+          >
+            Manage
+          </button>
+        </div>
+        <Card className="p-[16px] shadow-none">
+          <p className="text-[14px] text-[var(--color-text-secondary)] font-[500]">No active savings goals found.</p>
+        </Card>
       </section>
 
       {showSummary && data && (

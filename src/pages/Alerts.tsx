@@ -23,23 +23,44 @@ const getAlertStyles = (type: AlertType) => {
 export default function AlertsPage() {
   const { alerts, isLoading, markRead } = useAlerts();
 
+  const unreadCount = alerts.filter(a => !a.read).length;
+
+  const sortedAlerts = [...alerts].sort((a, b) => {
+    const order: Record<AlertType, number> = {
+      budget_warning: 1,
+      high_spend: 2,
+      streak: 3,
+      goal_reached: 4
+    };
+    return order[a.type] - order[b.type];
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full bg-[var(--color-bg-secondary)]"
+      className="flex flex-col h-full bg-[var(--color-bg-secondary)] pb-[72px]"
     >
-      <div className="px-[24px] pt-[32px] pb-[16px] border-b border-[var(--color-border)] shrink-0 shadow-[var(--shadow-shadow-sm)] z-10 bg-[var(--color-bg-secondary)]">
-        <h1 className="text-[28px] font-bold font-display tracking-tight leading-tight">Alerts</h1>
-        <p className="text-[var(--color-text-secondary)] text-[15px] font-[500]">Stay on top of your finances.</p>
+      <div className="px-[16px] pt-[32px] pb-[16px] border-b border-[var(--color-border)] shrink-0 shadow-[var(--shadow-shadow-sm)] z-20 bg-[var(--color-bg-secondary)] flex justify-between items-center sticky top-0">
+        <div>
+          <div className="flex items-center gap-[8px]">
+            <h1 className="text-[28px] font-bold font-display tracking-tight leading-tight">Alerts</h1>
+            {unreadCount > 0 && (
+              <span className="bg-[var(--color-danger)] text-white text-[11px] font-bold px-[8px] py-[2px] rounded-full flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount} New
+              </span>
+            )}
+          </div>
+          <p className="text-[var(--color-text-secondary)] text-[15px] font-[500]">Stay on top of your finances.</p>
+        </div>
       </div>
 
       {isLoading ? (
         <div className="flex-1 flex flex-col items-center justify-center space-y-[16px]">
           <RefreshIcon className="animate-spin text-[var(--color-accent)]" size={32} />
         </div>
-      ) : alerts.length === 0 ? (
+      ) : sortedAlerts.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-[24px] text-center space-y-[24px]">
           <div className="w-[80px] h-[80px] bg-[var(--color-bg-elevated)] rounded-full flex items-center justify-center text-[var(--color-text-muted)] border border-[var(--color-border)]">
             <AlertsIcon size={40} />
@@ -50,8 +71,8 @@ export default function AlertsPage() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-[24px] space-y-[16px] pb-[96px]">
-          {alerts.map((alert: Alert) => {
+        <div className="flex-1 overflow-y-auto p-[16px] space-y-[12px]">
+          {sortedAlerts.map((alert: Alert) => {
             const styles = getAlertStyles(alert.type);
             return (
               <div

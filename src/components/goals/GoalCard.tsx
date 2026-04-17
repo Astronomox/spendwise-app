@@ -21,52 +21,75 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
   const daysRemaining = Math.max(0, Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 3600 * 24)));
   const dailySave = daysRemaining > 0 ? (goal.target_amount - goal.current_amount) / daysRemaining : 0;
 
+  const radius = 24;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percent / 100) * circumference;
+
   return (
-    <Card className="p-[20px] space-y-[16px] border-[var(--color-border)]">
-      <div className="flex justify-between items-start">
-        <div className="flex items-center gap-[12px]">
-          <div className="w-[48px] h-[48px] rounded-[16px] flex items-center justify-center text-[var(--color-text-primary)]" style={{ backgroundColor: `color-mix(in srgb, ${iconItem.color} 15%, transparent)` }}>
-            <Icon size={24} style={{ color: iconItem.color }} />
-          </div>
-          <div>
-            <h3 className="font-bold font-display text-[16px] text-[var(--color-text-primary)]">{goal.name}</h3>
-            <div className="inline-flex items-center px-[8px] py-[2px] mt-[4px] bg-[var(--color-bg-elevated)] rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] text-[11px] font-bold uppercase tracking-wider">
-              {daysRemaining} days left
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-[8px]">
-          <button onClick={onEdit} className="p-[8px] -mt-[4px] -mr-[4px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors rounded-full active:scale-95"><EditIcon size={20} /></button>
-          <button onClick={onDelete} className="p-[8px] -mt-[4px] -mr-[4px] text-[var(--color-text-secondary)] hover:text-[var(--color-danger)] transition-colors rounded-full active:scale-95"><TrashIcon size={20} /></button>
-        </div>
+    <Card className="p-[20px] border-[var(--color-border)] shadow-none flex gap-[16px] items-center relative overflow-hidden group transition-all duration-200">
+      {/* Delete Zone on Swipe/Hover (Simplifying for desktop/hover for now, real swipe would use Framer Motion drag) */}
+      <div className="absolute right-0 top-0 bottom-0 w-[80px] bg-[var(--color-danger)] flex items-center justify-center text-white opacity-0 translate-x-full group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+        <button onClick={onDelete} className="p-[16px] h-full w-full flex items-center justify-center">
+          <TrashIcon size={24} />
+        </button>
       </div>
 
-      <div className="space-y-[8px]">
-        <div className="flex justify-between items-end">
-          <span className="font-bold text-[20px] text-[var(--color-text-primary)] font-display tracking-tight leading-none">{formatNaira(goal.current_amount)}</span>
-          <span className="text-[var(--color-text-secondary)] text-[13px] font-[500]">of {formatNaira(goal.target_amount)}</span>
-        </div>
-        <div className="h-[8px] w-full bg-[var(--color-bg-elevated)] rounded-full overflow-hidden border border-[var(--color-border)]/50">
-          <div
-            className={`h-full rounded-full transition-all duration-1000 ease-out ${isComplete ? 'bg-[var(--color-success)]' : 'bg-[var(--color-accent)]'}`}
-            style={{ width: `${percent}%` }}
+      <div className="relative w-[64px] h-[64px] shrink-0 flex items-center justify-center">
+        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 64 64">
+          <circle
+            className="text-[var(--color-bg-elevated)]"
+            strokeWidth="4"
+            stroke="currentColor"
+            fill="transparent"
+            r={radius}
+            cx="32"
+            cy="32"
           />
+          <circle
+            className={isComplete ? "text-[var(--color-success)]" : "text-[var(--color-accent)]"}
+            strokeWidth="4"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            stroke="currentColor"
+            fill="transparent"
+            r={radius}
+            cx="32"
+            cy="32"
+            style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center flex-col">
+          <span className="text-[12px] font-bold font-display leading-none">{percent}%</span>
         </div>
       </div>
 
-      {!isComplete && dailySave > 0 && (
-        <div className="pt-[16px] border-t border-[var(--color-border)] flex justify-between items-center">
-          <span className="text-[13px] text-[var(--color-text-secondary)] font-[500]">Daily save needed</span>
-          <span className="text-[14px] font-bold text-[var(--color-accent)]">{formatNaira(dailySave)}</span>
+      <div className="flex-1 min-w-0 pr-[32px] cursor-pointer" onClick={onEdit}>
+        <div className="flex items-center gap-[8px] mb-[4px]">
+          <Icon size={16} className="text-[var(--color-text-secondary)]" style={{ color: iconItem.color }} />
+          <h3 className="font-bold font-display text-[16px] text-[var(--color-text-primary)] truncate">{goal.name}</h3>
         </div>
-      )}
-      {isComplete && (
-        <div className="pt-[16px] border-t border-[var(--color-border)] flex justify-center items-center">
-          <div className="flex items-center gap-[6px] px-[12px] py-[4px] bg-[rgba(16,185,129,0.1)] text-[var(--color-success)] rounded-full">
-            <span className="text-[13px] font-bold tracking-wide uppercase">Goal Reached!</span>
+        <p className="text-[14px] font-bold font-display text-[var(--color-text-primary)] naira leading-tight mb-[4px]">
+          {goal.current_amount.toLocaleString()} <span className="text-[12px] text-[var(--color-text-secondary)] font-[500] font-body">/ {goal.target_amount.toLocaleString()}</span>
+        </p>
+
+        {isComplete ? (
+          <div className="inline-flex items-center gap-[4px] px-[8px] py-[2px] bg-[rgba(16,185,129,0.1)] text-[var(--color-success)] rounded-full">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Goal Reached! 🎉</span>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="flex gap-[8px]">
+            <span className="inline-flex items-center px-[8px] py-[2px] bg-[var(--color-bg-elevated)] rounded-full text-[var(--color-text-secondary)] text-[11px] font-bold uppercase tracking-wider">
+              {daysRemaining}d left
+            </span>
+            {dailySave > 0 && (
+              <span className="inline-flex items-center px-[8px] py-[2px] bg-[rgba(0,135,81,0.05)] text-[var(--color-accent)] rounded-full text-[11px] font-bold uppercase tracking-wider">
+                ₦{Math.ceil(dailySave).toLocaleString()}/day
+              </span>
+            )}
+          </div>
+        )}
+      </div>
     </Card>
   );
 }

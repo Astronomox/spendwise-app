@@ -74,6 +74,9 @@ export default function LoggerPage() {
   const selectedCategory = CATEGORIES.find(c => c.id === categoryId);
   const CategoryIcon = selectedCategory?.Icon;
 
+  // Simple hardcoded recent categories for mockup logic
+  const recentCategories = [CATEGORIES[0], CATEGORIES[1], CATEGORIES[3]];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -82,7 +85,7 @@ export default function LoggerPage() {
       className="flex flex-col h-full bg-[var(--color-bg-secondary)]"
     >
       {/* Header */}
-      <header className="px-[24px] h-[56px] flex items-center justify-between border-b border-[var(--color-border)] shrink-0">
+      <header className="px-[16px] h-[56px] flex items-center justify-between border-b border-[var(--color-border)] shrink-0 bg-[var(--color-bg-secondary)] sticky top-0 z-10 shadow-[var(--shadow-shadow-sm)]">
         <button 
           onClick={() => step === 2 ? setStep(1) : navigate(-1)}
           className="p-[8px] -ml-[8px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
@@ -93,7 +96,7 @@ export default function LoggerPage() {
         <div className="w-[40px]" /> {/* Spacer */}
       </header>
 
-      <div className="flex-1 overflow-y-auto p-[24px]">
+      <div className="flex-1 overflow-y-auto p-[16px]">
         <AnimatePresence mode="wait">
           {step === 1 ? (
             <motion.div
@@ -101,13 +104,38 @@ export default function LoggerPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="space-y-[32px]"
+              className="space-y-[24px]"
             >
-              <div className="space-y-[8px]">
+              <div className="space-y-[8px] mb-[16px]">
                 <h2 className="text-[28px] font-bold font-display tracking-tight leading-tight">What did you spend on?</h2>
                 <p className="text-[var(--color-text-secondary)] text-[15px] font-[500]">Select a category to continue.</p>
               </div>
-              <CategoryPicker selectedId={categoryId} onSelect={handleCategorySelect} />
+
+              <div className="space-y-[12px]">
+                <p className="text-[13px] font-bold text-[var(--color-text-secondary)] uppercase tracking-widest">Recent</p>
+                <div className="flex gap-[12px] overflow-x-auto pb-[4px]">
+                  {recentCategories.map(cat => {
+                    const Icon = cat.Icon;
+                    return (
+                      <button
+                        key={`recent-${cat.id}`}
+                        onClick={() => handleCategorySelect(cat.id)}
+                        className="flex flex-col items-center gap-[8px] min-w-[88px] bg-[var(--color-bg-elevated)] p-[12px] rounded-[16px] border-[1px] border-[var(--color-border)] hover:bg-[var(--color-border)] transition-colors"
+                      >
+                        <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center" style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 15%, transparent)`, color: cat.color }}>
+                          <Icon size={16} />
+                        </div>
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">{cat.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-[12px]">
+                <p className="text-[13px] font-bold text-[var(--color-text-secondary)] uppercase tracking-widest">All Categories</p>
+                <CategoryPicker selectedId={categoryId} onSelect={handleCategorySelect} />
+              </div>
             </motion.div>
           ) : (
             <motion.div

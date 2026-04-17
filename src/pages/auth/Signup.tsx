@@ -5,8 +5,8 @@ import { Input } from '@/src/components/ui/Input';
 import { useAppStore } from '@/src/lib/store';
 
 import { supabase } from '@/src/lib/supabase';
-import { motion } from 'motion/react';
 import { GoogleIcon } from '@/src/components/ui/icons';
+import { AuthLayout } from '@/src/components/layout/AuthLayout';
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -116,53 +116,51 @@ export default function SignupPage() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full bg-[var(--color-text-primary)] overflow-hidden"
-    >
-      {/* Top Section */}
-      <div className="relative pt-[40px] pb-[32px] px-[24px] shrink-0 text-center">
-        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] bg-[var(--color-accent)] rounded-full blur-[100px] opacity-20 pointer-events-none" />
-        <h1 className="text-[32px] font-black text-white font-display mb-[8px] relative z-10">SpendWise.</h1>
-        <p className="text-[var(--color-text-muted)] text-[15px] relative z-10">Start building real wealth today.</p>
-      </div>
+    <AuthLayout>
+      <div className="space-y-[32px]">
+        <h2 className="text-[28px] font-bold font-display text-[var(--color-text-inverse-primary)] mb-[32px] leading-tight">
+          Create your SpendWise account
+        </h2>
 
-      {/* Form Section */}
-      <div className="flex-1 bg-white rounded-t-[24px] p-[24px] pt-[32px] space-y-[24px] shadow-[var(--shadow-shadow-lg)] z-10 overflow-y-auto">
-        <form onSubmit={handleSubmit} className="space-y-[16px]">
-          <Input
-            label="Full Name"
-            placeholder="Adeola Oriola"
-            value={formData.name}
-            error={errors.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
-          <Input
-            label="Email Address"
-            type="email"
-            placeholder="adeola@spendwise.ng"
-            value={formData.email}
-            error={errors.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          />
-          <Input
-            label="Password"
-            type="password"
-            placeholder="Min. 6 characters"
-            value={formData.password}
-            error={errors.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          />
-          <Input
-            label="Monthly Budget (NGN)"
-            type="number"
-            placeholder="e.g. 150000"
-            value={formData.budget}
-            error={errors.budget}
-            onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-          />
+        <form onSubmit={handleSubmit} className="space-y-[24px]">
+          <div className="space-y-[24px]">
+            <Input
+              inverse
+              label="Full Name"
+              placeholder="Adeola Oriola"
+              value={formData.name}
+              error={errors.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            />
+            <Input
+              inverse
+              label="Email Address"
+              type="email"
+              placeholder="adeola@spendwise.ng"
+              value={formData.email}
+              error={errors.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+            <Input
+              inverse
+              label="Password"
+              type="password"
+              placeholder="Min. 6 characters"
+              value={formData.password}
+              error={errors.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            />
+            <Input
+              inverse
+              label="Monthly Budget"
+              type="number"
+              placeholder="e.g. 150000"
+              value={formData.budget}
+              error={errors.budget}
+              isCurrency
+              onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+            />
+          </div>
 
           {generalError && (
             <div className="p-[12px] bg-[rgba(225,29,72,0.1)] border border-[rgba(225,29,72,0.2)] rounded-[8px] text-[var(--color-danger)] text-[13px] text-center animate-in fade-in zoom-in-95">
@@ -170,36 +168,36 @@ export default function SignupPage() {
             </div>
           )}
 
-          <Button type="submit" className="w-full mt-[8px]" isLoading={isLoading}>
-            Create Account
+          <Button type="submit" className="w-full mt-[32px]" isLoading={isLoading}>
+            Sign up
           </Button>
         </form>
 
-        <div className="relative py-[8px]">
+        <div className="relative py-[24px]">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[var(--color-border)]"></div>
+            <div className="w-full border-t border-[var(--color-border-tertiary)]"></div>
           </div>
-          <div className="relative flex justify-center text-[11px] uppercase tracking-widest">
-            <span className="bg-white px-[8px] text-[var(--color-text-muted)] font-bold">Or continue with</span>
+          <div className="relative flex justify-center text-[12px] uppercase tracking-widest font-[500]">
+            <span className="bg-white px-[8px] text-[var(--color-text-inverse-secondary)]">OR CONTINUE WITH</span>
           </div>
         </div>
 
         <Button 
           variant="outline" 
-          className="w-full flex items-center justify-center gap-[12px]"
+          className="w-full flex items-center justify-center gap-[12px] bg-white border-[var(--color-border-tertiary)] text-[var(--color-text-inverse-primary)] hover:bg-gray-50"
           onClick={handleGoogleLogin}
         >
           <GoogleIcon size={20} />
-          <span className="font-bold">Google</span>
+          <span className="font-bold">Continue with Google</span>
         </Button>
 
-        <p className="text-center text-[14px] text-[var(--color-text-secondary)] pt-[8px]">
+        <p className="text-center text-[14px] text-[var(--color-text-inverse-secondary)] mt-[24px]">
           Already have an account?{' '}
           <Link to="/auth/login" className="text-[var(--color-accent)] font-bold hover:underline">
             Log in
           </Link>
         </p>
       </div>
-    </motion.div>
+    </AuthLayout>
   );
 }
