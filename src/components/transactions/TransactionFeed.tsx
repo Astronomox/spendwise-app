@@ -40,28 +40,28 @@ export function TransactionFeed({ transactions, onEdit, onDelete }: TransactionF
 
   if (transactions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-        <div className="w-16 h-16 bg-bg-elevated rounded-full flex items-center justify-center text-text-muted">
+      <div className="flex flex-col items-center justify-center py-[80px] text-center space-y-[16px]">
+        <div className="w-[64px] h-[64px] bg-[var(--color-bg-elevated)] rounded-full flex items-center justify-center text-[var(--color-text-muted)]">
           <TrendingUpIcon size={32} />
         </div>
-        <div className="space-y-1">
-          <p className="font-bold text-text-primary">No transactions found</p>
-          <p className="text-[13px] text-text-secondary">Try adjusting your filters or log an expense.</p>
+        <div className="space-y-[4px]">
+          <p className="font-bold font-display text-[20px] text-[var(--color-text-primary)]">No transactions yet</p>
+          <p className="text-[15px] font-[500] text-[var(--color-text-secondary)]">Tap + to log your first expense.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="divide-y divide-gray-50">
+    <div className="space-y-[16px] p-[16px]">
       {sortedLabels.map((label) => (
-        <div key={label} className="space-y-1">
-          <div className="bg-bg-primary px-6 py-2">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-text-secondary">
+        <div key={label} className="space-y-[8px]">
+          <div className="sticky top-[138px] z-10 bg-[var(--color-bg-secondary)] py-[4px]">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
               {label}
             </span>
           </div>
-          <div className="bg-white">
+          <div className="bg-[var(--color-bg-card)] border-[1px] border-[var(--color-border)] rounded-[16px] overflow-hidden">
             {groups[label].map((t) => (
               <div key={t.id}>
                 <TransactionItem 

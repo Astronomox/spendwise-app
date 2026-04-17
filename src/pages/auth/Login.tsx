@@ -5,8 +5,8 @@ import { Input } from '@/src/components/ui/Input';
 import { useAppStore } from '@/src/lib/store';
 
 import { supabase } from '@/src/lib/supabase';
-
 import { GoogleIcon } from '@/src/components/ui/icons';
+import { AuthLayout } from '@/src/components/layout/AuthLayout';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -101,16 +101,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col h-full p-6 justify-center space-y-8">
-      <div className="space-y-2 text-center">
-        <h1 className="text-[32px] font-black text-accent">Welcome Back.</h1>
-        <p className="text-text-secondary">Log in to track your naira.</p>
-      </div>
+    <AuthLayout>
+      <div className="space-y-[32px]">
+        <h2 className="text-[28px] font-bold font-display text-[var(--color-text-inverse-primary)] mb-[32px]">
+          Log in to SpendWise
+        </h2>
 
-      <div className="space-y-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-[24px]">
+          <div className="space-y-[24px]">
             <Input
+              inverse
               label="Email Address"
               type="email"
               placeholder="adeola@spendwise.ng"
@@ -122,6 +122,7 @@ export default function LoginPage() {
               }}
             />
             <Input
+              inverse
               label="Password"
               type="password"
               placeholder="••••••••"
@@ -135,41 +136,41 @@ export default function LoginPage() {
           </div>
 
           {generalError && (
-            <div className="p-3 bg-danger/10 border border-danger/20 rounded-radius-md text-danger text-[13px] text-center animate-in fade-in zoom-in-95">
+            <div className="p-[12px] bg-[rgba(225,29,72,0.1)] border border-[rgba(225,29,72,0.2)] rounded-[8px] text-[var(--color-danger)] text-[13px] text-center animate-in fade-in zoom-in-95">
               {generalError}
             </div>
           )}
 
-          <Button type="submit" className="w-full" isLoading={isLoading}>
+          <Button type="submit" className="w-full mt-[32px]" isLoading={isLoading}>
             Log In
           </Button>
         </form>
 
-        <div className="relative py-2">
+        <div className="relative py-[24px]">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-100"></div>
+            <div className="w-full border-t border-[var(--color-border-tertiary)]"></div>
           </div>
-          <div className="relative flex justify-center text-[11px] uppercase tracking-widest">
-            <span className="bg-white px-2 text-text-muted font-bold">Or continue with</span>
+          <div className="relative flex justify-center text-[12px] uppercase tracking-widest font-[500]">
+            <span className="bg-white px-[8px] text-[var(--color-text-inverse-secondary)]">OR CONTINUE WITH</span>
           </div>
         </div>
 
         <Button 
           variant="outline" 
-          className="w-full flex items-center justify-center gap-3 h-12"
+          className="w-full flex items-center justify-center gap-[12px] bg-white border-[var(--color-border-tertiary)] text-[var(--color-text-inverse-primary)] hover:bg-gray-50"
           onClick={handleGoogleLogin}
         >
           <GoogleIcon size={20} />
-          <span className="font-bold">Google</span>
+          <span className="font-bold">Continue with Google</span>
         </Button>
-      </div>
 
-      <p className="text-center text-[14px] text-text-secondary">
-        Don't have an account?{' '}
-        <Link to="/auth/signup" className="text-accent font-bold">
-          Sign up free
-        </Link>
-      </p>
-    </div>
+        <p className="text-center text-[14px] text-[var(--color-text-inverse-secondary)] mt-[24px]">
+          Don't have an account?{' '}
+          <Link to="/auth/signup" className="text-[var(--color-accent)] font-bold hover:underline">
+            Sign up free
+          </Link>
+        </p>
+      </div>
+    </AuthLayout>
   );
 }
