@@ -280,6 +280,25 @@ PORT=
 
 ---
 
+## Deployment
+
+Backend is deployed on Render:
+
+Base URL:
+[https://spendwise-app-39vv.onrender.com](https://spendwise-app-39vv.onrender.com)
+
+Environment:
+
+- Node.js production server
+- PostgreSQL (Prisma cloud DB)
+- Hosted on Render Web Service
+
+## Production Notes
+
+- Cold starts may cause initial request delay on Render free tier
+- All sensitive values are stored in environment variables
+- Database is hosted externally (Prisma/PostgreSQL)
+
 ## Current Status
 
 ### Completed
