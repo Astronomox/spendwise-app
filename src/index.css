@@ -64,20 +64,14 @@
     justify-content: center;
   }
 
-  .app-container {
-    width: 100%;
-    max-width: 400px;
-    height: 100vh;
-    max-height: 800px;
-    background-color: var(--color-bg-secondary);
-    border-radius: var(--radius-radius-lg);
-    box-shadow: var(--shadow-shadow-lg);
-    border: 8px solid var(--color-text-primary);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow: hidden;
-  }
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--color-bg-secondary);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
 
   h1, h2, h3, h4, .font-display {
     @apply font-display font-bold tracking-tight;
