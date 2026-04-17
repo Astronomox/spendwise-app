@@ -1,5 +1,6 @@
 import prisma from "../config/prisma.js";
 
+// Keyword-based category detection service
 export const detectCategory = async (description = "") => {
     if (!description) return null;
 

@@ -1,6 +1,7 @@
 import prisma from "../../config/prisma.js";
 import { safeNumber, toNaira } from "../../utils/money.js";
 
+// Main function to calculate burn rate (average daily spending) for a user over the past N days
 export const getBurnRate = async (userId, days = 30) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);

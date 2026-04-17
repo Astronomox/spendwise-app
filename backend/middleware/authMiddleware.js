@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import prisma from "../config/prisma.js";
 
+// Global middleware to protect routes and ensure the user is authenticated
 export const protect = async (req, res, next) => {
     let token;
 

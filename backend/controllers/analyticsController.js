@@ -1,6 +1,7 @@
 import { getSpendingAnalytics } from "../services/analytics/analyticsService.js";
 import { getBurnRate } from "../services/analytics/burnrateService.js";
 
+// Funtion to get analytics data within a specified date range for the authenticated user
 export const getAnalytics = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
@@ -32,6 +33,7 @@ export const getAnalytics = async (req, res) => {
     }
 };
 
+// Function to calculate the burn rate for the authenticated user over a specified number of days
 export const getBurnRateController = async (req, res) => {
     try {
         const { days } = req.query;

@@ -11,3 +11,6 @@ build
 .prisma
 
 .DS_Store
+
+prisma/seed.js
+test.js

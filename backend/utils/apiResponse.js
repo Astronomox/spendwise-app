@@ -1,3 +1,6 @@
+// Utility functions for consistent API responses
+
+// Success response format
 export const successResponse = (data, message = "Success", meta = {}) => {
     return {
         success: true,
@@ -7,6 +10,7 @@ export const successResponse = (data, message = "Success", meta = {}) => {
     };
 };
 
+// Error response format
 export const errorResponse = (message = "Error") => {
     return {
         success: false,

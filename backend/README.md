@@ -265,7 +265,7 @@ node server.js
 ```env
 DATABASE_URL=
 JWT_SECRET=
-PORT=5002
+PORT=
 ```
 
 ---

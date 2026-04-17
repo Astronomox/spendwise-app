@@ -1,6 +1,7 @@
 import prisma from "../../config/prisma.js";
 import { toNaira } from "../../utils/money.js";
 
+// Main function to get category breakdown of expenses for a user over a specified date range
 export const getCategoryBreakdown = async (userId, startDate, endDate) => {
     const data = await prisma.transaction.groupBy({
         by: ["categoryId"],

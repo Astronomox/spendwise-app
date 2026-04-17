@@ -73,7 +73,7 @@ export const createTransaction = async (req, res) => {
             finalCategoryId = detected || null;
         }
 
-        // Validate detected category (important fix)
+        // Validate detected category
         if (finalCategoryId) {
             const categoryExists = await prisma.category.findFirst({
                 where: {
@@ -150,7 +150,7 @@ export const getTransactions = async (req, res) => {
             filters.categoryId = categoryId;
         }
 
-        // FIX: safer category name filtering
+        // Safer category name filtering
         if (category) {
             const categoryRecord = await prisma.category.findFirst({
                 where: { name: category.trim() },

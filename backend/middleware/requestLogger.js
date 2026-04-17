@@ -1,3 +1,4 @@
+// Helper middleware to log incoming requests and their response times
 export const requestLogger = (req, res, next) => {
     const start = process.hrtime();
 
