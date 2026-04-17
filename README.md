@@ -146,6 +146,7 @@ SpendWise uses a dark navy + green fintech palette with a consistent 8px spacing
 **Adeola** — Frontend / Full Stack  
 **Semilore** — Backend / Data  
 **Wisdom** — Full Stack / SMS Integration  
+**Oreoluwa** — Project Manager
 
 Built in a 14-day sprint. Bismillah.
 
