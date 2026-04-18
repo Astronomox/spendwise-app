@@ -1,42 +1,62 @@
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400&display=swap');
 @import "tailwindcss";
 
 @theme {
   /* Core Palette - Professional Polish */
-  --color-bg-primary: #F0F2F5;
-  --color-bg-secondary: #FFFFFF;
-  --color-bg-card: #FFFFFF;
-  --color-bg-elevated: #F3F4F6;
+  --color-bg-primary: #0A0F0D;
+  --color-bg-secondary: #0A0F0D;
+  --color-bg-card: #111916;
+  --color-bg-elevated: #1A2420;
   
   --color-accent: #008751;
   --color-accent-dim: #005F39;
   --color-accent-border: rgba(0, 135, 81, 0.2);
   
-  --color-text-primary: #121212;
-  --color-text-secondary: #6B7280;
-  --color-text-muted: #9CA3AF;
+  --color-text-primary: #F0F5F2;
+  --color-text-secondary: rgba(240,245,242,0.55);
+  --color-text-muted: rgba(240,245,242,0.35);
   
-  --color-danger: #E11D48;
-  --color-warning: #E6B00F;
+  --color-danger: #E05252;
+  --color-warning: #E09A3A;
+  --color-success: #2DB37A;
+  --color-slate: #64748B;
+  --color-border: rgba(255,255,255,0.08);
+  --color-border-tertiary: #D1D5DB;
+  --color-accent-glow: rgba(0, 135, 81, 0.20);
+
+  --color-text-inverse-primary: #121212;
+  --color-text-inverse-secondary: #6B7280;
+
+  /* Auth Background Gradient Colors */
+  --color-auth-bg-start: #F5F3ED;
+  --color-auth-bg-mid: #E8DCC8;
+  --color-auth-bg-end: #D4E5D8;
   
   /* Typography */
-  --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-body: Arial, sans-serif;
+  --font-display: 'Clash Display', system-ui, sans-serif;
+  --font-body: 'Satoshi', system-ui, sans-serif;
 
-  /* Spacing Scale (Base-4) */
-  --spacing-space-1: 4px;
-  --spacing-space-2: 8px;
-  --spacing-space-3: 12px;
-  --spacing-space-4: 16px;
-  --spacing-space-5: 20px;
-  --spacing-space-6: 24px;
-  --spacing-space-8: 32px;
-  --spacing-space-10: 40px;
+  /* Spacing Scale (8px Grid) */
+  --spacing-space-1: 8px;
+  --spacing-space-2: 16px;
+  --spacing-space-3: 24px;
+  --spacing-space-4: 32px;
+  --spacing-space-5: 40px;
+  --spacing-space-6: 48px;
 
   /* Border Radius */
+  --radius-radius-xs: 4px;
   --radius-radius-sm: 8px;
   --radius-radius-md: 12px;
-  --radius-radius-lg: 24px;
-  --radius-radius-xl: 40px;
+  --radius-radius-lg: 16px;
+  --radius-radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-shadow-accent: 0 0 20px var(--color-accent-glow);
 }
 
 @layer base {
@@ -60,11 +80,26 @@
     height: 100vh;
     max-height: 800px;
     background-color: var(--color-bg-secondary);
-    border-radius: var(--radius-radius-xl);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    border: 8px solid #121212;
+    border-radius: var(--radius-radius-lg);
+    box-shadow: var(--shadow-shadow-lg);
+    border: 8px solid rgba(255,255,255,0.1);
     display: flex;
     flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Make auth-container full screen for the split layout */
+  .auth-container {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+    background-color: var(--color-bg-secondary);
+    display: flex;
+    flex-direction: row;
     position: relative;
     overflow: hidden;
   }
@@ -76,12 +111,19 @@
 
 /* Custom Utilities */
 @layer utilities {
+  .auth-hero-gradient {
+    background: linear-gradient(135deg, var(--color-auth-bg-start) 0%, var(--color-auth-bg-mid) 50%, var(--color-auth-bg-end) 100%);
+  }
+
+  .hero-gradient {
+    background: linear-gradient(135deg, #0F2018 0%, #0A1A12 100%);
+  }
+
+  .radial-glow {
+    background: radial-gradient(ellipse at 30% 50%, rgba(0,135,81,0.15) 0%, transparent 65%);
+  }
+
   .accent-gradient {
     background-image: linear-gradient(135deg, var(--color-accent), var(--color-accent-dim));
-  }
-  
-  .naira::before {
-    content: "₦";
-    margin-right: 0.1em;
   }
 }

@@ -17,24 +17,24 @@ export function TopCategories({ spendByCategory }: TopCategoriesProps) {
     });
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar px-6 -mx-6">
+    <div className="flex gap-[8px] overflow-x-auto pb-[4px] px-[16px] scrollbar-hide">
       {topCats.map((cat) => (
         <div 
           key={cat.id}
-          className="flex items-center gap-2 px-3 py-2 bg-bg-elevated rounded-full border border-gray-100 shrink-0"
+          className="flex items-center gap-[8px] p-[8px] pr-[16px] bg-[var(--color-bg-card)] rounded-[16px] border border-[var(--color-border)] shrink-0 shadow-sm"
         >
           <div 
-            className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: `${cat.color}15` }}
+            className="w-[40px] h-[40px] rounded-[12px] flex items-center justify-center shrink-0"
+            style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 15%, transparent)` }}
           >
-            <cat.Icon size={16} style={{ color: cat.color }} />
+            <cat.Icon size={20} style={{ color: cat.color }} />
           </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
+          <div className="flex flex-col justify-center">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)] leading-none mb-[4px]">
               {cat.label}
             </span>
-            <span className="text-[12px] font-bold">
-              {formatNaira(cat.amount).replace('NGN', '').trim()}
+            <span className="text-[15px] font-bold font-display leading-none text-[var(--color-text-primary)]">
+              {formatNaira(cat.amount)}
             </span>
           </div>
         </div>
