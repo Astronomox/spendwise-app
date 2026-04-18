@@ -27,7 +27,7 @@ app.use("/api/analytics", analyticsRoutes); // ANALYTICS ROUTES
 
 // HEALTH CHECK ENDPOINT
 app.get("/", (req, res) => {
-    res.send("KudiSense API running...");
+    res.send("SpendWise API running...");
 });
 
 // START SERVER
