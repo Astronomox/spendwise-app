@@ -1,4 +1,4 @@
-import { cn } from '@/src/lib/utils';
+import { cn, formatNaira } from '@/src/lib/utils';
 import { DeleteIcon } from '@/src/components/ui/icons';
 
 interface AmountInputProps {
@@ -24,28 +24,28 @@ export function AmountInput({ value, onChange }: AmountInputProps) {
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'backspace'];
 
   return (
-    <div className="space-y-8">
-      <div className="text-center space-y-1">
-        <p className="text-[13px] text-text-secondary font-medium uppercase tracking-widest">Amount</p>
-        <div className="flex items-center justify-center gap-1">
-          <span className="text-[32px] font-bold text-accent">₦</span>
-          <span className="text-[48px] font-black font-display tracking-tighter">
-            {value || '0'}
+    <div className="space-y-[32px] w-full max-w-[320px] mx-auto">
+      <div className="text-center space-y-[4px]">
+        <p className="text-[13px] text-[var(--color-text-secondary)] font-[600] uppercase tracking-widest">Amount</p>
+        <div className="flex items-center justify-center gap-[4px] h-[64px]">
+          <span className="text-[56px] font-bold font-display tracking-tight text-[var(--color-text-primary)]">
+            {value ? formatNaira(Number(value)) : formatNaira(0)}
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-[16px] max-w-[280px] mx-auto">
         {keys.map((key) => (
           <button
             key={key}
             onClick={() => handlePress(key)}
             className={cn(
-              "h-16 rounded-radius-md flex items-center justify-center text-[20px] font-bold transition-colors active:bg-gray-200",
-              key === 'backspace' ? "text-text-secondary" : "text-text-primary bg-bg-elevated"
+              "h-[64px] rounded-full flex items-center justify-center text-[24px] font-bold transition-colors active:scale-95 duration-100",
+              key === 'backspace' ? "text-[var(--color-text-secondary)] bg-transparent hover:bg-[var(--color-bg-elevated)]" : "text-[var(--color-text-primary)] bg-[var(--color-bg-elevated)] hover:bg-[var(--color-border)] shadow-[var(--shadow-shadow-sm)]"
             )}
+            aria-label={key === 'backspace' ? 'Backspace' : `Number ${key}`}
           >
-            {key === 'backspace' ? <DeleteIcon size={24} /> : key}
+            {key === 'backspace' ? <DeleteIcon size={28} /> : key}
           </button>
         ))}
       </div>
