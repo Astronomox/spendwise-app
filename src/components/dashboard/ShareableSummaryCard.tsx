@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { Button } from '@/src/components/ui/Button';
 import { CATEGORIES } from '@/src/components/logger/CategoryPicker';
+import { formatNaira } from '@/src/lib/utils';
 import { ShareIcon, CloseIcon, FlameIcon } from '@/src/components/ui/icons';
 
 interface ShareableSummaryProps {
@@ -88,7 +89,7 @@ export function ShareableSummaryCard({ data, user, onClose }: ShareableSummaryPr
 
           <div className="relative z-10 w-full text-center space-y-[8px] my-[24px]">
             <p className="text-[14px] uppercase tracking-widest text-white/60 font-[600]">Total Spent</p>
-            <p className="text-[48px] font-bold font-display leading-none text-[var(--color-accent)] naira">{data.total_spent.toLocaleString()}</p>
+            <p className="text-[48px] font-bold font-display leading-none text-[var(--color-accent)]">{formatNaira(data.total_spent)}</p>
           </div>
 
           <div className="relative z-10 w-full space-y-[16px] flex-1">
@@ -104,7 +105,7 @@ export function ShareableSummaryCard({ data, user, onClose }: ShareableSummaryPr
                     <div className="flex-1">
                       <p className="font-bold text-[15px]">{item.category.label}</p>
                     </div>
-                    <p className="font-bold font-display text-[16px] naira">{item.amount.toLocaleString()}</p>
+                    <p className="font-bold font-display text-[16px]">{formatNaira(item.amount)}</p>
                   </div>
                 );
               })}

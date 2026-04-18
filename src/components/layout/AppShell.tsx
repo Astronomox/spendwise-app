@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { cn } from '@/src/lib/utils';
@@ -11,7 +11,6 @@ import {
   PlusCircleIcon,
   NotificationIcon
 } from '@/src/components/ui/icons';
-import { supabase } from '@/src/lib/supabase';
 import { useAlerts } from '@/src/hooks/useAlerts';
 
 interface AppShellProps {
@@ -19,13 +18,17 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const { user, setUser } = useAppStore();
+  const { user } = useAppStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   
-  // Don't show shell on auth pages
+  // Only apply auth layout strictly to login/signup. Onboarding uses app-container.
+  const isAuthLayoutPage = location.pathname === '/auth/login' || location.pathname === '/auth/signup';
+
+  // Don't show shell on any auth page (login, signup, onboarding)
   const isAuthPage = location.pathname.startsWith('/auth');
+
   // Hide bottom nav on logger page for full focus
   const isLoggerPage = location.pathname === '/logger';
 
@@ -38,7 +41,7 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   if (isAuthPage) {
-    return <div className="auth-container">{children}</div>;
+    return <div className={isAuthLayoutPage ? "auth-container" : "app-container"}>{children}</div>;
   }
 
   return (
@@ -81,7 +84,7 @@ export function AppShell({ children }: AppShellProps) {
       {!isLoggerPage && (
         <nav
           className={cn(
-            "fixed bottom-0 left-0 right-0 h-[calc(72px+env(safe-area-inset-bottom))] bg-[var(--color-bg-secondary)] flex justify-around items-center pb-[calc(16px+env(safe-area-inset-bottom))] z-50 transition-all duration-200",
+            "fixed bottom-0 max-w-[400px] w-full mx-auto h-[calc(72px+env(safe-area-inset-bottom))] bg-[var(--color-bg-secondary)] flex justify-around items-center pb-[calc(16px+env(safe-area-inset-bottom))] z-50 transition-all duration-200",
             isScrolled ? "border-t-[1px] border-[var(--color-border)] shadow-[var(--shadow-shadow-lg)]" : "border-t-transparent"
           )}
         >

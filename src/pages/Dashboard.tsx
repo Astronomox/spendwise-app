@@ -54,8 +54,17 @@ export default function Dashboard() {
   const budgetProgress = data.monthly_budget > 0 ? (data.total_spent / data.monthly_budget) * 100 : 0;
   const recentTransactions = transactions.slice(0, 5);
 
+  const today = new Date();
   const spentToday = transactions
-    .filter(t => new Date(t.date).toDateString() === new Date().toDateString() && t.direction === 'debit')
+    .filter(t => {
+      const d = new Date(t.date);
+      return (
+        d.getFullYear() === today.getFullYear() &&
+        d.getMonth() === today.getMonth() &&
+        d.getDate() === today.getDate() &&
+        t.direction === 'debit'
+      );
+    })
     .reduce((sum, t) => sum + t.amount, 0);
 
   const getProgressColor = (progress: number) => {
@@ -95,9 +104,9 @@ export default function Dashboard() {
           <div className="relative z-10 space-y-[24px]">
             <p className={cn(
               "text-[48px] font-bold font-display tracking-tight leading-none",
-              budgetProgress >= 100 ? "text-[var(--color-danger)]" : "text-white naira"
+              budgetProgress >= 100 ? "text-[var(--color-danger)]" : "text-white"
             )}>
-              {budgetProgress >= 100 && <span className="text-[32px] align-top mr-[4px]">₦</span>}
+              <span className="text-[32px] align-top mr-[4px]">₦</span>
               <AnimatedNumber value={data.total_spent} />
             </p>
 
@@ -123,13 +132,15 @@ export default function Dashboard() {
       <section className="px-[16px] grid grid-cols-2 gap-[12px]">
         <Card className="flex flex-col p-[16px] border-[var(--color-border)] shadow-none">
           <p className="text-[12px] font-[500] text-[var(--color-text-secondary)] mb-[8px]">Spent Today</p>
-          <p className="text-[20px] font-bold font-display text-[var(--color-text-primary)] naira leading-none">
+          <p className="text-[20px] font-bold font-display text-[var(--color-text-primary)] leading-none">
+            <span className="text-[14px] align-top mr-[2px]">₦</span>
             <AnimatedNumber value={spentToday} />
           </p>
         </Card>
         <Card className="flex flex-col p-[16px] border-[var(--color-accent-border)] bg-[rgba(0,135,81,0.02)] shadow-none">
           <p className="text-[12px] font-[500] text-[var(--color-text-secondary)] mb-[8px]">Daily Safe Spend</p>
-          <p className="text-[20px] font-bold font-display text-[var(--color-accent)] naira leading-none">
+          <p className="text-[20px] font-bold font-display text-[var(--color-accent)] leading-none">
+            <span className="text-[14px] align-top mr-[2px]">₦</span>
             <AnimatedNumber value={data.daily_safe_spend} />
           </p>
         </Card>
@@ -143,8 +154,8 @@ export default function Dashboard() {
               <h3 className="text-[18px] font-bold font-display text-[var(--color-text-primary)]">This Week</h3>
             </div>
             <div className="text-right">
-              <span className="text-[16px] font-bold font-display text-[var(--color-text-primary)] naira">
-                {data.weekly_spend.reduce((a: number, b: number) => a + b, 0).toLocaleString()}
+              <span className="text-[16px] font-bold font-display text-[var(--color-text-primary)]">
+                {formatNaira(data.weekly_spend.reduce((a: number, b: number) => a + b, 0))}
               </span>
             </div>
           </div>

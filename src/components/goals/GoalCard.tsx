@@ -69,8 +69,8 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
           <Icon size={16} className="text-[var(--color-text-secondary)]" style={{ color: iconItem.color }} />
           <h3 className="font-bold font-display text-[16px] text-[var(--color-text-primary)] truncate">{goal.name}</h3>
         </div>
-        <p className="text-[14px] font-bold font-display text-[var(--color-text-primary)] naira leading-tight mb-[4px]">
-          {goal.current_amount.toLocaleString()} <span className="text-[12px] text-[var(--color-text-secondary)] font-[500] font-body">/ {goal.target_amount.toLocaleString()}</span>
+        <p className="text-[14px] font-bold font-display text-[var(--color-text-primary)] leading-tight mb-[4px]">
+          {formatNaira(goal.current_amount)} <span className="text-[12px] text-[var(--color-text-secondary)] font-[500] font-body">/ {formatNaira(goal.target_amount)}</span>
         </p>
 
         {isComplete ? (

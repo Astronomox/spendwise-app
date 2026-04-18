@@ -19,7 +19,7 @@ export function useAlerts({ enabled }: { enabled?: boolean } = { enabled: true }
         .order('created_at', { ascending: false });
 
       if (error) {
-        if (error.code === '42P01') return []; // table does not exist yet
+        if (error.code === '42P01' && import.meta.env.DEV) return []; // table does not exist yet
         throw error;
       }
       return (data || []) as Alert[];

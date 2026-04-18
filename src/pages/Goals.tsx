@@ -7,6 +7,7 @@ import { GoalModal } from '@/src/components/goals/GoalModal';
 import { Button } from '@/src/components/ui/Button';
 import { RefreshIcon, GoalsIcon } from '@/src/components/ui/icons';
 import { SavingsGoal } from '@/src/types/goals';
+import { formatNaira } from '@/src/lib/utils';
 
 export default function GoalsPage() {
   const { user } = useAppStore();
@@ -65,11 +66,11 @@ export default function GoalsPage() {
           <div className="flex justify-between items-center bg-[var(--color-bg-elevated)] rounded-[12px] p-[16px] border border-[var(--color-border)]">
             <div>
               <p className="text-[12px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Total Saved</p>
-              <p className="text-[20px] font-bold font-display text-[var(--color-accent)] naira leading-none mt-[4px]">{totalSaved.toLocaleString()}</p>
+              <p className="text-[20px] font-bold font-display text-[var(--color-accent)] leading-none mt-[4px]">{formatNaira(totalSaved)}</p>
             </div>
             <div className="text-right">
               <p className="text-[12px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Target</p>
-              <p className="text-[16px] font-bold font-display text-[var(--color-text-primary)] naira leading-none mt-[4px] opacity-80">{totalTarget.toLocaleString()}</p>
+              <p className="text-[16px] font-bold font-display text-[var(--color-text-primary)] leading-none mt-[4px] opacity-80">{formatNaira(totalTarget)}</p>
             </div>
           </div>
         )}

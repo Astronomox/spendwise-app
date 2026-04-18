@@ -33,8 +33,8 @@ export function TopCategories({ spendByCategory }: TopCategoriesProps) {
             <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)] leading-none mb-[4px]">
               {cat.label}
             </span>
-            <span className="text-[15px] font-bold font-display leading-none text-[var(--color-text-primary)] naira">
-              {cat.amount.toLocaleString()}
+            <span className="text-[15px] font-bold font-display leading-none text-[var(--color-text-primary)]">
+              {formatNaira(cat.amount)}
             </span>
           </div>
         </div>
