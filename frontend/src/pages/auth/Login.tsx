@@ -48,14 +48,20 @@ export default function LoginPage() {
     try {
       const response = await auth.login(email, password);
 
+      // The backend returns the user object directly, not wrapped in a `user` property.
+      // E.g. { token: '...', id: '...', email: '...', fullName: '...' }
+      const { token, ...user } = response;
+
       // Save to localStorage
-      localStorage.setItem('sw_token', response.token);
-      localStorage.setItem('sw_user', JSON.stringify(response.user));
+      localStorage.setItem('sw_token', token);
+      localStorage.setItem('sw_user', JSON.stringify(user));
 
       // Update global store
-      setUser(response.user);
+      setUser(user);
 
-      navigate('/dashboard');
+      // Navigate to dashboard asynchronously to ensure state has settled
+      setTimeout(() => navigate('/dashboard'), 0);
+
     } catch (err: unknown) {
       setGeneralError(err instanceof Error ? err.message : 'Invalid email or password.');
     } finally {
