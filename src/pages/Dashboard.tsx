@@ -54,17 +54,8 @@ export default function Dashboard() {
   const budgetProgress = data.monthly_budget > 0 ? (data.total_spent / data.monthly_budget) * 100 : 0;
   const recentTransactions = transactions.slice(0, 5);
 
-  const today = new Date();
   const spentToday = transactions
-    .filter(t => {
-      const d = new Date(t.date);
-      return (
-        d.getFullYear() === today.getFullYear() &&
-        d.getMonth() === today.getMonth() &&
-        d.getDate() === today.getDate() &&
-        t.direction === 'debit'
-      );
-    })
+    .filter(t => t.date === new Date().toISOString().split('T')[0] && t.direction === 'debit')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const getProgressColor = (progress: number) => {
