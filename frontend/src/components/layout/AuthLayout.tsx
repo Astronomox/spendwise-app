@@ -36,15 +36,15 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
         {/* Layer 2: Logo */}
         <div className="relative z-10">
-          <h1 className="text-[32px] font-bold font-display text-white tracking-[1px]">SpendWise.</h1>
+          <h1 className="text-[32px] font-bold font-display text-[#1A1A1A] tracking-[1px]">SpendWise.</h1>
         </div>
 
         {/* Layer 3 & 4: Heading and Subtext */}
         <div className="relative z-10 flex-1 flex flex-col justify-center max-w-[400px]">
-          <h2 className="text-[32px] font-bold font-display text-white leading-tight mb-[8px]">
+          <h2 className="text-[32px] font-bold font-display text-[#1A1A1A] leading-tight mb-[8px]">
             Track every naira.
           </h2>
-          <p className="text-[16px] font-[400] text-white/60 font-body">
+          <p className="text-[16px] font-[400] text-[rgba(0,0,0,0.6)] font-body">
             Build wealth on your terms.
           </p>
         </div>
@@ -55,19 +55,19 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             <div className="w-[20px] h-[20px] rounded-full bg-white/10 flex items-center justify-center text-[var(--color-accent)]">
               <CheckCircleIcon size={12} strokeWidth={3} />
             </div>
-            <span className="text-[16px] font-[400] text-white/70 font-body">Auto-log from SMS</span>
+            <span className="text-[16px] font-[400] text-[rgba(0,0,0,0.65)] font-body">Auto-log from SMS</span>
           </div>
           <div className="flex items-center gap-[12px]">
             <div className="w-[20px] h-[20px] rounded-full bg-white/10 flex items-center justify-center text-[var(--color-accent)]">
               <CheckCircleIcon size={12} strokeWidth={3} />
             </div>
-            <span className="text-[16px] font-[400] text-white/70 font-body">Spend with intention</span>
+            <span className="text-[16px] font-[400] text-[rgba(0,0,0,0.65)] font-body">Spend with intention</span>
           </div>
           <div className="flex items-center gap-[12px]">
             <div className="w-[20px] h-[20px] rounded-full bg-white/10 flex items-center justify-center text-[var(--color-accent)]">
               <CheckCircleIcon size={12} strokeWidth={3} />
             </div>
-            <span className="text-[16px] font-[400] text-white/70 font-body">Share your progress</span>
+            <span className="text-[16px] font-[400] text-[rgba(0,0,0,0.65)] font-body">Share your progress</span>
           </div>
         </div>
       </div>
