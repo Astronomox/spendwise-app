@@ -56,7 +56,7 @@ export function AppShell({ children }: AppShellProps) {
       {!isLoggerPage && (
         <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-[240px] bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex-col z-50 py-[24px]">
           <div className="px-[24px] mb-[40px]">
-            <h1 className="text-[28px] font-black text-[var(--color-accent)] font-display">SpendWise.</h1>
+            <h1 className="text-[16px] font-black text-[var(--color-accent)] font-display">SpendWise.</h1>
           </div>
 
           <nav className="flex-1 flex flex-col gap-[8px] px-[16px]">
