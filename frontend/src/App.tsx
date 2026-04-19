@@ -17,9 +17,25 @@ export default function App() {
   const { isAuthenticated, setUser, clearUser } = useAppStore();
 
 
-  // Protect routes based on explicit localStorage check to avoid flashes on reload
-  const storedUser = typeof window !== 'undefined' ? localStorage.getItem('sw_user') : null;
-  const isActuallyAuthenticated = isAuthenticated || (storedUser && storedUser !== 'undefined');
+  // Protect routes based on validated localStorage data to avoid flashes on reload
+  const hasStoredAuthenticatedUser = (() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const storedUser = localStorage.getItem('sw_user');
+    if (!storedUser || storedUser === 'undefined') {
+      return false;
+    }
+
+    try {
+      const parsedUser = JSON.parse(storedUser);
+      return !!parsedUser && typeof parsedUser === 'object' && !Array.isArray(parsedUser);
+    } catch {
+      return false;
+    }
+  })();
+  const isActuallyAuthenticated = isAuthenticated || hasStoredAuthenticatedUser;
 
 
   return (
