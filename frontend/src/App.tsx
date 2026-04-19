@@ -11,53 +11,20 @@ import GoalsPage from './pages/Goals';
 import AlertsPage from './pages/Alerts';
 import SmsQueuePage from './pages/SmsQueue';
 import { useAppStore } from './lib/store';
-import { supabase } from './lib/supabase';
 import { ToastContainer } from '@/src/components/ui/Toast';
 
 export default function App() {
-  const { isAuthenticated, setUser } = useAppStore();
+  const { isAuthenticated, setUser, clearUser } = useAppStore();
 
-  useEffect(() => {
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        // Fetch profile
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            if (profile) {
-              setUser({
-                id: profile.id,
-                name: profile.full_name,
-                email: session.user.email || '',
-                monthly_budget: profile.monthly_budget,
-              });
-            }
-          });
-      }
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [setUser]);
 
   return (
     <Router>
       <AppShell>
         <Routes>
           {/* Auth Routes */}
-          <Route path="/auth/login" element={<LoginPage />} />
-          <Route path="/auth/signup" element={<SignupPage />} />
-          <Route path="/auth/onboarding" element={<OnboardingPage />} />
+          <Route path="/auth/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />} />
+          <Route path="/auth/signup" element={isAuthenticated ? <Navigate to="/dashboard" /> : <SignupPage />} />
+          <Route path="/auth/onboarding" element={isAuthenticated ? <OnboardingPage /> : <Navigate to="/auth/login" />} />
 
           {/* Protected Routes */}
           <Route 

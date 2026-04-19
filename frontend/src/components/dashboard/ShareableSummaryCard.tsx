@@ -14,9 +14,8 @@ interface ShareableSummaryProps {
   };
   user: {
     id: string;
-    name: string;
+    fullName: string;
     email: string;
-    monthly_budget: number;
   };
   onClose: () => void;
 }

@@ -6,9 +6,9 @@ import { cn } from '@/src/lib/utils';
 import { SearchIcon, RefreshIcon } from '@/src/components/ui/icons';
 import { EditTransactionModal } from '@/src/components/transactions/EditTransactionModal';
 import { Transaction } from '@/src/types/transactions';
-import { supabase } from '@/src/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'motion/react';
+import { useToastStore } from '@/src/components/ui/Toast';
 
 type TimeFilter = 'all' | 'today' | 'week' | 'month';
 
@@ -25,16 +25,12 @@ export default function HistoryPage() {
     if (transaction) setEditingTransaction(transaction);
   };
 
+  const { addToast } = useToastStore();
+
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this transaction?')) return;
-    try {
-      const { error } = await supabase.from('transactions').delete().eq('id', id);
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
-    } catch (e) {
-      console.error('Failed to delete transaction', e);
-    }
+    // API deletion not available yet
+    addToast('Deletion coming soon.', 'warning');
   };
 
   const filteredTransactions = useMemo(() => {
@@ -42,7 +38,7 @@ export default function HistoryPage() {
       // Time filter
       const date = new Date(t.date);
       const now = new Date();
-      
+
       if (timeFilter === 'today' && date.toDateString() !== now.toDateString()) return false;
       if (timeFilter === 'week') {
         const weekAgo = new Date();
@@ -77,7 +73,7 @@ export default function HistoryPage() {
       <div className="px-[16px] py-[16px] space-y-[16px] border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-bg-secondary)] z-20 shadow-[var(--shadow-shadow-sm)]">
         <div className="relative">
           <SearchIcon className="absolute left-[12px] top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" size={20} />
-          <input 
+          <input
             type="text"
             placeholder="Search transactions..."
             value={searchQuery}
@@ -119,11 +115,11 @@ export default function HistoryPage() {
                 onClick={() => setCategoryFilter(cat.id)}
                 className={cn(
                   "px-[16px] py-[8px] rounded-[12px] text-[12px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border-[1px] flex items-center gap-[6px]",
-                  categoryFilter === cat.id 
+                  categoryFilter === cat.id
                     ? "bg-[rgba(0,135,81,0.05)] border-[var(--color-accent)] text-[var(--color-text-primary)] shadow-[var(--shadow-shadow-sm)]"
                     : "bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)]"
                 )}
-                style={{ 
+                style={{
                   borderColor: categoryFilter === cat.id ? cat.color : undefined,
                   color: categoryFilter === cat.id ? cat.color : undefined
                 }}
@@ -136,7 +132,7 @@ export default function HistoryPage() {
           })}
         </div>
       </div>
-      
+
       {isLoading ? (
         <div className="flex-1 p-[16px] space-y-[16px]">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -149,8 +145,8 @@ export default function HistoryPage() {
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto pb-[72px]">
-          <TransactionFeed 
-            transactions={filteredTransactions} 
+          <TransactionFeed
+            transactions={filteredTransactions}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />

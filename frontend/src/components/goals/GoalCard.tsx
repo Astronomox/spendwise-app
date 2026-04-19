@@ -75,7 +75,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
 
         {isComplete ? (
           <div className="inline-flex items-center gap-[4px] px-[8px] py-[2px] bg-[rgba(16,185,129,0.1)] text-[var(--color-success)] rounded-full">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Goal Reached! 🎉</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider">Goal Reached!</span>
           </div>
         ) : (
           <div className="flex gap-[8px]">

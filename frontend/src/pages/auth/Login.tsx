@@ -4,7 +4,7 @@ import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
 import { useAppStore } from '@/src/lib/store';
 
-import { supabase } from '@/src/lib/supabase';
+import { auth } from '@/src/lib/api';
 import { GoogleIcon } from '@/src/components/ui/icons';
 import { AuthLayout } from '@/src/components/layout/AuthLayout';
 
@@ -46,58 +46,26 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const response = await auth.login(email, password);
 
-      if (error) throw error;
+      // Save to localStorage
+      localStorage.setItem('sw_token', response.token);
+      localStorage.setItem('sw_user', JSON.stringify(response.user));
 
-      if (data.user) {
-        // Fetch profile data
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+      // Update global store
+      setUser(response.user);
 
-        if (profileError) {
-          // Fallback if profile doesn't exist yet
-          setUser({
-            id: data.user.id,
-            name: data.user.email?.split('@')[0] || 'User',
-            email: data.user.email || '',
-            monthly_budget: 150000,
-          });
-        } else {
-          setUser({
-            id: profile.id,
-            name: profile.full_name,
-            email: data.user.email || '',
-            monthly_budget: profile.monthly_budget,
-          });
-        }
-        navigate('/dashboard');
-      }
-    } catch (err: any) {
-      setGeneralError(err.message || 'Invalid email or password.');
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      setGeneralError(err instanceof Error ? err.message : 'Invalid email or password.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      });
-      if (error) throw error;
-    } catch (err: any) {
-      setGeneralError(err.message || 'Failed to login with Google.');
-    }
+    // Google login not natively supported by the new custom backend instructions yet.
+    setGeneralError('Google login is coming soon.');
   };
 
   return (

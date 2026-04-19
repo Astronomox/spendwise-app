@@ -9,10 +9,10 @@ import { TransactionItem } from '@/src/components/transactions/TransactionItem';
 import { useDashboardSummary } from '@/src/hooks/useDashboard';
 import { useTransactions } from '@/src/hooks/useTransactions';
 import { ShareableSummaryCard } from '@/src/components/dashboard/ShareableSummaryCard';
-import { 
-  FlameIcon, 
-  TrendingUpIcon, 
-  CalendarIcon, 
+import {
+  FlameIcon,
+  TrendingUpIcon,
+  CalendarIcon,
   RefreshIcon,
   ShareIcon
 } from '@/src/components/ui/icons';
@@ -23,7 +23,7 @@ import { AnimatedNumber } from '@/src/components/ui/AnimatedNumber';
 export default function Dashboard() {
   const { user } = useAppStore();
   const navigate = useNavigate();
-  
+
   const { data, isLoading, error, refetch } = useDashboardSummary();
   const { transactions } = useTransactions();
   const [showSummary, setShowSummary] = useState(false);
@@ -50,7 +50,7 @@ export default function Dashboard() {
     return (
       <div className="p-6 space-y-4 text-center">
         <p className="text-danger font-bold">Failed to load dashboard data.</p>
-        <button 
+        <button
           onClick={() => refetch()}
           className="px-4 py-2 bg-accent text-white rounded-radius-md font-bold"
         >
@@ -97,7 +97,7 @@ export default function Dashboard() {
           <div className="relative z-10 flex justify-between items-start mb-[32px]">
             <div>
               <p className="text-[14px] text-[var(--color-text-secondary)] font-[500] mb-[4px]">
-                Good evening, {user?.name?.split(' ')[0] || 'Adeola'}
+                Good evening, {user?.fullName?.split(' ')[0] || 'Adeola'}
               </p>
               <h2 className="text-[12px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Spent this month</h2>
             </div>
@@ -111,7 +111,7 @@ export default function Dashboard() {
               </button>
             )}
           </div>
-          
+
           <div className="relative z-10 space-y-[24px]">
             <p className={cn(
               "text-[48px] font-bold font-display tracking-tight leading-none",
@@ -223,7 +223,7 @@ export default function Dashboard() {
         <section className="space-y-[12px] px-[16px] lg:px-0 pb-[24px]">
           <div className="flex justify-between items-center">
           <h3 className="text-[18px] font-bold font-display text-[var(--color-text-primary)]">Savings</h3>
-          <button 
+          <button
             onClick={() => navigate('/goals')}
             className="text-[13px] text-[var(--color-accent)] font-bold hover:underline"
           >

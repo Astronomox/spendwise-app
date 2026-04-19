@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/src/components/ui/Button';
 import { cn } from '@/src/lib/utils';
 import { useAppStore } from '@/src/lib/store';
-import { supabase } from '@/src/lib/supabase';
 import { CheckCircleIcon, SavingsCategoryIcon, NotificationIcon, HomeIcon } from '@/src/components/ui/icons';
 
 const BANKS = ['GTBank', 'Access Bank', 'Zenith Bank', 'UBA', 'First Bank', 'Other'];
@@ -36,18 +35,8 @@ export default function OnboardingPage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          preferences: {
-            bank: selectedBank,
-            categories: selectedCategories,
-            sms_opt_in: smsOptIn
-          }
-        })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
+      // Stub: in a real app you'd call a save-preferences API here
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       navigate('/dashboard');
     } catch (err: unknown) {

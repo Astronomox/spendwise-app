@@ -4,9 +4,9 @@ import { Transaction } from '@/src/types/transactions';
 import { Button } from '@/src/components/ui/Button';
 import { Card } from '@/src/components/ui/Card';
 import { EditTransactionModal } from '@/src/components/transactions/EditTransactionModal';
-import { supabase } from '@/src/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { RefreshIcon, CheckCircleIcon } from '@/src/components/ui/icons';
+import { useToastStore } from '@/src/components/ui/Toast';
 import { formatNaira } from '@/src/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -17,34 +17,15 @@ export default function SmsQueuePage() {
 
   const pendingTransactions = transactions.filter(t => t.status === 'pending');
 
-  const handleConfirm = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('transactions')
-        .update({ status: 'confirmed' })
-        .eq('id', id);
-      if (error) throw error;
+  const { addToast } = useToastStore();
 
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
-    } catch (e) {
-      console.error('Failed to confirm transaction', e);
-    }
+  const handleConfirm = async (id: string) => {
+    addToast('SMS confirming coming soon.', 'warning');
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to dismiss this transaction?')) return;
-    try {
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    } catch (e) {
-      console.error('Failed to delete transaction', e);
-    }
+    addToast('SMS deletion coming soon.', 'warning');
   };
 
   return (

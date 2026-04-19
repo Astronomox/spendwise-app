@@ -3,12 +3,11 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { useAppStore } from '@/src/lib/store';
-import { supabase } from '@/src/lib/supabase';
-import { 
-  HomeIcon, 
-  HistoryIcon, 
-  GoalsIcon, 
-  AlertsIcon, 
+import {
+  HomeIcon,
+  HistoryIcon,
+  GoalsIcon,
+  AlertsIcon,
   PlusCircleIcon,
   NotificationIcon
 } from '@/src/components/ui/icons';
@@ -26,7 +25,7 @@ export function AppShell({ children }: AppShellProps) {
 
   // Only apply auth layout strictly to login/signup. Onboarding uses app-container.
   const isAuthLayoutPage = location.pathname === '/auth/login' || location.pathname === '/auth/signup';
-  
+
   // Don't show shell on any auth page (login, signup, onboarding)
   const isAuthPage = location.pathname.startsWith('/auth');
 
@@ -45,9 +44,10 @@ export function AppShell({ children }: AppShellProps) {
     return <div className={isAuthLayoutPage ? "auth-container" : "app-container max-w-[1200px] mx-auto"}>{children}</div>;
   }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth/login');
+  const handleSignOut = () => {
+    localStorage.removeItem('sw_token');
+    localStorage.removeItem('sw_user');
+    window.location.href = '/auth/login';
   };
 
   return (
@@ -79,10 +79,10 @@ export function AppShell({ children }: AppShellProps) {
           <div className="mt-auto px-[16px]">
             <div className="p-[12px] bg-[var(--color-bg-elevated)] rounded-[16px] border border-[var(--color-border)] flex items-center gap-[12px]">
               <div className="w-[36px] h-[36px] bg-[var(--color-bg-secondary)] rounded-full flex items-center justify-center border-[1px] border-[var(--color-border)] text-[12px] font-bold shrink-0">
-                {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'AD'}
+                {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'AD'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-[var(--color-text-primary)] truncate">{user?.name}</p>
+                <p className="text-[13px] font-bold text-[var(--color-text-primary)] truncate">{user?.fullName}</p>
                 <button onClick={handleSignOut} className="text-[11px] font-bold text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-colors">Sign Out</button>
               </div>
             </div>
@@ -109,7 +109,7 @@ export function AppShell({ children }: AppShellProps) {
                 )}
               </button>
               <div className="w-[36px] h-[36px] bg-[var(--color-bg-elevated)] rounded-full flex items-center justify-center border-[1px] border-[var(--color-border)] text-[12px] font-bold">
-                {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'AD'}
+                {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'AD'}
               </div>
             </div>
           </header>
@@ -136,9 +136,9 @@ export function AppShell({ children }: AppShellProps) {
         >
           <NavTab to="/dashboard" icon={<HomeIcon size={24} />} label="Home" />
           <NavTab to="/history" icon={<HistoryIcon size={24} />} label="History" />
-          
+
           {/* Central Plus Button */}
-          <button 
+          <button
             onClick={() => navigate('/logger')}
             aria-label="Log Cash"
             className="relative -mt-[20px] active:scale-[0.97] transition-transform flex items-center justify-center"
