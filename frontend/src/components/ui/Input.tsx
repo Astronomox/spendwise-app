@@ -1,5 +1,5 @@
 import { InputHTMLAttributes, forwardRef } from 'react';
-import { cn } from '@/src/lib/utils';
+import { cn, formatNaira } from '@/src/lib/utils';
 import { CloseIcon, WarningIcon } from '@/src/components/ui/icons';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -28,7 +28,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               "absolute left-[16px] top-1/2 -translate-y-1/2 font-[600] pointer-events-none",
               inverse ? "text-[var(--color-text-inverse-primary)]" : "text-[var(--color-text-primary)]"
             )}>
-              ₦
+              {formatNaira(0).replace(/\d/g, '').trim()}
             </div>
           )}
           <input
@@ -51,6 +51,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               type="button"
               onClick={onClear}
               className="absolute right-[16px] top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+              aria-label="Clear input"
             >
               <CloseIcon size={16} />
             </button>

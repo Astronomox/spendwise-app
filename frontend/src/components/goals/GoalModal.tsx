@@ -96,7 +96,7 @@ export function GoalModal({ goal, isOpen, onClose, onSave }: GoalModalProps) {
 
             <div className="flex justify-between items-center px-6 pb-4 border-b border-gray-100 shrink-0">
               <h2 className="text-[18px] font-black">{goal ? 'Edit Goal' : 'New Goal'}</h2>
-              <button onClick={onClose} className="p-2 -mr-2 text-text-secondary">
+              <button onClick={onClose} className="p-2 -mr-2 text-text-secondary" aria-label="Close goal modal">
                 <CloseIcon size={20} />
               </button>
             </div>

@@ -4,14 +4,14 @@ import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
 import { useAppStore } from '@/src/lib/store';
 
-import { supabase } from '@/src/lib/supabase';
+import { auth } from '@/src/lib/api';
 import { GoogleIcon } from '@/src/components/ui/icons';
 import { AuthLayout } from '@/src/components/layout/AuthLayout';
 
 export default function SignupPage() {
   const navigate = useNavigate();
   const setUser = useAppStore((state) => state.setUser);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,7 +24,7 @@ export default function SignupPage() {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Full name is required';
     }
@@ -46,7 +46,7 @@ export default function SignupPage() {
     } else if (isNaN(Number(formData.budget)) || Number(formData.budget) <= 0) {
       newErrors.budget = 'Please enter a valid amount greater than 0';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -54,76 +54,43 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setGeneralError(null);
-    
+
     if (!validate()) return;
-    
+
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.name,
-            monthly_budget: Number(formData.budget),
-          },
-        },
-      });
+      const response = await auth.signup(formData.email, formData.password, formData.name);
 
-      if (error) throw error;
+      // Save to localStorage
+      localStorage.setItem('sw_token', response.token);
+      localStorage.setItem('sw_user', JSON.stringify(response.user));
+      localStorage.setItem('sw_budget', formData.budget);
 
-      if (data.user) {
-        // Create profile in profiles table
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: data.user.id,
-              full_name: formData.name,
-              monthly_budget: Number(formData.budget),
-            },
-          ]);
+      // Update global store
+      setUser(response.user);
 
-        setUser({
-          id: data.user.id,
-          name: formData.name,
-          email: formData.email,
-          monthly_budget: Number(formData.budget),
-        });
-        
-        navigate('/auth/onboarding');
-      }
-    } catch (err: any) {
-      setGeneralError(err.message || 'Failed to create account.');
+      navigate('/auth/onboarding');
+    } catch (err: unknown) {
+      setGeneralError(err instanceof Error ? err.message : 'Failed to create account.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      });
-      if (error) throw error;
-    } catch (err: any) {
-      setGeneralError(err.message || 'Failed to signup with Google.');
-    }
+    setGeneralError('Google signup is coming soon.');
   };
 
   return (
     <AuthLayout>
-      <div className="space-y-[32px]">
-        <h2 className="text-[28px] font-bold font-display text-[var(--color-text-inverse-primary)] mb-[32px] leading-tight">
+      <div className="space-y-[24px]">
+        <h2 className="text-[28px] font-bold font-display text-[var(--color-text-inverse-primary)] mb-[20px] leading-tight">
           Create your SpendWise account
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-[24px]">
-          <div className="space-y-[24px]">
+        <form onSubmit={handleSubmit} className="space-y-[16px]">
+          <div className="space-y-[16px]">
             <Input
               inverse
               label="Full Name"
@@ -168,12 +135,12 @@ export default function SignupPage() {
             </div>
           )}
 
-          <Button type="submit" className="w-full mt-[32px]" isLoading={isLoading}>
+          <Button type="submit" className="w-full mt-[20px]" isLoading={isLoading}>
             Sign up
           </Button>
         </form>
 
-        <div className="relative py-[24px]">
+        <div className="relative py-[16px]">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-[var(--color-border-tertiary)]"></div>
           </div>
@@ -182,8 +149,8 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="w-full flex items-center justify-center gap-[12px] bg-white border-[var(--color-border-tertiary)] text-[var(--color-text-inverse-primary)] hover:bg-gray-50"
           onClick={handleGoogleLogin}
         >
@@ -191,7 +158,7 @@ export default function SignupPage() {
           <span className="font-bold">Continue with Google</span>
         </Button>
 
-        <p className="text-center text-[14px] text-[var(--color-text-inverse-secondary)] mt-[24px]">
+        <p className="text-center text-[14px] text-[var(--color-text-inverse-secondary)] mt-[12px]">
           Already have an account?{' '}
           <Link to="/auth/login" className="text-[var(--color-accent)] font-bold hover:underline">
             Log in

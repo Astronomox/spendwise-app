@@ -5,8 +5,8 @@ import { Input } from '@/src/components/ui/Input';
 import { CategoryPicker, CategoryId, CATEGORIES } from '@/src/components/logger/CategoryPicker';
 import { CloseIcon } from '@/src/components/ui/icons';
 import { Transaction } from '@/src/types/transactions';
-import { supabase } from '@/src/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
+import { useToastStore } from '@/src/components/ui/Toast';
 
 interface EditModalProps {
   transaction: Transaction | null;
@@ -33,27 +33,18 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditModal
     }
   }, [transaction]);
 
+  const { addToast } = useToastStore();
+
   const handleSave = async () => {
     if (!transaction || !amount || !categoryId || !date) return;
 
     setIsSubmitting(true);
     setError(null);
     try {
-      const { error: updateError } = await supabase
-        .from('transactions')
-        .update({
-          amount: Number(amount),
-          category: categoryId,
-          description: description || `Spent on ${categoryId}`,
-          date: date,
-        })
-        .eq('id', transaction.id);
+      // Stub: in a real app you'd call a save-transaction API here
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (updateError) throw updateError;
-
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
-
+      addToast('Transaction updates coming soon.', 'warning');
       onClose();
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -99,7 +90,7 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditModal
 
             <div className="flex justify-between items-center px-[24px] pb-[16px] border-b border-[var(--color-border)] shrink-0">
               <h2 className="text-[18px] font-bold font-display">Edit Transaction</h2>
-              <button onClick={onClose} className="p-[8px] -mr-[8px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
+              <button onClick={onClose} className="p-[8px] -mr-[8px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors" aria-label="Close edit modal">
                 <CloseIcon size={24} />
               </button>
             </div>

@@ -89,6 +89,7 @@ export default function LoggerPage() {
         <button 
           onClick={() => step === 2 ? setStep(1) : navigate(-1)}
           className="p-[8px] -ml-[8px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          aria-label="Go back"
         >
           <ArrowLeftIcon size={24} />
         </button>
@@ -121,6 +122,7 @@ export default function LoggerPage() {
                         key={`recent-${cat.id}`}
                         onClick={() => handleCategorySelect(cat.id)}
                         className="flex flex-col items-center gap-[8px] min-w-[88px] bg-[var(--color-bg-elevated)] p-[12px] rounded-[16px] border-[1px] border-[var(--color-border)] hover:bg-[var(--color-border)] transition-colors"
+                        aria-label={`Select ${cat.label} category`}
                       >
                         <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center" style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 15%, transparent)`, color: cat.color }}>
                           <Icon size={16} />

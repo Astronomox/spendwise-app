@@ -4,9 +4,9 @@ import { Transaction } from '@/src/types/transactions';
 import { Button } from '@/src/components/ui/Button';
 import { Card } from '@/src/components/ui/Card';
 import { EditTransactionModal } from '@/src/components/transactions/EditTransactionModal';
-import { supabase } from '@/src/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { RefreshIcon, CheckCircleIcon } from '@/src/components/ui/icons';
+import { useToastStore } from '@/src/components/ui/Toast';
 import { formatNaira } from '@/src/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -17,34 +17,15 @@ export default function SmsQueuePage() {
 
   const pendingTransactions = transactions.filter(t => t.status === 'pending');
 
-  const handleConfirm = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('transactions')
-        .update({ status: 'confirmed' })
-        .eq('id', id);
-      if (error) throw error;
+  const { addToast } = useToastStore();
 
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
-    } catch (e) {
-      console.error('Failed to confirm transaction', e);
-    }
+  const handleConfirm = async (id: string) => {
+    addToast('SMS confirming coming soon.', 'warning');
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to dismiss this transaction?')) return;
-    try {
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    } catch (e) {
-      console.error('Failed to delete transaction', e);
-    }
+    addToast('SMS deletion coming soon.', 'warning');
   };
 
   return (
@@ -60,8 +41,10 @@ export default function SmsQueuePage() {
       </div>
 
       {isLoading ? (
-        <div className="flex-1 flex flex-col items-center justify-center space-y-[16px]">
-          <RefreshIcon className="animate-spin text-[var(--color-accent)]" size={32} />
+        <div className="flex-1 p-[16px] space-y-[16px]">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="w-full h-[150px] skeleton rounded-[16px]"></div>
+          ))}
         </div>
       ) : pendingTransactions.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center space-y-[16px] p-[24px]">

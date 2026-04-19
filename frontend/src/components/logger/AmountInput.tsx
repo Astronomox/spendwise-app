@@ -1,4 +1,4 @@
-import { cn } from '@/src/lib/utils';
+import { cn, formatNaira } from '@/src/lib/utils';
 import { DeleteIcon } from '@/src/components/ui/icons';
 
 interface AmountInputProps {
@@ -28,9 +28,8 @@ export function AmountInput({ value, onChange }: AmountInputProps) {
       <div className="text-center space-y-[4px]">
         <p className="text-[13px] text-[var(--color-text-secondary)] font-[600] uppercase tracking-widest">Amount</p>
         <div className="flex items-center justify-center gap-[4px] h-[64px]">
-          <span className="text-[32px] font-bold text-[var(--color-accent)] opacity-80">₦</span>
           <span className="text-[56px] font-bold font-display tracking-tight text-[var(--color-text-primary)]">
-            {value ? Number(value).toLocaleString() : '0'}
+            {value ? formatNaira(Number(value)) : formatNaira(0)}
           </span>
         </div>
       </div>
@@ -44,6 +43,7 @@ export function AmountInput({ value, onChange }: AmountInputProps) {
               "h-[64px] rounded-full flex items-center justify-center text-[24px] font-bold transition-colors active:scale-95 duration-100",
               key === 'backspace' ? "text-[var(--color-text-secondary)] bg-transparent hover:bg-[var(--color-bg-elevated)]" : "text-[var(--color-text-primary)] bg-[var(--color-bg-elevated)] hover:bg-[var(--color-border)] shadow-[var(--shadow-shadow-sm)]"
             )}
+            aria-label={key === 'backspace' ? 'Backspace' : `Number ${key}`}
           >
             {key === 'backspace' ? <DeleteIcon size={28} /> : key}
           </button>

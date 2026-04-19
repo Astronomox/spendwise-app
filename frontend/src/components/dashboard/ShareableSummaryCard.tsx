@@ -14,9 +14,8 @@ interface ShareableSummaryProps {
   };
   user: {
     id: string;
-    name: string;
+    fullName: string;
     email: string;
-    monthly_budget: number;
   };
   onClose: () => void;
 }
@@ -67,6 +66,7 @@ export function ShareableSummaryCard({ data, user, onClose }: ShareableSummaryPr
       <button
         onClick={onClose}
         className="absolute top-[24px] right-[24px] p-[8px] bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors z-20"
+        aria-label="Close summary card"
       >
         <CloseIcon size={24} />
       </button>

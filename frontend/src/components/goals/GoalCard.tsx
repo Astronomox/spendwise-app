@@ -29,7 +29,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
     <Card className="p-[20px] border-[var(--color-border)] shadow-none flex gap-[16px] items-center relative overflow-hidden group transition-all duration-200">
       {/* Delete Zone on Swipe/Hover (Simplifying for desktop/hover for now, real swipe would use Framer Motion drag) */}
       <div className="absolute right-0 top-0 bottom-0 w-[80px] bg-[var(--color-danger)] flex items-center justify-center text-white opacity-0 translate-x-full group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-        <button onClick={onDelete} className="p-[16px] h-full w-full flex items-center justify-center">
+        <button onClick={onDelete} className="p-[16px] h-full w-full flex items-center justify-center" aria-label="Delete Goal">
           <TrashIcon size={24} />
         </button>
       </div>
@@ -75,7 +75,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
 
         {isComplete ? (
           <div className="inline-flex items-center gap-[4px] px-[8px] py-[2px] bg-[rgba(16,185,129,0.1)] text-[var(--color-success)] rounded-full">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Goal Reached! 🎉</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider">Goal Reached!</span>
           </div>
         ) : (
           <div className="flex gap-[8px]">
@@ -84,7 +84,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
             </span>
             {dailySave > 0 && (
               <span className="inline-flex items-center px-[8px] py-[2px] bg-[rgba(0,135,81,0.05)] text-[var(--color-accent)] rounded-full text-[11px] font-bold uppercase tracking-wider">
-                ₦{Math.ceil(dailySave).toLocaleString()}/day
+                {formatNaira(Math.ceil(dailySave))}/day
               </span>
             )}
           </div>

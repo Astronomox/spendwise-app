@@ -77,8 +77,10 @@ export default function GoalsPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex-1 flex flex-col items-center justify-center space-y-[16px]">
-          <RefreshIcon className="animate-spin text-[var(--color-accent)]" size={32} />
+        <div className="flex-1 p-[16px] space-y-[16px]">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="w-full h-[120px] skeleton rounded-[16px]"></div>
+          ))}
         </div>
       ) : goals.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-[24px] text-center space-y-[24px]">
