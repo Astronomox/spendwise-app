@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { requestLogger } from "./middleware/requestLogger.js";
 
+
 // LOAD ENV VARIABLES
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(requestLogger); // LOG ALL REQUESTS WITH TIMING AND SLOW REQUEST HIGHLIG
 app.use("/api/auth", authRoutes); // AUTH ROUTES
 app.use("/api/transactions", transactionRoutes); // TRANSACTION ROUTES
 app.use("/api/analytics", analyticsRoutes); // ANALYTICS ROUTES
+app.use("/api/auth", authRoutes); //GOOGLE AUTH ROUTES
 
 // HEALTH CHECK ENDPOINT
 app.get("/", (req, res) => {

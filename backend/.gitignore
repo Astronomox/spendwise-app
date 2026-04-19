@@ -13,4 +13,9 @@ build
 .DS_Store
 
 prisma/seed.js
+
 test.js
+
+google-test.html
+
+.vscode/

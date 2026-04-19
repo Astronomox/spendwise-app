@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../config/prisma.js";
+import { verifyGoogleToken } from "../services/auth/googleAuthService.js";
 
 // Helper function to generate JWT token
 const generateToken = (userId) => {
@@ -77,5 +78,59 @@ export const login = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// GOOGLE LOGIN LOGIC
+export const googleAuth = async (req, res) => {
+    try {
+        const { idToken } = req.body;
+
+        if (!idToken) {
+            return res.status(400).json({
+                message: "Google ID token is required",
+            });
+        }
+
+        // 1. Verify Google token
+        const googleUser = await verifyGoogleToken(idToken);
+
+        if (!googleUser?.email) {
+            return res.status(400).json({
+                message: "Invalid Google token",
+            });
+        }
+
+        // 2. Check if user exists
+        let user = await prisma.user.findUnique({
+            where: { email: googleUser.email },
+        });
+
+        // 3. Create user if not exists
+        if (!user) {
+            user = await prisma.user.create({
+                data: {
+                    email: googleUser.email,
+                    fullName: googleUser.fullName,
+                    provider: "google",
+                    providerId: googleUser.googleId,
+                },
+            });
+        }
+
+        // 4. Generate JWT
+        const token = generateToken(user);
+
+        return res.json({
+            success: true,
+            token,
+            user,
+        });
+
+    } catch (error) {
+        console.error("Google Auth Error:", error);
+        return res.status(500).json({
+            message: "Google authentication failed",
+        });
     }
 };

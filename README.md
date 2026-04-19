@@ -17,21 +17,27 @@ SpendWise fixes that.
 ## What It Does
 
 ### Auto-logging from SMS
+
 SpendWise reads your bank alert messages in real time — GTBank, Zenith, Kuda, Access Bank, First Bank, UBA, Opay, and more. Every debit is automatically parsed, categorised, and logged. No manual input needed.
 
 ### Manual cash logger
+
 For cash transactions that don't trigger an SMS. 3 taps: pick a category, enter the amount, confirm. Done in under 10 seconds.
 
 ### Dashboard
+
 Your financial picture at a glance — total spent this month, budget progress, daily safe spend limit, 7-day spending chart, and top spending categories.
 
 ### Savings goals
+
 Set a target (save ₦500,000 for a new laptop by April), track your progress, and see exactly how much you need to set aside each day to get there.
 
 ### Smart alerts
+
 Get notified when you've spent 2× your daily average, when you've hit a budget streak, or when a savings goal milestone is reached.
 
 ### Shareable summary card
+
 Generate a beautiful visual summary of your month — total spent, top categories, streak count — and share it straight to WhatsApp.
 
 ---
@@ -39,7 +45,7 @@ Generate a beautiful visual summary of your month — total spent, top categorie
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
+| --- | --- |
 | Frontend | React 19 + Vite |
 | Routing | React Router v7 |
 | Styling | Tailwind CSS v4 + CSS Variables |
@@ -55,6 +61,7 @@ Generate a beautiful visual summary of your month — total spent, top categorie
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - pnpm
 - A Supabase project
@@ -102,6 +109,7 @@ Open [http://localhost:3000](http://localhost:3000)
 ---
 
 ## Database Schema
+
 profiles         — user settings, monthly budget, bank preferences
 transactions     — all income/expense entries (manual + SMS)
 savings_goals    — user savings targets with deadlines
@@ -112,6 +120,7 @@ Row Level Security (RLS) is enabled on all tables. Users can only access their o
 ---
 
 ## Project Structure
+
 src/
 ├── components/
 │   ├── layout/        # AppShell, navigation
