@@ -21,6 +21,7 @@ export default function App() {
   const storedUser = typeof window !== 'undefined' ? localStorage.getItem('sw_user') : null;
   const isActuallyAuthenticated = isAuthenticated || (storedUser && storedUser !== 'undefined');
 
+
   return (
     <Router>
       <AppShell>
@@ -54,6 +55,7 @@ export default function App() {
           <Route
             path="/sms-queue"
             element={isActuallyAuthenticated ? <SmsQueuePage /> : <Navigate to="/auth/login" />}
+
           />
 
           {/* Fallback */}

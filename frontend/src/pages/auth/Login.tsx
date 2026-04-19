@@ -50,9 +50,6 @@ export default function LoginPage() {
 
       // The backend returns the user object directly, not wrapped in a `user` property.
       // E.g. { token: '...', id: '...', email: '...', fullName: '...' }
-      // So we need to extract the token and pass the rest as the user object.
-      // For now, let's just log it temporarily to confirm.
-
       const { token, ...user } = response;
 
       // Save to localStorage
@@ -64,6 +61,7 @@ export default function LoginPage() {
 
       // Navigate to dashboard asynchronously to ensure state has settled
       setTimeout(() => navigate('/dashboard'), 0);
+
     } catch (err: unknown) {
       setGeneralError(err instanceof Error ? err.message : 'Invalid email or password.');
     } finally {
