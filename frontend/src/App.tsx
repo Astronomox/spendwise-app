@@ -9,6 +9,7 @@ import Goals      from '@/pages/Goals';
 import Alerts     from '@/pages/Alerts';
 import SmsQueue   from '@/pages/SmsQueue';
 import Onboarding from '@/pages/Onboarding';
+import Profile    from '@/pages/Profile';
 import Login      from '@/pages/auth/Login';
 import Signup     from '@/pages/auth/Signup';
 
@@ -29,6 +30,7 @@ export default function App(): React.JSX.Element {
           <Route path="/goals"       element={<PrivateRoute element={<Goals />}      />} />
           <Route path="/alerts"      element={<PrivateRoute element={<Alerts />}     />} />
           <Route path="/sms-queue"   element={<PrivateRoute element={<SmsQueue />}   />} />
+          <Route path="/profile"     element={<PrivateRoute element={<Profile />}    />} />
           <Route path="/onboarding"  element={<Onboarding />} />
           <Route path="/auth/login"  element={<Login />}  />
           <Route path="/auth/signup" element={<Signup />} />

@@ -171,9 +171,13 @@ export default function AppShell({ children }: AppShellProps): React.JSX.Element
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-danger rounded-full border-2 border-forge-bg" />
                 )}
               </button>
-              <div className="w-8 h-8 rounded-full bg-rust/20 border border-rust/30 flex items-center justify-center text-[11px] font-bold text-rust">
+              <button
+                onClick={() => navigate('/profile')}
+                aria-label="View profile"
+                className="w-8 h-8 rounded-full bg-rust/20 border border-rust/30 flex items-center justify-center text-[11px] font-bold text-rust"
+              >
                 {initials}
-              </div>
+              </button>
             </div>
           </header>
         )}

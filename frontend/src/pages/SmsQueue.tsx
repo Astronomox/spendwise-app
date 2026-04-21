@@ -1,7 +1,7 @@
 // src/pages/SmsQueue.tsx
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useToastStore }   from '@/components/ui/Toast';
 import { EditTransactionModal } from '@/components/transactions/EditTransactionModal';
@@ -10,17 +10,17 @@ import { Transaction } from '@/types/transactions';
 import { formatNaira } from '@/lib/utils';
 
 export default function SmsQueuePage(): React.JSX.Element {
-  const { transactions, isLoading }  = useTransactions();
-  const addToast                     = useToastStore((s) => s.addToast);
-  const [editing, setEditing]        = useState<Transaction | null>(null);
+  const { transactions, isLoading } = useTransactions();
+  const addToast                    = useToastStore((s) => s.addToast);
+  const [editing, setEditing]       = useState<Transaction | null>(null);
 
   const pending = transactions.filter((t) => t.status === 'pending');
 
-  const handleConfirm = (_id: string) => {
+  const handleConfirm = (_id: string): void => {
     addToast('SMS confirming coming soon.', 'info');
   };
 
-  const handleDismiss = (id: string) => {
+  const handleDismiss = (_id: string): void => {
     if (!window.confirm('Are you sure you want to dismiss this transaction?')) return;
     addToast('SMS deletion coming soon.', 'info');
   };
