@@ -5,10 +5,12 @@ import { motion } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { useAppStore } from '@/lib/store';
 
 interface LoginFormErrors {
   email?:    string;
   password?: string;
+  form?:     string;
 }
 
 interface Feature {
@@ -24,6 +26,7 @@ const FEATURES: readonly Feature[] = [
 
 export default function Login(): React.JSX.Element {
   const navigate = useNavigate();
+  const setUser  = useAppStore((s) => s.setUser);
 
   const [email,    setEmail]    = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -43,11 +46,51 @@ export default function Login(): React.JSX.Element {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!validate()) return;
+
     setLoading(true);
-    // Simulate auth delay — replace with real API call
-    await new Promise<void>(resolve => setTimeout(resolve, 1000));
-    setLoading(false);
-    navigate('/dashboard');
+    setErrors({});
+
+    try {
+      const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined)
+        ?? 'https://spendwise-app-39vv.onrender.com';
+
+      const res = await fetch(`${BASE_URL}/api/auth/login`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password }),
+      });
+
+      // API returns flat shape: { id, email, fullName, token }
+      const data = await res.json() as {
+        id?:       string;
+        email?:    string;
+        fullName?: string;
+        token?:    string;
+        message?:  string;
+      };
+
+      if (!res.ok) {
+        setErrors({ form: data.message ?? 'Invalid email or password' });
+        return;
+      }
+
+      // Persist token for authenticated API requests
+      localStorage.setItem('sw_token', data.token ?? '');
+
+      // Save user to global store — sets isAuthenticated: true
+      setUser({
+        id:            data.id       ?? '',
+        fullName:      data.fullName ?? '',
+        email:         data.email    ?? '',
+        monthlyBudget: 150_000,
+      });
+
+      navigate('/dashboard', { replace: true });
+    } catch {
+      setErrors({ form: 'Network error — please try again.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -135,6 +178,14 @@ export default function Login(): React.JSX.Element {
               onChange={e => { setPassword(e.target.value); setErrors(v => ({ ...v, password: undefined })); }}
               error={errors.password}
             />
+
+            {/* Form-level error */}
+            {errors.form != null && (
+              <p className="text-[13px] font-semibold text-red-500 text-center">
+                {errors.form}
+              </p>
+            )}
+
             <Button
               type="submit"
               isLoading={loading}

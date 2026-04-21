@@ -139,8 +139,7 @@ export default function Logger(): React.JSX.Element {
         date:        new Date().toISOString(),
         source:      'manual',
         status:      'confirmed',
-        description: note.trim() || (selectedCat?.label ?? ''),
-      });
+        description: (note.trim() || selectedCat?.label) ?? '',      });
     } catch {
       // toast is shown by the hook on error — just don't show success
       return;

@@ -6,7 +6,6 @@ import { useGoals } from '@/hooks/useGoals';
 import { formatNaira } from '@/lib/utils';
 import type { Goal, GoalFormValues } from '@/types/goals';
 import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import GoalCard from '@/components/goals/GoalCard';
 import { GoalModal } from '@/components/goals/GoalModal';
@@ -22,9 +21,6 @@ export default function Goals(): React.JSX.Element {
     deleteGoal,
   } = useGoals();
 
-  // Fall back to mock data while API is unavailable / loading
-  const goals = isLoading || liveGoals.length === 0 ? mockGoals : liveGoals;
-
   // Local optimistic state — used only while Goals API is stubbed
   const [localGoals, setLocalGoals] = useState<Goal[]>(mockGoals);
   const displayGoals = liveGoals.length > 0 ? liveGoals : localGoals;
@@ -32,11 +28,11 @@ export default function Goals(): React.JSX.Element {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [editing, setEditing] = useState<Goal | null>(null);
 
-  const totalSaved = displayGoals.reduce((s, g) => s + g.currentAmount, 0);
-  const totalTarget = displayGoals.reduce((s, g) => s + g.targetAmount, 0);
+  const totalSaved  = displayGoals.reduce((s, g) => s + g.currentAmount, 0);
+  const totalTarget = displayGoals.reduce((s, g) => s + g.targetAmount,  0);
 
   const openCreate = (): void => { setEditing(null); setShowModal(true); };
-  const openEdit = (g: Goal): void => { setEditing(g); setShowModal(true); };
+  const openEdit   = (g: Goal): void => { setEditing(g); setShowModal(true); };
   const closeModal = (): void => setShowModal(false);
 
   const handleSave = async ({ name, targetAmount }: GoalFormValues): Promise<void> => {
@@ -52,13 +48,13 @@ export default function Goals(): React.JSX.Element {
         setLocalGoals(gs => gs.map(g => g.id === editing.id ? { ...g, name, targetAmount } : g));
       } else {
         const newGoal: Goal = {
-          id: `g${Date.now()}`,
+          id:            `g${Date.now()}`,
           name,
           targetAmount,
           currentAmount: 0,
-          deadline: new Date(Date.now() + 90 * 86_400_000).toISOString(),
-          icon: 'savings',
-          userId: 'u1',
+          deadline:      new Date(Date.now() + 90 * 86_400_000).toISOString(),
+          icon:          'savings',
+          userId:        'u1',
         };
         setLocalGoals(gs => [...gs, newGoal]);
       }
@@ -70,7 +66,6 @@ export default function Goals(): React.JSX.Element {
     try {
       await deleteGoal(id);
     } catch {
-      // API not available yet — fall back to local state
       setLocalGoals(gs => gs.filter(g => g.id !== id));
     }
   };
@@ -152,12 +147,12 @@ export default function Goals(): React.JSX.Element {
         </div>
       )}
 
-      {/* Modal — AnimatePresence handled internally by GoalModal */}
+      {/* Modal */}
       <GoalModal
         goal={editing}
         isOpen={showModal}
         onClose={closeModal}
-        onSave={handleSave}
+        onSave={(v) => handleSave(v)}
       />
     </div>
   );

@@ -23,13 +23,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
+// Backend returns a flat object: { id, email, fullName, token }
 export interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    fullName: string;
-  };
+  id:       string;
+  email:    string;
+  fullName: string;
+  token:    string;
 }
 
 export const auth = {
