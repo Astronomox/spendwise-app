@@ -1,6 +1,6 @@
 # SpendWise — Frontend
 
-A premium personal finance tracker built with **Vite + React 18**, styled with **Tailwind CSS** and the **Forge palette** (rusty brown on near-black). Animations via **Framer Motion**, charts via **Recharts**, icons via **Lucide React**.
+A premium personal finance tracker built with **Vite + React 18 + TypeScript**, styled with **Tailwind CSS** and the **Forge palette** (rusty brown on near-black). Animations via **Framer Motion**, charts via **Recharts**, icons via **Lucide React**.
 
 ---
 
@@ -8,16 +8,22 @@ A premium personal finance tracker built with **Vite + React 18**, styled with *
 
 ```bash
 # 1. Install dependencies
-npm install
+pnpm install
 
-# 2. Start the dev server
-npm run dev
+# 2. Copy env file and set your API URL
+cp .env.example .env.local
 
-# 3. Build for production
-npm run build
+# 3. Start the dev server
+pnpm dev
 
-# 4. Preview the production build locally
-npm run preview
+# 4. Type-check (no emit)
+pnpm typecheck
+
+# 5. Build for production
+pnpm build
+
+# 6. Preview the production build locally
+pnpm preview
 ```
 
 The dev server starts at **http://localhost:5173** by default.
@@ -27,51 +33,77 @@ The dev server starts at **http://localhost:5173** by default.
 ## Project structure
 
 ```
-spendwise-vite/
+frontend/
 ├── index.html
 ├── package.json
-├── vite.config.js          # path alias: @ → ./src
+├── vite.config.ts          # path alias: @ → ./src
+├── tsconfig.json           # strict mode, project references
+├── tsconfig.node.json      # node-side config (vite.config.ts)
 ├── tailwind.config.js      # Forge palette tokens
 ├── postcss.config.js
+├── vercel.json             # SPA catch-all rewrite
+├── .env.example            # VITE_API_URL placeholder
 └── src/
-    ├── main.jsx            # React 18 root
-    ├── App.jsx             # BrowserRouter + Routes
+    ├── main.tsx            # React 18 root, QueryClientProvider, ToastContainer
+    ├── App.tsx             # BrowserRouter + Routes + PrivateRoute auth guard
     ├── index.css           # Tailwind directives, base styles, custom utilities
+    ├── vite-env.d.ts       # Vite client type reference
+    │
+    ├── types/
+    │   ├── transactions.ts # Transaction, TransactionDirection, TransactionSource, TransactionStatus
+    │   ├── goals.ts        # Goal, GoalFormValues
+    │   ├── alerts.ts       # Alert, AlertType
+    │   └── user.ts         # User, DashboardData
     │
     ├── data/
-    │   └── mockData.js     # Prototype mock data — swap for API calls
+    │   └── mockData.ts     # Prototype mock data — fallback when API is unavailable
     │
     ├── lib/
-    │   ├── utils.js        # cn(), formatNaira(), getTimeAgo(), getGreeting()
-    │   └── categories.jsx  # CATEGORIES array + getCategoryById()
+    │   ├── api.ts          # Typed API client (auth, transactions, analytics)
+    │   ├── queryClient.ts  # TanStack Query v5 client configuration
+    │   ├── store.ts        # Zustand auth store (persists to localStorage)
+    │   ├── utils.ts        # cn(), formatNaira(), getTimeAgo(), getGreeting()
+    │   └── categories.tsx  # CATEGORIES array + getCategoryById()
+    │
+    ├── hooks/
+    │   ├── useTransactions.ts  # Query + optimistic mutations for transactions
+    │   ├── useDashboard.ts     # Dashboard summary query
+    │   ├── useGoals.ts         # Goals CRUD with optimistic updates
+    │   └── useAlerts.ts        # Alerts query + mark-read mutation
     │
     ├── components/
     │   ├── ui/
-    │   │   ├── Button.jsx
-    │   │   ├── Card.jsx
-    │   │   ├── Input.jsx
-    │   │   ├── Badge.jsx
-    │   │   └── AnimatedNumber.jsx
+    │   │   ├── Button.tsx
+    │   │   ├── Card.tsx
+    │   │   ├── Input.tsx
+    │   │   ├── Badge.tsx
+    │   │   ├── AnimatedNumber.tsx
+    │   │   └── Toast.tsx           # Zustand toast store + auto-dismiss UI
     │   ├── charts/
-    │   │   └── WeeklyBarChart.jsx
+    │   │   └── WeeklyBarChart.tsx
     │   ├── layout/
-    │   │   └── AppShell.jsx   # Sidebar (desktop) + bottom nav (mobile) + page transitions
+    │   │   ├── AppShell.tsx        # Sidebar (desktop) + bottom nav (mobile) + page transitions
+    │   │   └── AuthLayout.tsx      # Auth page layout wrapper
     │   ├── transactions/
-    │   │   └── TransactionItem.jsx
+    │   │   ├── TransactionItem.tsx
+    │   │   └── EditTransactionModal.tsx
     │   ├── goals/
-    │   │   └── GoalCard.jsx
+    │   │   ├── GoalCard.tsx
+    │   │   └── GoalModal.tsx
     │   └── dashboard/
-    │       └── TopCategories.jsx
+    │       └── TopCategories.tsx
     │
     └── pages/
-        ├── Dashboard.jsx
-        ├── History.jsx
-        ├── Logger.jsx
-        ├── Goals.jsx
-        ├── Alerts.jsx
+        ├── Dashboard.tsx
+        ├── History.tsx
+        ├── Logger.tsx
+        ├── Goals.tsx
+        ├── Alerts.tsx
+        ├── SmsQueue.tsx
+        ├── Onboarding.tsx
         └── auth/
-            ├── Login.jsx
-            └── Signup.jsx
+            ├── Login.tsx
+            └── Signup.tsx
 ```
 
 ---
@@ -117,62 +149,66 @@ Applied via `font-display` / `font-body` Tailwind utilities (configured in `tail
 
 ---
 
-## Connecting to the backend
+## Backend integration
 
-All data currently comes from `src/data/mockData.js`. To wire up the real backend:
+The app uses **TanStack React Query v5** for data fetching and **Zustand** for auth state. All API calls go through `src/lib/api.ts`, which reads `VITE_API_URL` from your `.env.local`.
 
-1. **Install a data-fetching library** — [TanStack Query](https://tanstack.com/query) is recommended (already used in the original codebase):
-   ```bash
-   npm install @tanstack/react-query
-   ```
+### Auth flow
 
-2. **Create API hooks** in `src/hooks/` mirroring the original `useTransactions`, `useDashboard`, `useGoals`, `useAlerts` hooks.
+1. User signs up or logs in via `/auth/login` or `/auth/signup`
+2. JWT token is stored in `localStorage` (`sw_token` / `sw_user`) via the Zustand store (`src/lib/store.ts`)
+3. `PrivateRoute` in `App.tsx` checks `isAuthenticated` from the store — unauthenticated users are redirected to `/auth/login`
+4. After signup, users are redirected to `/onboarding`
 
-3. **Replace mock imports** in each page with the real hooks, e.g.:
-   ```jsx
-   // Before
-   import { mockTransactions } from '@/data/mockData';
+### Data hooks
 
-   // After
-   import { useTransactions } from '@/hooks/useTransactions';
-   const { transactions, isLoading } = useTransactions();
-   ```
+| Hook               | File                          | Description                              |
+|--------------------|-------------------------------|------------------------------------------|
+| `useTransactions`  | `src/hooks/useTransactions.ts`| Transactions query + optimistic add      |
+| `useDashboard`     | `src/hooks/useDashboard.ts`   | Dashboard summary (budget, spend, etc.)  |
+| `useGoals`         | `src/hooks/useGoals.ts`       | Goals CRUD with optimistic local updates |
+| `useAlerts`        | `src/hooks/useAlerts.ts`      | Alerts list + mark-as-read mutation      |
 
-4. **Add auth** — wire `src/pages/auth/Login.jsx` and `Signup.jsx` to the existing backend auth endpoints, store the JWT in `localStorage` (`sw_token` / `sw_user`), and gate protected routes in `App.jsx` using a Zustand or Context auth store.
+Each page falls back to `src/data/mockData.ts` when the API is unavailable or loading, so the UI always renders.
 
 ---
 
 ## Key dependencies
 
-| Package             | Version  | Purpose                              |
-|---------------------|----------|--------------------------------------|
-| `react`             | 18.3     | UI framework                         |
-| `react-router-dom`  | 6.24     | Client-side routing                  |
-| `framer-motion`     | 11.3     | Page transitions, micro-interactions |
-| `recharts`          | 2.12     | Weekly spend bar chart               |
-| `lucide-react`      | 0.408    | Icon set                             |
-| `tailwindcss`       | 3.4      | Utility-first CSS                    |
-| `vite`              | 5.3      | Build tool + dev server              |
-| `@vitejs/plugin-react` | 4.3   | JSX transform + Fast Refresh         |
+| Package                  | Version  | Purpose                              |
+|--------------------------|----------|--------------------------------------|
+| `react`                  | 18.3     | UI framework                         |
+| `react-router-dom`       | 6.24     | Client-side routing                  |
+| `@tanstack/react-query`  | 5.51     | Data fetching + cache                |
+| `zustand`                | 4.5      | Auth state management                |
+| `framer-motion`          | 11.3     | Page transitions, micro-interactions |
+| `recharts`               | 2.12     | Weekly spend bar chart               |
+| `lucide-react`           | 0.408    | Icon set                             |
+| `tailwindcss`            | 3.4      | Utility-first CSS                    |
+| `typescript`             | 5.5      | Type safety                          |
+| `vite`                   | 5.3      | Build tool + dev server              |
 
 ---
 
 ## Available scripts
 
-| Command           | Description                          |
-|-------------------|--------------------------------------|
-| `npm run dev`     | Start Vite dev server (HMR enabled)  |
-| `npm run build`   | Production build → `dist/`           |
-| `npm run preview` | Serve the production build locally   |
+| Command            | Description                                    |
+|--------------------|------------------------------------------------|
+| `pnpm dev`         | Start Vite dev server (HMR enabled)            |
+| `pnpm build`       | Type-check + production build → `dist/`        |
+| `pnpm preview`     | Serve the production build locally             |
+| `pnpm typecheck`   | Run `tsc -b --noEmit` (type-check, no output)  |
 
 ---
 
 ## Deployment
 
-The output of `npm run build` is a static `dist/` folder — deploy to **Vercel**, **Netlify**, or any static host. A `vercel.json` with SPA rewrites is recommended:
+The output of `pnpm build` is a static `dist/` folder. A `vercel.json` with SPA rewrites is included:
 
 ```json
 {
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
 ```
+
+Deploy to **Vercel**, **Netlify**, or any static host. Set `VITE_API_URL` as an environment variable in your hosting platform's dashboard.
