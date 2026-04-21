@@ -1,10 +1,16 @@
-export interface SavingsGoal {
-  id: string;
-  user_id: string;
-  name: string;
-  icon: string;
-  target_amount: number;
-  current_amount: number;
-  deadline: string; // ISO 8601
-  created_at: string;
+// src/types/goals.ts
+
+export interface Goal {
+  id:            string;
+  name:          string;
+  targetAmount:  number;
+  currentAmount: number;
+  /** ISO 8601 date string */
+  deadline:      string;
+  /** Maps to a CATEGORIES id — used to pick the icon */
+  icon:          string;
+  userId:        string;
 }
+
+/** Shape accepted by the create / edit form */
+export type GoalFormValues = Pick<Goal, 'name' | 'targetAmount'>;

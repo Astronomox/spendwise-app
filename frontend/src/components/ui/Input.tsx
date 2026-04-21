@@ -1,73 +1,105 @@
-import { InputHTMLAttributes, forwardRef } from 'react';
-import { cn, formatNaira } from '@/src/lib/utils';
-import { CloseIcon, WarningIcon } from '@/src/components/ui/icons';
+// src/components/ui/Input.tsx
+import { useState } from 'react';
+import { Eye, EyeOff, X, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  isCurrency?: boolean;
+export interface InputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+  label?:   string;
+  error?:   string;
+  /** Show a ✕ button to clear the value */
   onClear?: () => void;
+  /** Light (white) surface used on auth pages */
   inverse?: boolean;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, disabled, isCurrency, value, onClear, inverse = false, ...props }, ref) => {
-    return (
-      <div className="w-full space-y-[8px] relative">
-        {label && (
-          <label className={cn(
-            "text-[13px] font-[500] block",
-            inverse ? "text-[var(--color-text-inverse-secondary)]" : "text-[var(--color-text-secondary)]"
-          )}>
-            {label}
-          </label>
-        )}
-        <div className="relative w-full">
-          {isCurrency && (
-            <div className={cn(
-              "absolute left-[16px] top-1/2 -translate-y-1/2 font-[600] pointer-events-none",
-              inverse ? "text-[var(--color-text-inverse-primary)]" : "text-[var(--color-text-primary)]"
-            )}>
-              {formatNaira(0).replace(/\d/g, '').trim()}
-            </div>
+export default function Input({
+  label,
+  error,
+  className,
+  disabled,
+  onClear,
+  type    = 'text',
+  inverse = false,
+  value,
+  ...props
+}: InputProps): React.JSX.Element {
+  const [showPw, setShowPw] = useState(false);
+  const isPassword = type === 'password';
+  const inputType  = isPassword && showPw ? 'text' : type;
+
+  const hasClearBtn = !isPassword && onClear != null && value !== '' && value != null;
+
+  return (
+    <div className="flex flex-col gap-1.5 w-full">
+      {label != null && (
+        <label className={cn(
+          'text-[13px] font-medium',
+          inverse ? 'text-gray-600' : 'text-cream/55'
+        )}>
+          {label}
+        </label>
+      )}
+
+      <div className="relative">
+        <input
+          type={inputType}
+          disabled={disabled}
+          value={value}
+          className={cn(
+            'w-full min-h-[48px] px-4 rounded-xl text-[15px] font-medium',
+            'border transition-all duration-200 outline-none',
+            'focus:ring-2 focus:ring-rust/30 focus:border-rust',
+            inverse
+              ? 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400'
+              : 'bg-forge-surface border-white/[0.10] text-cream placeholder:text-cream/30',
+            error != null && 'border-danger focus:ring-danger/25 focus:border-danger',
+            (isPassword || hasClearBtn) && 'pr-11',
+            'disabled:opacity-50',
+            className
           )}
-          <input
-            ref={ref}
-            disabled={disabled}
-            value={value}
+          {...props}
+        />
+
+        {/* Password toggle */}
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPw(v => !v)}
             className={cn(
-              'flex min-h-[48px] w-full rounded-[12px] border-[1px] py-[12px] text-[15px] transition-all duration-200 focus:border-[var(--color-accent)] focus:shadow-[0_0_0_3px_var(--color-accent-glow)] focus:outline-none disabled:opacity-50',
-              inverse
-                ? 'bg-white border-[var(--color-border-tertiary)] text-[var(--color-text-inverse-primary)] placeholder-[#9CA3AF] disabled:bg-gray-50'
-                : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] disabled:bg-[var(--color-bg-elevated)]',
-              isCurrency ? 'pl-[40px]' : 'px-[16px]',
-              error && 'border-[var(--color-danger)] focus:border-[var(--color-danger)] focus:shadow-[0_0_0_3px_rgba(225,29,72,0.2)]',
-              className
+              'absolute right-3.5 top-1/2 -translate-y-1/2 p-0.5',
+              'flex items-center justify-center transition-colors',
+              inverse ? 'text-gray-400 hover:text-gray-700' : 'text-cream/30 hover:text-cream/70'
             )}
-            {...props}
-          />
-          {value && onClear && typeof value === 'string' && value.length > 0 && !disabled && (
-            <button
-              type="button"
-              onClick={onClear}
-              className="absolute right-[16px] top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-              aria-label="Clear input"
-            >
-              <CloseIcon size={16} />
-            </button>
-          )}
-        </div>
-        {error && (
-          <p className="text-[12px] text-[var(--color-danger)] font-[500] flex items-center gap-[4px] animate-in fade-in slide-in-from-top-1">
-            <WarningIcon size={14} />
-            {error}
-          </p>
+            aria-label={showPw ? 'Hide password' : 'Show password'}
+          >
+            {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
+
+        {/* Clear button */}
+        {hasClearBtn && (
+          <button
+            type="button"
+            onClick={onClear}
+            className={cn(
+              'absolute right-3.5 top-1/2 -translate-y-1/2 p-0.5',
+              'flex items-center justify-center transition-colors',
+              inverse ? 'text-gray-400 hover:text-gray-700' : 'text-cream/30 hover:text-cream/70'
+            )}
+            aria-label="Clear input"
+          >
+            <X size={15} />
+          </button>
         )}
       </div>
-    );
-  }
-);
 
-Input.displayName = 'Input';
-
-export { Input };
+      {error != null && (
+        <p className="flex items-center gap-1 text-[12px] font-medium text-danger">
+          <AlertTriangle size={13} />
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}

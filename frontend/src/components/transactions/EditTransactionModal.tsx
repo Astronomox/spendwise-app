@@ -1,29 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Button } from '@/src/components/ui/Button';
-import { Input } from '@/src/components/ui/Input';
-import { CategoryPicker, CategoryId, CATEGORIES } from '@/src/components/logger/CategoryPicker';
-import { CloseIcon } from '@/src/components/ui/icons';
-import { Transaction } from '@/src/types/transactions';
-import { useQueryClient } from '@tanstack/react-query';
-import { useToastStore } from '@/src/components/ui/Toast';
+// src/components/transactions/EditTransactionModal.tsx
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import Input  from '@/components/ui/Input';
+import { CATEGORIES } from '@/lib/categories';
+import { Transaction } from '@/types/transactions';
+import { useToastStore } from '@/components/ui/Toast';
 
-interface EditModalProps {
+interface EditTransactionModalProps {
   transaction: Transaction | null;
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen:      boolean;
+  onClose:     () => void;
 }
 
-export function EditTransactionModal({ transaction, isOpen, onClose }: EditModalProps) {
-  const queryClient = useQueryClient();
+export function EditTransactionModal({
+  transaction,
+  isOpen,
+  onClose,
+}: EditTransactionModalProps): React.JSX.Element {
+  const addToast = useToastStore((s) => s.addToast);
 
-  const [amount, setAmount] = useState('');
-  const [categoryId, setCategoryId] = useState<CategoryId | null>(null);
+  const [amount,      setAmount]      = useState('');
+  const [categoryId,  setCategoryId]  = useState<string>('other');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState('');
+  const [date,        setDate]        = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error,       setError]       = useState<string | null>(null);
 
+  // Sync fields when transaction changes
   useEffect(() => {
     if (transaction) {
       setAmount(transaction.amount.toString());
@@ -33,44 +38,39 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditModal
     }
   }, [transaction]);
 
-  const { addToast } = useToastStore();
-
   const handleSave = async () => {
     if (!transaction || !amount || !categoryId || !date) return;
-
     setIsSubmitting(true);
     setError(null);
     try {
-      // Stub: in a real app you'd call a save-transaction API here
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      addToast('Transaction updates coming soon.', 'warning');
+      // Stub: edit API not available yet
+      await new Promise<void>((r) => setTimeout(r, 500));
+      addToast('Transaction updates coming soon.', 'info');
       onClose();
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message || 'Failed to update transaction.');
-      } else {
-        setError('Failed to update transaction.');
-      }
+      setError(err instanceof Error ? err.message : 'Failed to update transaction.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const selectedCategory = CATEGORIES.find(c => c.id === categoryId);
-  const CategoryIcon = selectedCategory?.Icon;
+  const selectedCat = CATEGORIES.find((c) => c.id === categoryId);
+  const CatIcon     = selectedCat?.Icon;
 
   return (
     <AnimatePresence>
       {isOpen && transaction && (
         <>
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[rgba(0,0,0,0.5)] backdrop-blur-[4px] z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-[3px] z-50"
           />
+
+          {/* Sheet */}
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -79,28 +79,32 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditModal
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={0.2}
-            onDragEnd={(e, info) => {
-              if (info.offset.y > 100) onClose();
-            }}
-            className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-secondary)] rounded-t-[24px] z-50 h-[85vh] flex flex-col shadow-[var(--shadow-shadow-lg)]"
+            onDragEnd={(_e, info) => { if (info.offset.y > 100) onClose(); }}
+            className="fixed bottom-0 left-0 right-0 bg-forge-surface rounded-t-3xl z-50 h-[85vh] flex flex-col"
           >
-            <div className="flex justify-center py-[8px] shrink-0">
-              <div className="w-[30px] h-[3px] bg-[var(--color-border)] rounded-full" />
+            {/* Drag handle */}
+            <div className="flex justify-center py-2 shrink-0">
+              <div className="w-8 h-1 bg-white/20 rounded-full" />
             </div>
 
-            <div className="flex justify-between items-center px-[24px] pb-[16px] border-b border-[var(--color-border)] shrink-0">
-              <h2 className="text-[18px] font-bold font-display">Edit Transaction</h2>
-              <button onClick={onClose} className="p-[8px] -mr-[8px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors" aria-label="Close edit modal">
-                <CloseIcon size={24} />
+            {/* Header */}
+            <div className="flex justify-between items-center px-6 pb-4 border-b border-white/[0.06] shrink-0">
+              <h2 className="text-[18px] font-bold text-cream font-display">Edit Transaction</h2>
+              <button
+                onClick={onClose}
+                className="p-2 -mr-2 text-cream/40 hover:text-cream transition-colors"
+                aria-label="Close"
+              >
+                <X size={22} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-[24px] py-[24px] space-y-[32px]">
-              <div className="space-y-[16px]">
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
+              <div className="space-y-4">
                 <Input
                   label="Amount"
                   type="number"
-                  isCurrency
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                 />
@@ -118,37 +122,58 @@ export function EditTransactionModal({ transaction, isOpen, onClose }: EditModal
                 />
               </div>
 
-              <div className="space-y-[16px]">
-                <label className="text-[13px] font-[500] text-[var(--color-text-secondary)] uppercase tracking-widest block">Category</label>
-                <div className="p-[16px] bg-[var(--color-bg-elevated)] rounded-[16px] border border-[var(--color-border)] flex items-center gap-[12px]">
-                  <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `color-mix(in srgb, ${selectedCategory?.color} 15%, transparent)` }}>
-                    {CategoryIcon && <CategoryIcon size={24} style={{ color: selectedCategory?.color }} />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[15px] font-bold uppercase tracking-wider" style={{ color: selectedCategory?.color }}>
-                      {selectedCategory?.label}
+              {/* Category picker */}
+              <div className="space-y-4">
+                <label className="text-[12px] font-bold text-cream/40 uppercase tracking-widest block">
+                  Category
+                </label>
+
+                {/* Selected preview */}
+                {selectedCat && CatIcon && (
+                  <div className="p-4 bg-forge-elevated rounded-2xl border border-white/[0.06] flex items-center gap-3">
+                    <div
+                      className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: `${selectedCat.color}22` }}
+                    >
+                      <CatIcon size={22} style={{ color: selectedCat.color }} />
+                    </div>
+                    <p className="text-[15px] font-bold uppercase tracking-wider" style={{ color: selectedCat.color }}>
+                      {selectedCat.label}
                     </p>
                   </div>
-                </div>
-                <div className="pt-[16px]">
-                  <CategoryPicker selectedId={categoryId} onSelect={setCategoryId} />
+                )}
+
+                {/* Grid */}
+                <div className="grid grid-cols-3 gap-2">
+                  {CATEGORIES.map((cat) => {
+                    const Icon = cat.Icon;
+                    const active = categoryId === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setCategoryId(cat.id)}
+                        className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border text-[11px] font-bold transition-all ${
+                          active
+                            ? 'border-rust/50 bg-rust/10 text-rust'
+                            : 'border-white/[0.06] bg-forge-elevated text-cream/40 hover:text-cream/70'
+                        }`}
+                      >
+                        <Icon size={16} style={active ? {} : { color: cat.color }} />
+                        {cat.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {error && (
-                <p className="text-[var(--color-danger)] text-[13px] font-[600] text-center">
-                  {error}
-                </p>
+                <p className="text-danger text-[13px] font-semibold text-center">{error}</p>
               )}
             </div>
 
-            <div className="p-[24px] border-t border-[var(--color-border)] shrink-0 bg-[var(--color-bg-secondary)] pb-[40px]">
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={handleSave}
-                isLoading={isSubmitting}
-              >
+            {/* Footer */}
+            <div className="p-6 border-t border-white/[0.06] shrink-0 pb-10">
+              <Button className="w-full" size="lg" onClick={handleSave} isLoading={isSubmitting}>
                 Save Changes
               </Button>
             </div>

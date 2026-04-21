@@ -1,122 +1,125 @@
-import React, { useState } from 'react';
-import { useTransactions } from '@/src/hooks/useTransactions';
-import { Transaction } from '@/src/types/transactions';
-import { Button } from '@/src/components/ui/Button';
-import { Card } from '@/src/components/ui/Card';
-import { EditTransactionModal } from '@/src/components/transactions/EditTransactionModal';
-import { useQueryClient } from '@tanstack/react-query';
-import { RefreshIcon, CheckCircleIcon } from '@/src/components/ui/icons';
-import { useToastStore } from '@/src/components/ui/Toast';
-import { formatNaira } from '@/src/lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
+// src/pages/SmsQueue.tsx
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle, RefreshCw } from 'lucide-react';
+import { useTransactions } from '@/hooks/useTransactions';
+import { useToastStore }   from '@/components/ui/Toast';
+import { EditTransactionModal } from '@/components/transactions/EditTransactionModal';
+import Button from '@/components/ui/Button';
+import { Transaction } from '@/types/transactions';
+import { formatNaira } from '@/lib/utils';
 
-export default function SmsQueuePage() {
-  const queryClient = useQueryClient();
-  const { transactions, isLoading } = useTransactions();
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+export default function SmsQueuePage(): React.JSX.Element {
+  const { transactions, isLoading }  = useTransactions();
+  const addToast                     = useToastStore((s) => s.addToast);
+  const [editing, setEditing]        = useState<Transaction | null>(null);
 
-  const pendingTransactions = transactions.filter(t => t.status === 'pending');
+  const pending = transactions.filter((t) => t.status === 'pending');
 
-  const { addToast } = useToastStore();
-
-  const handleConfirm = async (id: string) => {
-    addToast('SMS confirming coming soon.', 'warning');
+  const handleConfirm = (_id: string) => {
+    addToast('SMS confirming coming soon.', 'info');
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDismiss = (id: string) => {
     if (!window.confirm('Are you sure you want to dismiss this transaction?')) return;
-    addToast('SMS deletion coming soon.', 'warning');
+    addToast('SMS deletion coming soon.', 'info');
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full bg-[var(--color-bg-secondary)]"
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="flex flex-col h-full"
     >
-      <div className="px-[24px] pt-[32px] pb-[16px] border-b border-[var(--color-border)] shrink-0">
-        <h1 className="text-[28px] font-bold font-display tracking-tight leading-tight">SMS Review Queue</h1>
-        <p className="text-[var(--color-text-secondary)] text-[15px] font-[500]">Review and confirm your auto-logged transactions.</p>
+      {/* Header */}
+      <div className="pt-8 pb-4 border-b border-white/[0.06] shrink-0">
+        <h1 className="text-[28px] font-black font-display text-cream tracking-tight">
+          SMS Review Queue
+        </h1>
+        <p className="text-cream/50 text-[15px] font-medium mt-1">
+          Review and confirm your auto-logged transactions.
+        </p>
       </div>
 
+      {/* Content */}
       {isLoading ? (
-        <div className="flex-1 p-[16px] space-y-[16px]">
+        <div className="flex-1 pt-6 space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="w-full h-[150px] skeleton rounded-[16px]"></div>
+            <div key={i} className="w-full h-36 rounded-2xl bg-forge-elevated animate-pulse" />
           ))}
         </div>
-      ) : pendingTransactions.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-[16px] p-[24px]">
-          <div className="w-[64px] h-[64px] bg-[rgba(16,185,129,0.1)] rounded-full flex items-center justify-center text-[var(--color-success)]">
-            <CheckCircleIcon size={32} strokeWidth={3} />
+      ) : pending.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 py-12">
+          <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center">
+            <CheckCircle size={32} className="text-emerald-400" strokeWidth={2} />
           </div>
-          <div className="space-y-[4px]">
-            <h3 className="font-bold text-[20px] font-display text-[var(--color-text-primary)]">You're all caught up</h3>
-            <p className="text-[15px] font-[500] text-[var(--color-text-secondary)]">No new transactions to review.</p>
+          <div>
+            <h3 className="font-black text-[20px] font-display text-cream">You're all caught up</h3>
+            <p className="text-[15px] font-medium text-cream/50 mt-1">No new transactions to review.</p>
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-[24px] space-y-[16px] pb-[96px]">
+        <div className="flex-1 overflow-y-auto pt-6 space-y-4 pb-24">
           <AnimatePresence>
-            {pendingTransactions.map(t => (
+            {pending.map((t) => (
               <motion.div
                 key={t.id}
                 layout
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95, height: 0, marginBottom: 0 }}
+                exit={{ opacity: 0, scale: 0.96 }}
                 transition={{ duration: 0.2 }}
+                className="p-5 bg-forge-surface rounded-2xl border border-white/[0.06] space-y-4"
               >
-                <Card className="p-[20px] space-y-[16px] border-[var(--color-border)]">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-bold text-[16px] text-[var(--color-text-primary)]">{t.merchant || t.description}</p>
-                      <p className="text-[var(--color-text-secondary)] text-[13px] font-[500]">{new Date(t.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-[16px] text-[var(--color-text-primary)]">
-                        {formatNaira(t.amount)}
-                      </p>
-                      <div className="inline-block mt-[4px] px-[8px] py-[2px] bg-[rgba(0,135,81,0.1)] text-[var(--color-accent)] rounded-[4px] text-[11px] uppercase tracking-wider font-bold">
-                        {t.category}
-                      </div>
-                    </div>
+                {/* Row 1: merchant + amount */}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-bold text-[16px] text-cream">
+                      {t.merchant ?? t.description}
+                    </p>
+                    <p className="text-cream/40 text-[13px] font-medium">
+                      {new Date(t.date).toLocaleString([], {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      })}
+                    </p>
                   </div>
-
-                  {t.raw_sms && (
-                    <div className="bg-[var(--color-bg-elevated)] p-[12px] rounded-[8px] border border-[var(--color-border)]">
-                      <p className="text-[12px] text-[var(--color-text-muted)] font-mono break-words leading-relaxed">{t.raw_sms}</p>
-                    </div>
-                  )}
-
-                  <div className="flex gap-[8px] pt-[8px]">
-                    <Button
-                      variant="tertiary"
-                      size="sm"
-                      className="flex-1 text-[var(--color-danger)] hover:bg-[rgba(225,29,72,0.05)] border-[var(--color-border)]"
-                      onClick={() => handleDelete(t.id)}
-                    >
-                      Dismiss
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => setEditingTransaction(t)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleConfirm(t.id)}
-                    >
-                      Confirm
-                    </Button>
+                  <div className="text-right">
+                    <p className="font-bold text-[16px] text-cream">{formatNaira(t.amount)}</p>
+                    <span className="inline-block mt-1 px-2 py-0.5 bg-rust/10 text-rust rounded text-[11px] uppercase tracking-wide font-bold">
+                      {t.category}
+                    </span>
                   </div>
-                </Card>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleDismiss(t.id)}
+                  >
+                    Dismiss
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setEditing(t)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleConfirm(t.id)}
+                  >
+                    Confirm
+                  </Button>
+                </div>
               </motion.div>
             ))}
           </AnimatePresence>
@@ -124,9 +127,9 @@ export default function SmsQueuePage() {
       )}
 
       <EditTransactionModal
-        transaction={editingTransaction}
-        isOpen={!!editingTransaction}
-        onClose={() => setEditingTransaction(null)}
+        transaction={editing}
+        isOpen={!!editing}
+        onClose={() => setEditing(null)}
       />
     </motion.div>
   );

@@ -1,108 +1,145 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import { useAlerts } from '@/src/hooks/useAlerts';
-import { cn } from '@/src/lib/utils';
-import { RefreshIcon, FlameIcon, WarningIcon, CelebrationIcon, HighSpendIcon, AlertsIcon } from '@/src/components/ui/icons';
-import { AlertType, Alert } from '@/src/types/alerts';
+// src/pages/Alerts.tsx
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Bell, Flame, AlertTriangle, TrendingUp, Sparkles, type LucideIcon } from 'lucide-react';
+import { mockAlerts } from '@/data/mockData';
+import { useAlerts } from '@/hooks/useAlerts';
+import { getTimeAgo, cn } from '@/lib/utils';
+import type { Alert, AlertType } from '@/types/alerts';
+import Badge from '@/components/ui/Badge';
 
-const getAlertStyles = (type: AlertType) => {
-  switch (type) {
-    case 'high_spend':
-      return { icon: <HighSpendIcon size={20} />, color: 'var(--color-danger)', bg: 'bg-danger/10' };
-    case 'streak':
-      return { icon: <FlameIcon size={20} />, color: 'var(--color-warning)', bg: 'bg-warning/10' };
-    case 'budget_warning':
-      return { icon: <WarningIcon size={20} />, color: 'var(--color-warning)', bg: 'bg-warning/10' };
-    case 'goal_reached':
-      return { icon: <CelebrationIcon size={20} />, color: 'var(--color-accent)', bg: 'bg-accent/10' };
-    default:
-      return { icon: <AlertsIcon size={20} />, color: 'var(--color-text-secondary)', bg: 'bg-gray-100' };
-  }
+// ─── Alert metadata ──────────────────────────────────────────
+
+interface AlertMeta {
+  Icon:   LucideIcon;
+  color:  string;
+}
+
+const ALERT_META: Record<AlertType, AlertMeta> = {
+  budget_warning: { Icon: AlertTriangle, color: '#FBBF24' },
+  high_spend:     { Icon: TrendingUp,    color: '#F43F5E' },
+  streak:         { Icon: Flame,         color: '#F59E0B' },
+  goal_reached:   { Icon: Sparkles,      color: '#2DB37A' },
 };
 
-export default function AlertsPage() {
-  const { alerts, isLoading, markRead } = useAlerts();
+// ─── Alert card ──────────────────────────────────────────────
 
-  const unreadCount = alerts.filter(a => !a.read).length;
+interface AlertCardProps {
+  alert:   Alert;
+  onRead:  (id: string) => void;
+}
 
-  const sortedAlerts = [...alerts].sort((a, b) => {
-    const order: Record<AlertType, number> = {
-      budget_warning: 1,
-      high_spend: 2,
-      streak: 3,
-      goal_reached: 4
-    };
-    return order[a.type] - order[b.type];
-  });
+function AlertCard({ alert, onRead }: AlertCardProps): React.JSX.Element {
+  const meta  = ALERT_META[alert.type];
+  const Icon  = meta.Icon;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full bg-[var(--color-bg-secondary)] pb-[72px]"
+      whileHover={!alert.read ? { x: 2 } : undefined}
+      onClick={() => { if (!alert.read) onRead(alert.id); }}
+      className={cn(
+        'p-5 rounded-3xl border flex gap-4 transition-all duration-200',
+        alert.read
+          ? 'bg-transparent border-white/[0.06] opacity-55'
+          : 'bg-forge-surface border-white/[0.10] cursor-pointer hover:shadow-card'
+      )}
+      style={!alert.read ? { borderLeft: `3px solid ${meta.color}` } : undefined}
     >
-      <div className="px-[16px] pt-[32px] pb-[16px] border-b border-[var(--color-border)] shrink-0 shadow-[var(--shadow-shadow-sm)] z-20 bg-[var(--color-bg-secondary)] flex justify-between items-center sticky top-0">
-        <div>
-          <div className="flex items-center gap-[8px]">
-            <h1 className="text-[28px] font-bold font-display tracking-tight leading-tight">Alerts</h1>
-            {unreadCount > 0 && (
-              <span className="bg-[var(--color-danger)] text-white text-[11px] font-bold px-[8px] py-[2px] rounded-full flex items-center justify-center">
-                {unreadCount > 9 ? '9+' : unreadCount} New
-              </span>
-            )}
-          </div>
-          <p className="text-[var(--color-text-secondary)] text-[15px] font-[500]">Stay on top of your finances.</p>
-        </div>
+      {/* Icon bubble */}
+      <div
+        className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+        style={{
+          backgroundColor: `color-mix(in srgb, ${meta.color} 12%, transparent)`,
+          color: meta.color,
+        }}
+      >
+        <Icon size={18} />
       </div>
 
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <h4 className={cn(
+            'text-[15px] font-display text-cream leading-snug',
+            alert.read ? 'font-semibold' : 'font-bold'
+          )}>
+            {alert.title}
+          </h4>
+          {!alert.read && (
+            <div
+              className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5"
+              style={{ backgroundColor: meta.color }}
+            />
+          )}
+        </div>
+        <p className="text-[13px] text-cream/50 font-medium leading-relaxed">{alert.message}</p>
+        <p className="text-[11px] text-cream/25 font-medium mt-2">{getTimeAgo(alert.createdAt)}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Alerts page ─────────────────────────────────────────────
+
+export default function Alerts(): React.JSX.Element {
+  const { alerts: liveAlerts, isLoading, markRead: markReadApi } = useAlerts();
+
+  // Local state mirrors live data; falls back to mock while API is unavailable
+  const [localAlerts, setLocalAlerts] = useState<Alert[]>(mockAlerts);
+  const alerts  = liveAlerts.length > 0 ? liveAlerts : localAlerts;
+  const unread  = alerts.filter(a => !a.read).length;
+
+  const markRead = async (id: string): Promise<void> => {
+    // Optimistic local update first
+    setLocalAlerts(as => as.map(a => a.id === id ? { ...a, read: true } : a));
+    try {
+      await markReadApi(id);
+    } catch {
+      // API not available yet — local state already updated
+    }
+  };
+
+  const sorted = [...alerts].sort((a, b) => {
+    if (a.read !== b.read) return a.read ? 1 : -1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  return (
+    <div className="pt-6 pb-8">
+
+      {/* Header */}
+      <div className="flex items-end justify-between mb-6">
+        <div>
+          <h1 className="text-[28px] font-extrabold font-display text-cream tracking-tight">Alerts</h1>
+          <p className="text-[14px] text-cream/40 font-medium mt-1">Stay on top of your finances.</p>
+        </div>
+        {unread > 0 && <Badge preset="danger">{unread} new</Badge>}
+      </div>
+
+      {/* List or empty state */}
       {isLoading ? (
-        <div className="flex-1 p-[16px] space-y-[16px]">
+        <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="w-full h-[88px] skeleton rounded-[16px]"></div>
+            <div key={i} className="h-24 rounded-3xl bg-forge-surface animate-pulse" />
           ))}
         </div>
-      ) : sortedAlerts.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-[24px] text-center space-y-[24px]">
-          <div className="w-[80px] h-[80px] bg-[var(--color-bg-elevated)] rounded-full flex items-center justify-center text-[var(--color-text-muted)] border border-[var(--color-border)]">
-            <AlertsIcon size={40} />
+      ) : sorted.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+          <div className="w-16 h-16 rounded-3xl bg-forge-elevated border border-white/[0.06] flex items-center justify-center">
+            <Bell size={28} className="text-cream/20" />
           </div>
-          <div className="space-y-[8px]">
-            <h3 className="font-bold text-[20px] font-display text-[var(--color-text-primary)]">All caught up</h3>
-            <p className="text-[var(--color-text-secondary)] text-[15px] font-[500]">You have no new alerts at this time.</p>
+          <div>
+            <p className="text-[16px] font-bold text-cream mb-1">All caught up</p>
+            <p className="text-[14px] text-cream/40">No alerts right now. Keep it up!</p>
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-[16px] space-y-[12px]">
-          {sortedAlerts.map((alert: Alert) => {
-            const styles = getAlertStyles(alert.type);
-            return (
-              <div
-                key={alert.id}
-                onClick={() => {
-                  if (!alert.read) {
-                    void markRead(alert.id).catch(() => {});
-                  }
-                }}
-                className={cn(
-                  "p-[20px] rounded-[16px] border-[1px] transition-all cursor-pointer flex gap-[16px]",
-                  alert.read
-                    ? "bg-[var(--color-bg-secondary)] border-[var(--color-border)] opacity-70"
-                    : "bg-[var(--color-bg-elevated)] border-l-[4px] border-l-[var(--color-accent)] border-y-[var(--color-border)] border-r-[var(--color-border)] shadow-[var(--shadow-shadow-sm)] hover:shadow-[var(--shadow-shadow-md)]"
-                )}
-              >
-                <div className={cn("w-[40px] h-[40px] rounded-full flex items-center justify-center shrink-0 border border-black/5", styles.bg)} style={{ color: styles.color }}>
-                  {styles.icon}
-                </div>
-                <div className="flex-1">
-                  <h4 className={cn("text-[15px] mb-[4px] font-display tracking-tight text-[var(--color-text-primary)]", alert.read ? "font-[600]" : "font-bold")}>{alert.title}</h4>
-                  <p className="text-[13px] text-[var(--color-text-secondary)] leading-relaxed font-[500]">{alert.message}</p>
-                </div>
-              </div>
-            );
-          })}
+        <div className="space-y-3">
+          {sorted.map(alert => (
+            <AlertCard key={alert.id} alert={alert} onRead={(id) => { void markRead(id); }} />
+          ))}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

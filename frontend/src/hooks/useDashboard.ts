@@ -1,38 +1,37 @@
+// src/hooks/useDashboard.ts
 import { useQuery } from '@tanstack/react-query';
-import { analytics } from '@/src/lib/api';
+import { analytics } from '@/lib/api';
+import { DashboardData } from '@/types/user';
 
 export function useDashboardSummary() {
-  return useQuery({
+  return useQuery<DashboardData>({
     queryKey: ['dashboard-summary'],
-    queryFn: async () => {
+    queryFn:  async (): Promise<DashboardData> => {
       const data = await analytics.summary();
 
-      // Get budget from localStorage (set during onboarding)
-      const budgetStr = localStorage.getItem('sw_budget');
+      // Monthly budget is set during onboarding and persisted in localStorage
+      const budgetStr    = localStorage.getItem('sw_budget');
       const monthlyBudget = budgetStr ? Number(budgetStr) : 0;
 
-      // Calculate days left in month
-      const today = new Date();
+      // Days remaining in the current month (minimum 1 to avoid divide-by-zero)
+      const today   = new Date();
       const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      const daysLeft = Math.max(1, lastDay.getDate() - today.getDate() + 1);
+      const daysLeftInMonth = Math.max(1, lastDay.getDate() - today.getDate() + 1);
 
-      // Compute daily safe spend
-      const budgetRemaining = monthlyBudget - (data.totalSpentNaira || 0);
-      const dailySafeSpend = budgetRemaining > 0 ? budgetRemaining / daysLeft : 0;
+      const totalSpent      = data.totalSpentNaira ?? 0;
+      const budgetRemaining = monthlyBudget - totalSpent;
+      const dailySafeSpend  = budgetRemaining > 0 ? budgetRemaining / daysLeftInMonth : 0;
 
-      // Ensure spend_by_category uses the fallback colours correctly and matches the old contract
-      // The API returns an object or array. We map it out.
-      const spend_by_category = data.categoryBreakdown || {};
+      // weeklySpend: API doesn't expose this yet — stub as 7 zeros
+      const weeklySpend: DashboardData['weeklySpend'] = [0, 0, 0, 0, 0, 0, 0];
 
       return {
-        total_spent: data.totalSpentNaira || 0,
-        monthly_budget: monthlyBudget,
-        budget_remaining: budgetRemaining,
-        days_left_in_month: daysLeft,
-        daily_safe_spend: dailySafeSpend,
-        weekly_spend: [0, 0, 0, 0, 0, 0, 0], // API doesn't support this yet, stub with 0s
-        spend_by_category: spend_by_category,
-        streak_count: 0 // API doesn't support this yet, stub with 0
+        totalSpent,
+        monthlyBudget,
+        daysLeftInMonth,
+        dailySafeSpend,
+        weeklySpend,
+        spendByCategory: data.categoryBreakdown ?? {},
       };
     },
     staleTime: 45 * 1000,

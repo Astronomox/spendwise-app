@@ -1,33 +1,49 @@
-import { HTMLAttributes, forwardRef } from 'react';
-import { cn } from '@/src/lib/utils';
+// src/components/ui/Badge.tsx
+import { cn } from '@/lib/utils';
 
-interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'success' | 'danger' | 'warning' | 'neutral';
+export type BadgePreset = 'rust' | 'success' | 'danger' | 'warning' | 'muted';
+
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  preset?: BadgePreset;
+  /** Override with an arbitrary hex/rgb colour; takes priority over preset */
+  color?:  string;
 }
 
-const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ className, variant = 'neutral', ...props }, ref) => {
-    const variants = {
-      success: 'bg-accent/10 text-accent border-accent/20',
-      danger: 'bg-danger/10 text-danger border-danger/20',
-      warning: 'bg-warning/10 text-warning border-warning/20',
-      neutral: 'bg-gray-100 text-text-secondary border-gray-200',
-    };
+const presetClasses: Record<BadgePreset, string> = {
+  rust:    'bg-rust/15    text-rust    border-rust/25',
+  success: 'bg-success/15 text-success border-success/25',
+  danger:  'bg-danger/15  text-danger  border-danger/25',
+  warning: 'bg-warning/15 text-warning border-warning/25',
+  muted:   'bg-white/[0.06] text-cream/55 border-white/[0.10]',
+};
 
-    return (
-      <span
-        ref={ref}
-        className={cn(
-          'inline-flex items-center rounded-radius-sm border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider',
-          variants[variant],
-          className
-        )}
-        {...props}
-      />
-    );
-  }
-);
-
-Badge.displayName = 'Badge';
-
-export { Badge };
+export default function Badge({
+  children,
+  preset    = 'rust',
+  color,
+  className,
+  ...props
+}: BadgeProps): React.JSX.Element {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center px-2.5 py-0.5 rounded-full',
+        'text-[11px] font-bold tracking-wide uppercase border',
+        color == null && presetClasses[preset],
+        className
+      )}
+      style={
+        color != null
+          ? {
+              background:   `color-mix(in srgb, ${color} 15%, transparent)`,
+              color,
+              borderColor:  `color-mix(in srgb, ${color} 25%, transparent)`,
+            }
+          : undefined
+      }
+      {...props}
+    >
+      {children}
+    </span>
+  );
+}

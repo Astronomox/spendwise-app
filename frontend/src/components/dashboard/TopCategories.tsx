@@ -1,44 +1,47 @@
-import React from 'react';
-import { CATEGORIES } from '@/src/components/logger/CategoryPicker';
-import { formatNaira } from '@/src/lib/utils';
+// src/components/dashboard/TopCategories.tsx
+import { motion } from 'framer-motion';
+import { getCategoryById } from '@/lib/categories';
+import { formatNaira } from '@/lib/utils';
 
-interface TopCategoriesProps {
+export interface TopCategoriesProps {
   spendByCategory: Record<string, number>;
 }
 
-export function TopCategories({ spendByCategory }: TopCategoriesProps) {
-  // Sort categories by spend amount and take top 4
-  const topCats = Object.entries(spendByCategory)
+export default function TopCategories({ spendByCategory }: TopCategoriesProps): React.JSX.Element {
+  const top = Object.entries(spendByCategory)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 4)
-    .map(([id, amount]) => {
-      const category = CATEGORIES.find(c => c.id === id) || CATEGORIES[CATEGORIES.length - 1];
-      return { ...category, amount };
-    });
+    .slice(0, 5)
+    .map(([id, amount]) => ({ ...getCategoryById(id), amount }));
 
   return (
-    <div className="flex gap-[8px] overflow-x-auto pb-[4px] px-[16px] scrollbar-hide">
-      {topCats.map((cat) => (
-        <div 
-          key={cat.id}
-          className="flex items-center gap-[8px] p-[8px] pr-[16px] bg-[var(--color-bg-card)] rounded-[16px] border border-[var(--color-border)] shrink-0 shadow-sm"
-        >
-          <div 
-            className="w-[40px] h-[40px] rounded-[12px] flex items-center justify-center shrink-0"
-            style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 15%, transparent)` }}
+    <div className="flex gap-2.5 overflow-x-auto pb-1">
+      {top.map((cat, i) => {
+        const Icon = cat.Icon;
+        return (
+          <motion.div
+            key={cat.id}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.07, duration: 0.3 }}
+            className="flex items-center gap-2.5 px-3.5 py-2.5 bg-forge-surface border border-white/[0.06] rounded-2xl flex-shrink-0 hover:border-white/[0.10] transition-colors cursor-default"
           >
-            <cat.Icon size={20} style={{ color: cat.color }} />
-          </div>
-          <div className="flex flex-col justify-center">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)] leading-none mb-[4px]">
-              {cat.label}
-            </span>
-            <span className="text-[15px] font-bold font-display leading-none text-[var(--color-text-primary)]">
-              {formatNaira(cat.amount)}
-            </span>
-          </div>
-        </div>
-      ))}
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 15%, transparent)` }}
+            >
+              <Icon size={17} style={{ color: cat.color }} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-cream/40 mb-0.5 leading-none">
+                {cat.label}
+              </p>
+              <p className="text-[14px] font-bold font-display text-cream leading-none">
+                {formatNaira(cat.amount)}
+              </p>
+            </div>
+          </motion.div>
+        );
+      })}
     </div>
   );
 }

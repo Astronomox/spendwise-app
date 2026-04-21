@@ -1,36 +1,43 @@
+// src/hooks/useAlerts.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Alert } from '@/src/types/alerts';
+import { Alert } from '@/types/alerts';
+import { useToastStore } from '@/components/ui/Toast';
 
-import { useToastStore } from '@/src/components/ui/Toast';
+interface UseAlertsOptions {
+  enabled?: boolean;
+}
 
-export function useAlerts({ enabled }: { enabled?: boolean } = { enabled: true }) {
-  const queryClient = useQueryClient();
-  const { addToast } = useToastStore();
+export function useAlerts({ enabled = true }: UseAlertsOptions = {}) {
+  const client   = useQueryClient();
+  const addToast = useToastStore((s) => s.addToast);
 
-  const alertsQuery = useQuery({
+  // ── Query ──────────────────────────────────────────────────────────────────
+  // Alerts API not available yet — returns empty array until endpoint is ready.
+  const alertsQuery = useQuery<Alert[]>({
     queryKey: ['alerts'],
     enabled,
-    queryFn: async () => {
-      // Stub: in a real app you'd call a get-alerts API here
-      return [] as Alert[];
-    },
+    queryFn:  async (): Promise<Alert[]> => [],
     staleTime: 60 * 1000,
   });
 
+  // ── Mark read ──────────────────────────────────────────────────────────────
   const markReadMutation = useMutation({
-    mutationFn: async (id: string) => {
-      // Stub: in a real app you'd call a mark-read API here
+    mutationFn: async (_id: string): Promise<void> => {
+      // API not available yet — stub
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['alerts'] }),
-    onError: (err) => {
-      addToast(err.message || 'Failed to mark alert as read', 'error');
-    }
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ['alerts'] });
+    },
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : 'Failed to mark alert as read';
+      addToast(message, 'error');
+    },
   });
 
   return {
-    alerts: alertsQuery.data || [],
+    alerts:    alertsQuery.data ?? [],
     isLoading: alertsQuery.isLoading,
-    error: alertsQuery.error,
-    markRead: markReadMutation.mutateAsync,
+    error:     alertsQuery.error,
+    markRead:  markReadMutation.mutateAsync,
   };
 }

@@ -1,39 +1,45 @@
-import { HTMLAttributes, forwardRef } from 'react';
-import { cn } from '@/src/lib/utils';
+// src/components/ui/Card.tsx
+import type { FC, ReactNode } from 'react';
+import { motion, type HTMLMotionProps } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
-interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'elevated' | 'glow';
-  featured?: boolean;
+export type CardVariant = 'default' | 'elevated' | 'glass' | 'accent' | 'hero';
+
+export interface CardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
+  children?:  ReactNode;
+  variant?:   CardVariant;
+  hoverable?: boolean;
 }
 
-const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant = 'default', featured = false, ...props }, ref) => {
-    const variants = {
-      default: 'bg-[var(--color-bg-card)] border-[var(--color-border)] shadow-[var(--shadow-shadow-sm)] hover:shadow-[var(--shadow-shadow-md)] text-[var(--color-text-primary)]',
-      elevated: 'bg-[var(--color-bg-card)] border-[var(--color-border)] shadow-[var(--shadow-shadow-md)] hover:shadow-[var(--shadow-shadow-lg)] text-[var(--color-text-primary)]',
-      glow: 'accent-gradient text-white border-none shadow-[var(--shadow-shadow-lg)]',
-    };
+const variantClasses: Record<CardVariant, string> = {
+  default:  'bg-forge-surface border border-white/[0.06]',
+  elevated: 'bg-forge-elevated border border-white/[0.10]',
+  glass:    'glass border border-white/[0.10]',
+  accent:   'bg-accent-card border border-rust/20',
+  hero:     'bg-hero-mesh border border-rust/[0.22]',
+};
 
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          'relative rounded-[16px] border-[1px] border-solid p-[20px] transition-all duration-150 hover:-translate-y-[2px] overflow-hidden',
-          featured ? 'pl-[24px]' : '',
-          variants[variant],
-          className
-        )}
-        {...props}
-      >
-        {featured && (
-          <div className="absolute top-0 bottom-0 left-0 w-[4px] bg-[var(--color-accent)]" />
-        )}
-        {props.children}
-      </div>
-    );
-  }
-);
+const Card: FC<CardProps> = ({
+  children,
+  variant   = 'default',
+  hoverable = false,
+  className,
+  ...props
+}) => {
+  return (
+    <motion.div
+      whileHover={hoverable ? { y: -2, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' } : undefined}
+      transition={{ duration: 0.15 }}
+      className={cn(
+        'rounded-3xl overflow-hidden shadow-card transition-shadow duration-200',
+        variantClasses[variant],
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
-Card.displayName = 'Card';
-
-export { Card };
+export default Card;

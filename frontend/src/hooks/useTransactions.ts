@@ -1,84 +1,93 @@
+// src/hooks/useTransactions.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { transactions } from '@/src/lib/api';
-import { Transaction } from '@/src/types/transactions';
+import { transactions as txApi, RawTransaction, CreateTransactionPayload } from '@/lib/api';
+import { Transaction } from '@/types/transactions';
+import { useToastStore } from '@/components/ui/Toast';
 
-import { useToastStore } from '@/src/components/ui/Toast';
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function rawToTransaction(t: RawTransaction): Transaction {
+  return {
+    id:          t.id ?? t._id ?? '',
+    merchant:    null,
+    category:    t.categoryId ?? t.category ?? 'other',
+    amount:      (t.amount ?? 0) / 100, // kobo → naira
+    direction:   t.type === 'INCOME' ? 'credit' : 'debit',
+    date:        t.createdAt ?? t.created_at ?? new Date().toISOString(),
+    source:      'manual',
+    status:      'confirmed',
+    description: t.description ?? '',
+  };
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useTransactions() {
-  const queryClient = useQueryClient();
-  const { addToast } = useToastStore();
+  const client     = useQueryClient();
+  const addToast   = useToastStore((s) => s.addToast);
 
+  // ── Query ──────────────────────────────────────────────────────────────────
   const transactionsQuery = useQuery({
     queryKey: ['transactions'],
-    queryFn: async () => {
-      const data = await transactions.list();
-
-      // API returns transactions where amount is in kobo.
-      // We must convert it to naira for the frontend UI.
-      return data.map((t: any) => ({
-        ...t,
-        id: t.id || t._id, // map depending on what backend returns
-        amount: (t.amount || 0) / 100, // Kobo to Naira
-        category: t.categoryId || t.category || 'other', // Fallback
-      })) as Transaction[];
+    queryFn:  async () => {
+      const raw = await txApi.list();
+      return raw.map(rawToTransaction);
     },
     staleTime: 30 * 1000,
   });
 
+  // ── Mutation ───────────────────────────────────────────────────────────────
   const addTransactionMutation = useMutation({
-    mutationFn: async (newTransaction: Omit<Transaction, 'id' | 'created_at'>) => {
-      // The backend expects amount in kobo, type: 'EXPENSE' or 'INCOME', categoryId
-      const amountKobo = Math.round((newTransaction.amount) * 100);
-
-      const payload = {
-        amount: amountKobo,
-        type: newTransaction.direction === 'debit' ? 'EXPENSE' : 'INCOME',
-        categoryId: newTransaction.category,
-        description: newTransaction.description
+    mutationFn: async (
+      newTx: Omit<Transaction, 'id'>
+    ): Promise<Transaction> => {
+      const payload: CreateTransactionPayload = {
+        amount:      Math.round(newTx.amount * 100), // naira → kobo
+        type:        newTx.direction === 'credit' ? 'INCOME' : 'EXPENSE',
+        categoryId:  newTx.category,
+        description: newTx.description,
       };
-
-      const data = await transactions.create(payload as any);
-      return data;
+      const raw = await txApi.create(payload);
+      return rawToTransaction(raw);
     },
+
+    // Optimistic update
+    onMutate: async (newTx) => {
+      await client.cancelQueries({ queryKey: ['transactions'] });
+      const previous = client.getQueryData<Transaction[]>(['transactions']);
+
+      if (previous) {
+        const optimistic: Transaction = {
+          ...newTx,
+          id: `temp-${Date.now()}`,
+        };
+        client.setQueryData<Transaction[]>(['transactions'], (old) =>
+          old ? [optimistic, ...old] : [optimistic]
+        );
+      }
+      return { previous };
+    },
+
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      client.invalidateQueries({ queryKey: ['transactions'] });
+      client.invalidateQueries({ queryKey: ['dashboard-summary'] });
       addToast('Transaction added successfully!', 'success');
     },
-    onMutate: async (newTx) => {
-      await queryClient.cancelQueries({ queryKey: ['transactions'] });
-      const previousTransactions = queryClient.getQueryData<Transaction[]>(['transactions']);
 
-      if (previousTransactions) {
-        queryClient.setQueryData<Transaction[]>(['transactions'], old => {
-          if (!old) return [];
-          const optimisticTx: Transaction = {
-            ...newTx,
-            id: `temp-${Date.now()}`,
-            created_at: new Date().toISOString(),
-          };
-          return [optimisticTx, ...old];
-        });
+    onError: (err: unknown, _vars, context) => {
+      if (context?.previous) {
+        client.setQueryData(['transactions'], context.previous);
       }
-      return { previousTransactions };
+      const message = err instanceof Error ? err.message : 'Failed to add transaction';
+      addToast(message, 'error');
     },
-    onError: (err: unknown, _variables, context) => {
-      if (context?.previousTransactions) {
-        queryClient.setQueryData(['transactions'], context.previousTransactions);
-      }
-      if (err instanceof Error) {
-        addToast(err.message || 'Failed to add transaction', 'error');
-      } else {
-        addToast('Failed to add transaction', 'error');
-      }
-    }
   });
 
   return {
-    transactions: transactionsQuery.data || [],
-    isLoading: transactionsQuery.isLoading,
-    error: transactionsQuery.error,
+    transactions: transactionsQuery.data  ?? [],
+    isLoading:    transactionsQuery.isLoading,
+    error:        transactionsQuery.error,
     addTransaction: addTransactionMutation.mutateAsync,
-    isAdding: addTransactionMutation.isPending,
+    isAdding:       addTransactionMutation.isPending,
   };
 }

@@ -1,130 +1,164 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { useAppStore } from '@/src/lib/store';
-import { useGoals } from '@/src/hooks/useGoals';
-import { GoalCard } from '@/src/components/goals/GoalCard';
-import { GoalModal } from '@/src/components/goals/GoalModal';
-import { Button } from '@/src/components/ui/Button';
-import { RefreshIcon, GoalsIcon } from '@/src/components/ui/icons';
-import { SavingsGoal } from '@/src/types/goals';
-import { formatNaira } from '@/src/lib/utils';
+// src/pages/Goals.tsx
+import { useState } from 'react';
+import { Plus, Target } from 'lucide-react';
+import { mockGoals } from '@/data/mockData';
+import { useGoals } from '@/hooks/useGoals';
+import { formatNaira } from '@/lib/utils';
+import type { Goal, GoalFormValues } from '@/types/goals';
+import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
+import Card from '@/components/ui/Card';
+import GoalCard from '@/components/goals/GoalCard';
+import { GoalModal } from '@/components/goals/GoalModal';
 
-export default function GoalsPage() {
-  const { user } = useAppStore();
-  const { goals, isLoading, addGoal, updateGoal, deleteGoal } = useGoals();
-  const [editingGoal, setEditingGoal] = useState<SavingsGoal | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+// ─── Goals page ──────────────────────────────────────────────
 
-  const handleCreate = () => {
-    setEditingGoal(null);
-    setIsModalOpen(true);
-  };
+export default function Goals(): React.JSX.Element {
+  const {
+    goals: liveGoals,
+    isLoading,
+    addGoal,
+    updateGoal,
+    deleteGoal,
+  } = useGoals();
 
-  const handleEdit = (goal: SavingsGoal) => {
-    setEditingGoal(goal);
-    setIsModalOpen(true);
-  };
+  // Fall back to mock data while API is unavailable / loading
+  const goals = isLoading || liveGoals.length === 0 ? mockGoals : liveGoals;
 
-  const handleSave = async (goalData: Omit<SavingsGoal, 'id' | 'user_id' | 'created_at' | 'current_amount'>) => {
-    if (!user) return;
+  // Local optimistic state — used only while Goals API is stubbed
+  const [localGoals, setLocalGoals] = useState<Goal[]>(mockGoals);
+  const displayGoals = liveGoals.length > 0 ? liveGoals : localGoals;
+
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [editing, setEditing] = useState<Goal | null>(null);
+
+  const totalSaved = displayGoals.reduce((s, g) => s + g.currentAmount, 0);
+  const totalTarget = displayGoals.reduce((s, g) => s + g.targetAmount, 0);
+
+  const openCreate = (): void => { setEditing(null); setShowModal(true); };
+  const openEdit = (g: Goal): void => { setEditing(g); setShowModal(true); };
+  const closeModal = (): void => setShowModal(false);
+
+  const handleSave = async ({ name, targetAmount }: GoalFormValues): Promise<void> => {
     try {
-      if (editingGoal) {
-        await updateGoal({ id: editingGoal.id, ...goalData });
+      if (editing != null) {
+        await updateGoal({ id: editing.id, name, targetAmount });
       } else {
-        await addGoal({ user_id: user.id, ...goalData });
+        await addGoal({ name, targetAmount });
       }
-      setIsModalOpen(false);
-    } catch (err: unknown) {
-      // Re-throw to be caught by the modal
-      throw err;
+    } catch {
+      // API not available yet — fall back to local state
+      if (editing != null) {
+        setLocalGoals(gs => gs.map(g => g.id === editing.id ? { ...g, name, targetAmount } : g));
+      } else {
+        const newGoal: Goal = {
+          id: `g${Date.now()}`,
+          name,
+          targetAmount,
+          currentAmount: 0,
+          deadline: new Date(Date.now() + 90 * 86_400_000).toISOString(),
+          icon: 'savings',
+          userId: 'u1',
+        };
+        setLocalGoals(gs => [...gs, newGoal]);
+      }
     }
+    closeModal();
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this goal?")) {
+  const handleDelete = async (id: string): Promise<void> => {
+    try {
       await deleteGoal(id);
+    } catch {
+      // API not available yet — fall back to local state
+      setLocalGoals(gs => gs.filter(g => g.id !== id));
     }
   };
-
-  const totalSaved = goals.reduce((sum, g) => sum + g.current_amount, 0);
-  const totalTarget = goals.reduce((sum, g) => sum + g.target_amount, 0);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full bg-[var(--color-bg-secondary)] relative pb-[72px]"
-    >
-      <div className="px-[16px] pt-[32px] pb-[16px] bg-[var(--color-bg-secondary)] sticky top-0 z-20 border-b border-[var(--color-border)] shadow-[var(--shadow-shadow-sm)] space-y-[16px]">
-        <div>
-          <h1 className="text-[28px] font-bold font-display tracking-tight leading-tight">Savings Goals</h1>
-          <p className="text-[var(--color-text-secondary)] text-[15px] font-[500]">What are we building towards?</p>
-        </div>
+    <div className="pt-6 pb-8">
 
-        {goals.length > 0 && (
-          <div className="flex justify-between items-center bg-[var(--color-bg-elevated)] rounded-[12px] p-[16px] border border-[var(--color-border)]">
-            <div>
-              <p className="text-[12px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Total Saved</p>
-              <p className="text-[20px] font-bold font-display text-[var(--color-accent)] leading-none mt-[4px]">{formatNaira(totalSaved)}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-[12px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">Target</p>
-              <p className="text-[16px] font-bold font-display text-[var(--color-text-primary)] leading-none mt-[4px] opacity-80">{formatNaira(totalTarget)}</p>
-            </div>
-          </div>
+      {/* Header */}
+      <div className="flex items-end justify-between mb-6">
+        <div>
+          <h1 className="text-[28px] font-extrabold font-display text-cream tracking-tight">
+            Savings Goals
+          </h1>
+          <p className="text-[14px] text-cream/40 font-medium mt-1">
+            What are you building towards?
+          </p>
+        </div>
+        {displayGoals.length > 0 && (
+          <Button size="sm" onClick={openCreate}>
+            <Plus size={15} /> New Goal
+          </Button>
         )}
       </div>
 
-      {isLoading ? (
-        <div className="flex-1 p-[16px] space-y-[16px]">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="w-full h-[120px] skeleton rounded-[16px]"></div>
-          ))}
-        </div>
-      ) : goals.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-[24px] text-center space-y-[24px]">
-          <div className="w-[80px] h-[80px] bg-[rgba(0,135,81,0.1)] rounded-full flex items-center justify-center text-[var(--color-accent)]">
-            <GoalsIcon size={40} />
+      {/* Summary banner */}
+      {displayGoals.length > 0 && (
+        <Card variant="accent" className="p-5 mb-6 flex justify-between items-center">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-cream/40 mb-1.5">
+              Total Saved
+            </p>
+            <p className="text-[22px] font-extrabold font-display text-rust-light tracking-tight">
+              {formatNaira(totalSaved)}
+            </p>
           </div>
-          <div className="space-y-[8px]">
-            <h3 className="font-bold text-[20px] font-display text-[var(--color-text-primary)]">No goals yet</h3>
-            <p className="text-[var(--color-text-secondary)] text-[15px] font-[500] max-w-[280px] mx-auto">Start saving for that vacation or emergency fund today.</p>
+          <div className="text-right">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-cream/40 mb-1.5">
+              Target
+            </p>
+            <p className="text-[18px] font-bold font-display text-cream/60">
+              {formatNaira(totalTarget)}
+            </p>
           </div>
-          <Button onClick={handleCreate} size="lg" className="px-[32px]">Create First Goal</Button>
-        </div>
-      ) : (
-        <div className="flex-1 overflow-y-auto p-[24px] space-y-[16px]">
-          {goals.map((goal: SavingsGoal) => (
-            <div key={goal.id}>
-              <GoalCard
-                goal={goal}
-                onEdit={() => handleEdit(goal)}
-                onDelete={() => handleDelete(goal.id)}
-              />
-            </div>
-          ))}
-        </div>
+        </Card>
       )}
 
-      {goals.length > 0 && (
-        <div className="absolute bottom-[88px] right-[24px] z-20">
-          <Button
-            className="rounded-full shadow-[var(--shadow-shadow-lg)] hover:shadow-[var(--shadow-shadow-accent)] h-[56px] px-[24px] gap-[8px]"
-            onClick={handleCreate}
-          >
-            <span className="text-[24px] leading-none mb-[2px]">+</span>
-            <span className="font-bold text-[15px]">New Goal</span>
+      {/* List or empty state */}
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-28 rounded-3xl bg-forge-surface animate-pulse" />
+          ))}
+        </div>
+      ) : displayGoals.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center gap-5">
+          <div className="w-[72px] h-[72px] rounded-3xl bg-rust/10 border border-rust/20 flex items-center justify-center text-rust">
+            <Target size={36} />
+          </div>
+          <div>
+            <h3 className="text-[18px] font-bold font-display text-cream mb-2">No goals yet</h3>
+            <p className="text-[14px] text-cream/40 max-w-[240px] mx-auto leading-relaxed">
+              Start saving for your next milestone today.
+            </p>
+          </div>
+          <Button size="lg" onClick={openCreate}>
+            <Plus size={16} /> Create First Goal
           </Button>
         </div>
+      ) : (
+        <div className="space-y-3">
+          {displayGoals.map(g => (
+            <GoalCard
+              key={g.id}
+              goal={g}
+              onEdit={() => openEdit(g)}
+              onDelete={() => { void handleDelete(g.id); }}
+            />
+          ))}
+        </div>
       )}
 
+      {/* Modal — AnimatePresence handled internally by GoalModal */}
       <GoalModal
-        goal={editingGoal}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        goal={editing}
+        isOpen={showModal}
+        onClose={closeModal}
         onSave={handleSave}
       />
-    </motion.div>
+    </div>
   );
 }

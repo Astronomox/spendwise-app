@@ -1,103 +1,67 @@
-import React from 'react';
-import { motion, useMotionValue, useTransform } from 'motion/react';
-import { Transaction } from '@/src/types/transactions';
-import { CATEGORIES } from '@/src/components/logger/CategoryPicker';
-import { cn, formatNaira } from '@/src/lib/utils';
-import { Badge } from '@/src/components/ui/Badge';
-import { EditIcon, TrashIcon } from '@/src/components/ui/icons';
+// src/components/transactions/TransactionItem.tsx
+import { motion } from 'framer-motion';
+import { getCategoryById } from '@/lib/categories';
+import { formatNaira, getTimeAgo, cn } from '@/lib/utils';
+import type { Transaction } from '@/types/transactions';
 
-interface TransactionItemProps {
+export interface TransactionItemProps {
   transaction: Transaction;
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string) => void;
+  isLast?:     boolean;
+  onEdit?:     (id: string) => void;
 }
 
-export function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps) {
-  const category = CATEGORIES.find((c) => c.id === transaction.category) || CATEGORIES[CATEGORIES.length - 1];
-  
-  const x = useMotionValue(0);
-  
-  // Transform x position to opacity and scale for actions
-  const editOpacity = useTransform(x, [0, 80], [0, 1]);
-  const deleteOpacity = useTransform(x, [-80, 0], [1, 0]);
-  
-  const handleDragEnd = (_: any, info: any) => {
-    if (info.offset.x > 100) {
-      onEdit?.(transaction.id);
-    } else if (info.offset.x < -100) {
-      onDelete?.(transaction.id);
-    }
-    // Snap back
-    x.set(0);
-  };
-
-  const isCredit = transaction.direction === 'credit';
-  const Icon = category.Icon;
+export default function TransactionItem({
+  transaction: t,
+  isLast = false,
+  onEdit,
+}: TransactionItemProps): React.JSX.Element {
+  const cat      = getCategoryById(t.category);
+  const Icon     = cat.Icon;
+  const isCredit = t.direction === 'credit';
 
   return (
-    <div className="relative overflow-hidden group border-b-[1px] border-[var(--color-border)] last:border-b-0">
-      {/* Actions behind the row */}
-      <div className="absolute inset-0 flex justify-between items-center px-[24px]">
-        <motion.div 
-          style={{ opacity: editOpacity }}
-          className="flex items-center gap-[8px] text-[var(--color-accent)] font-bold h-full"
-        >
-          <EditIcon size={20} />
-          <span>Edit</span>
-        </motion.div>
-        <motion.div 
-          style={{ opacity: deleteOpacity }}
-          className="flex items-center gap-[8px] text-[var(--color-danger)] font-bold h-full"
-        >
-          <span>Delete</span>
-          <TrashIcon size={20} />
-        </motion.div>
+    <motion.div
+      whileHover={{ backgroundColor: 'rgba(33,26,20,0.9)' }}
+      transition={{ duration: 0.12 }}
+      onClick={() => onEdit?.(t.id)}
+      className={cn(
+        'flex items-center gap-3 px-4 py-3.5 transition-colors',
+        onEdit != null && 'cursor-pointer',
+        !isLast && 'border-b border-white/[0.06]'
+      )}
+    >
+      {/* Category icon bubble */}
+      <div
+        className="w-10 h-10 rounded-[14px] flex items-center justify-center flex-shrink-0"
+        style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 15%, transparent)` }}
+      >
+        <Icon size={18} style={{ color: cat.color }} />
       </div>
 
-      {/* Main Row */}
-      <motion.div
-        drag="x"
-        dragConstraints={{ left: -120, right: 120 }}
-        dragElastic={0.1}
-        onDragEnd={handleDragEnd}
-        style={{ x }}
-        className={cn(
-          "relative bg-[var(--color-bg-card)] flex items-center gap-[12px] h-[64px] pl-[16px] pr-[16px] hover:bg-[var(--color-bg-elevated)] transition-colors cursor-grab active:cursor-grabbing",
-          transaction.status === 'pending' ? "border-l-[4px] border-[var(--color-warning)] pl-[12px]" : ""
-        )}
-      >
-        <div 
-          className="w-[40px] h-[40px] rounded-full flex items-center justify-center shrink-0"
-          style={{ 
-            backgroundColor: `color-mix(in srgb, ${category.color} 15%, transparent)`,
-          }}
-        >
-          <Icon size={20} style={{ color: category.color }} />
-        </div>
-        
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <div className="flex items-center gap-[8px]">
-            <p className="text-[15px] font-bold font-display truncate text-[var(--color-text-primary)]">
-              {transaction.merchant || transaction.description}
-            </p>
-            {transaction.source === 'sms' && (
-              <span className="text-[9px] px-[6px] py-[2px] bg-[var(--color-bg-elevated)] border-[1px] border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-[4px] font-bold uppercase tracking-wider">SMS</span>
-            )}
-          </div>
-          <p className="text-[12px] font-[500] text-[var(--color-text-secondary)] mt-[2px]">
-            {new Date(transaction.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      {/* Text */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-[14px] font-bold font-display text-cream truncate">
+            {t.merchant ?? t.description}
           </p>
+          {t.source === 'sms' && (
+            <span className="flex-shrink-0 text-[9px] px-1.5 py-0.5 bg-forge-elevated border border-white/[0.10] text-cream/40 rounded font-bold uppercase tracking-wider">
+              SMS
+            </span>
+          )}
         </div>
+        <p className="text-[12px] text-cream/40 font-medium mt-0.5">
+          {getTimeAgo(t.date)} · {cat.label}
+        </p>
+      </div>
 
-        <div className="text-right shrink-0 flex flex-col justify-center">
-          <p className={cn(
-            "text-[15px] font-bold font-display",
-            isCredit ? "text-[var(--color-success)]" : "text-[var(--color-text-primary)]"
-          )}>
-            {isCredit ? '+' : '-'} {formatNaira(transaction.amount).replace('NGN', '').trim()}
-          </p>
-        </div>
-      </motion.div>
-    </div>
+      {/* Amount */}
+      <p className={cn(
+        'text-[15px] font-bold font-display flex-shrink-0',
+        isCredit ? 'text-success' : 'text-cream'
+      )}>
+        {isCredit ? '+' : '−'}{formatNaira(t.amount)}
+      </p>
+    </motion.div>
   );
 }

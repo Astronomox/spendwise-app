@@ -1,197 +1,266 @@
-import React, { useState } from 'react';
+// src/pages/Logger.tsx
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CategoryPicker, CategoryId, CATEGORIES } from '@/src/components/logger/CategoryPicker';
-import { AmountInput } from '@/src/components/logger/AmountInput';
-import { Button } from '@/src/components/ui/Button';
-import { Input } from '@/src/components/ui/Input';
-import { 
-  ArrowLeftIcon, 
-  CheckCircleIcon, 
-  RefreshIcon 
-} from '@/src/components/ui/icons';
-import { motion, AnimatePresence } from 'motion/react';
-import { useTransactions } from '@/src/hooks/useTransactions';
-import { useAppStore } from '@/src/lib/store';
-import { formatNaira } from '@/src/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { CATEGORIES } from '@/lib/categories';
+import type { Category } from '@/lib/categories';
+import { formatNaira, cn } from '@/lib/utils';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import { useTransactions } from '@/hooks/useTransactions';
 
-export default function LoggerPage() {
+type Step = 1 | 2;
+
+// ─── Numpad ──────────────────────────────────────────────────
+
+const NUMPAD_KEYS = ['1','2','3','4','5','6','7','8','9','','0','⌫'] as const;
+type NumpadKey = typeof NUMPAD_KEYS[number];
+
+interface NumpadProps {
+  onPress: (key: NumpadKey) => void;
+}
+
+function Numpad({ onPress }: NumpadProps): React.JSX.Element {
+  return (
+    <div className="grid grid-cols-3 gap-3 max-w-xs mx-auto w-full">
+      {NUMPAD_KEYS.map((key, i) => (
+        <motion.button
+          key={i}
+          type="button"
+          whileTap={key !== '' ? { scale: 0.92 } : undefined}
+          onClick={() => key !== '' && onPress(key)}
+          className={cn(
+            'h-14 rounded-2xl flex items-center justify-center text-[20px] font-bold font-display transition-colors',
+            key === '⌫'
+              ? 'bg-rust/10 text-rust border border-rust/20'
+              : key === ''
+                ? 'invisible'
+                : 'bg-forge-surface border border-white/[0.07] text-cream hover:bg-forge-elevated'
+          )}
+        >
+          {key}
+        </motion.button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Category grid ───────────────────────────────────────────
+
+interface CategoryGridProps {
+  selected: string | null;
+  onSelect: (id: string) => void;
+}
+
+function CategoryGrid({ selected, onSelect }: CategoryGridProps): React.JSX.Element {
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {CATEGORIES.map((cat: Category) => {
+        const Icon     = cat.Icon;
+        const isActive = selected === cat.id;
+        return (
+          <motion.button
+            key={cat.id}
+            type="button"
+            whileTap={{ scale: 0.95 }}
+            onClick={() => onSelect(cat.id)}
+            className={cn(
+              'flex flex-col items-center gap-2.5 py-5 rounded-2xl border transition-all duration-200',
+              isActive
+                ? 'border-2 scale-[1.02]'
+                : 'border border-white/[0.07] bg-forge-surface hover:border-white/[0.12]'
+            )}
+            style={isActive ? {
+              borderColor: cat.color,
+              background:  `color-mix(in srgb, ${cat.color} 10%, #161210)`,
+            } : undefined}
+          >
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 15%, transparent)` }}
+            >
+              <Icon size={24} style={{ color: cat.color }} />
+            </div>
+            <span
+              className="text-[11px] font-bold uppercase tracking-[0.07em]"
+              style={{ color: isActive ? cat.color : 'rgba(245,241,235,0.45)' }}
+            >
+              {cat.label}
+            </span>
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Logger page ─────────────────────────────────────────────
+
+export default function Logger(): React.JSX.Element {
   const navigate = useNavigate();
-  const { user } = useAppStore();
-  const { addTransaction } = useTransactions();
-  
-  const [step, setStep] = useState<1 | 2>(1);
-  const [categoryId, setCategoryId] = useState<CategoryId | null>(null);
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleCategorySelect = (id: CategoryId) => {
-    setCategoryId(id);
+  const { addTransaction, isAdding } = useTransactions();
+
+  const [step,    setStep]    = useState<Step>(1);
+  const [catId,   setCatId]   = useState<string | null>(null);
+  const [amount,  setAmount]  = useState<string>('');
+  const [note,    setNote]    = useState<string>('');
+  const [success, setSuccess] = useState<boolean>(false);
+
+  const selectedCat  = CATEGORIES.find(c => c.id === catId) ?? null;
+  const numericAmount = Number(amount) || 0;
+
+  const handleCatSelect = (id: string): void => {
+    setCatId(id);
     setStep(2);
-    setError(null);
   };
 
-  const handleSubmit = async () => {
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      setError('Please enter a valid amount greater than 0');
+  const handleNumpad = (key: NumpadKey): void => {
+    if (key === '⌫') {
+      setAmount(a => a.slice(0, -1));
       return;
     }
-    
-    if (!categoryId || !user) return;
-
-    setIsSubmitting(true);
-    setError(null);
-    
-    try {
-      await addTransaction({
-        user_id: user.id,
-        amount: Number(amount),
-        category: categoryId,
-        description: note || `Spent on ${categoryId}`,
-        merchant: null,
-        date: new Date().toISOString(),
-        source: 'manual',
-        status: 'confirmed',
-        direction: 'debit',
-      });
-
-      setIsSubmitting(false);
-      setShowSuccess(true);
-      if (navigator.vibrate) navigator.vibrate(50);
-      
-      // Reset and navigate after success
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
-    } catch (err) {
-      setIsSubmitting(false);
-      setError('Failed to save transaction. Please try again.');
-    }
+    if (key === '') return;
+    setAmount(a => {
+      const next = a + key;
+      return next.replace(/^0+([1-9])/, '$1');
+    });
   };
 
-  const selectedCategory = CATEGORIES.find(c => c.id === categoryId);
-  const CategoryIcon = selectedCategory?.Icon;
-
-  // Simple hardcoded recent categories for mockup logic
-  const recentCategories = [CATEGORIES[0], CATEGORIES[1], CATEGORIES[3]];
+  const handleSubmit = async (): Promise<void> => {
+    if (numericAmount <= 0 || !catId) return;
+    try {
+      await addTransaction({
+        merchant:    null,
+        category:    catId,
+        amount:      numericAmount,
+        direction:   'debit',
+        date:        new Date().toISOString(),
+        source:      'manual',
+        status:      'confirmed',
+        description: note.trim() || (selectedCat?.label ?? ''),
+      });
+    } catch {
+      // toast is shown by the hook on error — just don't show success
+      return;
+    }
+    setSuccess(true);
+    setTimeout(() => navigate('/dashboard'), 1800);
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full bg-[var(--color-bg-secondary)]"
-    >
+    <div className="flex flex-col h-screen bg-forge-bg overflow-hidden relative">
+
       {/* Header */}
-      <header className="px-[16px] h-[56px] flex items-center justify-between border-b border-[var(--color-border)] shrink-0 bg-[var(--color-bg-secondary)] sticky top-0 z-10 shadow-[var(--shadow-shadow-sm)]">
-        <button 
-          onClick={() => step === 2 ? setStep(1) : navigate(-1)}
-          className="p-[8px] -ml-[8px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-          aria-label="Go back"
+      <header className="h-14 flex items-center justify-between px-4 border-b border-white/[0.06] flex-shrink-0">
+        <button
+          type="button"
+          onClick={() => step === 2 ? setStep(1) : navigate('/dashboard')}
+          className="flex items-center gap-1.5 text-[14px] font-semibold text-cream/55 hover:text-cream transition-colors"
         >
-          <ArrowLeftIcon size={24} />
+          <ArrowLeft size={20} />
+          {step === 2 ? 'Back' : 'Cancel'}
         </button>
-        <h1 className="text-[18px] font-bold font-display">Log Expense</h1>
-        <div className="w-[40px]" /> {/* Spacer */}
+        <h1 className="text-[17px] font-bold font-display text-cream">Log Expense</h1>
+        <div className="w-16" aria-hidden="true" />
       </header>
 
-      <div className="flex-1 overflow-y-auto p-[16px]">
+      {/* Step indicator */}
+      <div className="flex gap-1.5 px-4 pt-3 flex-shrink-0">
+        {([1, 2] as const).map(s => (
+          <motion.div
+            key={s}
+            animate={{ backgroundColor: s <= step ? '#B7410E' : '#211A14' }}
+            transition={{ duration: 0.3 }}
+            className="flex-1 h-[3px] rounded-full"
+          />
+        ))}
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto px-4 py-5">
         <AnimatePresence mode="wait">
           {step === 1 ? (
             <motion.div
               key="step1"
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="space-y-[24px]"
+              exit={{ opacity: 0, x: 16 }}
+              transition={{ duration: 0.25 }}
             >
-              <div className="space-y-[8px] mb-[16px]">
-                <h2 className="text-[28px] font-bold font-display tracking-tight leading-tight">What did you spend on?</h2>
-                <p className="text-[var(--color-text-secondary)] text-[15px] font-[500]">Select a category to continue.</p>
+              <div className="mb-7">
+                <h2 className="text-[26px] font-extrabold font-display text-cream tracking-tight leading-tight">
+                  What did you spend on?
+                </h2>
+                <p className="text-[14px] text-cream/40 mt-1">Select a category to continue.</p>
               </div>
-
-              <div className="space-y-[12px]">
-                <p className="text-[13px] font-bold text-[var(--color-text-secondary)] uppercase tracking-widest">Recent</p>
-                <div className="flex gap-[12px] overflow-x-auto pb-[4px]">
-                  {recentCategories.map(cat => {
-                    const Icon = cat.Icon;
-                    return (
-                      <button
-                        key={`recent-${cat.id}`}
-                        onClick={() => handleCategorySelect(cat.id)}
-                        className="flex flex-col items-center gap-[8px] min-w-[88px] bg-[var(--color-bg-elevated)] p-[12px] rounded-[16px] border-[1px] border-[var(--color-border)] hover:bg-[var(--color-border)] transition-colors"
-                        aria-label={`Select ${cat.label} category`}
-                      >
-                        <div className="w-[32px] h-[32px] rounded-full flex items-center justify-center" style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 15%, transparent)`, color: cat.color }}>
-                          <Icon size={16} />
-                        </div>
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">{cat.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="space-y-[12px]">
-                <p className="text-[13px] font-bold text-[var(--color-text-secondary)] uppercase tracking-widest">All Categories</p>
-                <CategoryPicker selectedId={categoryId} onSelect={handleCategorySelect} />
-              </div>
+              <CategoryGrid selected={catId} onSelect={handleCatSelect} />
             </motion.div>
           ) : (
             <motion.div
               key="step2"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-[32px] flex flex-col h-full"
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.25 }}
+              className="flex flex-col gap-6"
             >
-              <div className="flex items-center gap-[12px] p-[16px] bg-[var(--color-bg-elevated)] rounded-[16px] border border-[var(--color-border)] shadow-[var(--shadow-shadow-sm)] shrink-0">
-                <div className="w-[48px] h-[48px] rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `color-mix(in srgb, ${selectedCategory?.color} 15%, transparent)` }}>
-                  {CategoryIcon && <CategoryIcon size={24} style={{ color: selectedCategory?.color }} />}
+              {/* Selected category badge */}
+              {selectedCat != null && (
+                <div className="flex items-center gap-3 p-4 bg-forge-surface border border-white/[0.07] rounded-2xl">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `color-mix(in srgb, ${selectedCat.color} 15%, transparent)` }}
+                  >
+                    <selectedCat.Icon size={22} style={{ color: selectedCat.color }} />
+                  </div>
+                  <div className="flex-1">
+                    <p
+                      className="text-[13px] font-bold uppercase tracking-wide"
+                      style={{ color: selectedCat.color }}
+                    >
+                      {selectedCat.label}
+                    </p>
+                    <p className="text-[12px] text-cream/30">Tap Back to change</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-[15px] font-bold uppercase tracking-wider" style={{ color: selectedCategory?.color }}>
-                    {selectedCategory?.label}
-                  </p>
-                  <p className="text-[12px] text-[var(--color-text-secondary)] font-[500]">Tap to change category</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => setStep(1)} className="rounded-full">Change</Button>
-              </div>
-
-              <div className="flex-1 flex flex-col justify-center">
-                <AmountInput
-                  value={amount}
-                  onChange={(val) => {
-                    setAmount(val);
-                    if (error) setError(null);
-                  }}
-                />
-              </div>
-
-              {error && (
-                <p className="text-[var(--color-danger)] text-[13px] font-[600] text-center animate-in fade-in slide-in-from-top-1 shrink-0">
-                  {error}
-                </p>
               )}
 
-              <div className="space-y-[16px] shrink-0 mt-auto pt-[16px]">
-                <Input 
-                  label="Note (Optional)" 
-                  placeholder="What was this for?" 
+              {/* Amount display + numpad */}
+              <div className="flex flex-col items-center py-4 gap-6">
+                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-cream/30">
+                  Enter amount
+                </p>
+                <div className="flex items-start gap-1">
+                  <span className="text-[32px] font-bold text-cream/40 mt-2 font-display">₦</span>
+                  <span className={cn(
+                    'text-[64px] font-extrabold font-display tracking-tight leading-none min-w-[60px] text-center',
+                    numericAmount > 0 ? 'text-cream' : 'text-cream/20'
+                  )}>
+                    {numericAmount > 0 ? numericAmount.toLocaleString('en-NG') : '0'}
+                  </span>
+                </div>
+                <Numpad onPress={handleNumpad} />
+              </div>
+
+              {/* Note + submit */}
+              <div className="space-y-4 pb-4">
+                <Input
+                  label="Note (optional)"
+                  placeholder="What was this for?"
                   value={note}
-                  onChange={(e) => setNote(e.target.value)}
+                  onChange={e => setNote(e.target.value)}
                   onClear={() => setNote('')}
                 />
-                <Button 
-                  className="w-full" 
+                <Button
                   size="lg"
-                  isLoading={isSubmitting}
-                  onClick={handleSubmit}
-                  disabled={!amount || Number(amount) <= 0}
+                  className="w-full"
+                  disabled={numericAmount <= 0 || isAdding}
+                  isLoading={isAdding}
+                  onClick={() => { void handleSubmit(); }}
                 >
-                  Log Expense
+                  Log {numericAmount > 0 ? formatNaira(numericAmount) : 'Expense'}
                 </Button>
               </div>
             </motion.div>
@@ -199,31 +268,34 @@ export default function LoggerPage() {
         </AnimatePresence>
       </div>
 
-      {/* Success Overlay */}
+      {/* Success overlay */}
       <AnimatePresence>
-        {showSuccess && (
-          <motion.div 
+        {success && (
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-accent flex flex-col items-center justify-center text-white p-6 text-center"
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6 text-center px-8"
+            style={{ background: 'linear-gradient(135deg, #1A0C06, #0A0908)' }}
           >
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: 'spring', damping: 12 }}
+              transition={{ type: 'spring', damping: 12, stiffness: 200 }}
+              className="w-24 h-24 rounded-full bg-rust/15 border-2 border-rust/40 flex items-center justify-center"
             >
-              <CheckCircleIcon size={80} strokeWidth={3} />
+              <CheckCircle size={52} className="text-rust-light" />
             </motion.div>
-            <div className="mt-6 space-y-2">
-              <h2 className="text-[32px] font-black">Logged!</h2>
-              <p className="text-[18px] opacity-90 font-medium">
-                {formatNaira(Number(amount))} added to {selectedCategory?.label}
+            <div>
+              <h2 className="text-[36px] font-extrabold font-display text-cream tracking-tight">
+                Logged!
+              </h2>
+              <p className="text-[18px] text-cream/50 font-medium mt-1">
+                {formatNaira(numericAmount)} on {selectedCat?.label ?? ''}
               </p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }

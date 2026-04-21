@@ -1,34 +1,39 @@
-import React, { useEffect } from 'react';
-import { motion, useSpring, useTransform } from 'motion/react';
+// src/components/ui/AnimatedNumber.tsx
+import { useEffect, useState } from 'react';
 
-interface AnimatedNumberProps {
-  value: number;
-  className?: string;
+export interface AnimatedNumberProps {
+  value:     number;
+  format?:   'number' | 'pct';
   duration?: number;
-  format?: 'currency' | 'number' | 'percentage';
 }
 
-export function AnimatedNumber({ value, className = '', duration = 900, format = 'number' }: AnimatedNumberProps) {
-  const springValue = useSpring(0, {
-    bounce: 0,
-    duration: duration,
-  });
+/**
+ * Counts from 0 → value with a cubic ease-out animation.
+ * Re-animates whenever `value` changes.
+ */
+export default function AnimatedNumber({
+  value,
+  format   = 'number',
+  duration = 900,
+}: AnimatedNumberProps): React.JSX.Element {
+  const [display, setDisplay] = useState<number>(0);
 
   useEffect(() => {
-    springValue.set(value);
-  }, [value, springValue]);
+    let raf: number;
+    const start = performance.now();
 
-  const displayValue = useTransform(springValue, (current) => {
-    const rounded = Math.round(current);
-    if (format === 'percentage') {
-      return rounded.toString();
-    }
-    return rounded.toLocaleString();
-  });
+    const tick = (now: number): void => {
+      const progress = Math.min((now - start) / duration, 1);
+      // cubic ease-out
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(eased * value));
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
 
-  return (
-    <motion.span className={className}>
-      {displayValue}
-    </motion.span>
-  );
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+
+  if (format === 'pct') return <span>{display}</span>;
+  return <span>{display.toLocaleString('en-NG')}</span>;
 }

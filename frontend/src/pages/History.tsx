@@ -1,163 +1,205 @@
-import React, { useState, useMemo } from 'react';
-import { TransactionFeed } from '@/src/components/transactions/TransactionFeed';
-import { useTransactions } from '@/src/hooks/useTransactions';
-import { CATEGORIES, CategoryId } from '@/src/components/logger/CategoryPicker';
-import { cn } from '@/src/lib/utils';
-import { SearchIcon, RefreshIcon } from '@/src/components/ui/icons';
-import { EditTransactionModal } from '@/src/components/transactions/EditTransactionModal';
-import { Transaction } from '@/src/types/transactions';
-import { useQueryClient } from '@tanstack/react-query';
-import { motion } from 'motion/react';
-import { useToastStore } from '@/src/components/ui/Toast';
+// src/pages/History.tsx
+import { useState, useMemo } from 'react';
+import { Search, X } from 'lucide-react';
+import { mockTransactions } from '@/data/mockData';
+import { useTransactions } from '@/hooks/useTransactions';
+import { CATEGORIES } from '@/lib/categories';
+import { cn } from '@/lib/utils';
+import type { Transaction } from '@/types/transactions';
+import Card from '@/components/ui/Card';
+import TransactionItem from '@/components/transactions/TransactionItem';
+import { EditTransactionModal } from '@/components/transactions/EditTransactionModal';
 
 type TimeFilter = 'all' | 'today' | 'week' | 'month';
 
-export default function HistoryPage() {
-  const queryClient = useQueryClient();
-  const { transactions, isLoading, error } = useTransactions();
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
-  const [categoryFilter, setCategoryFilter] = useState<CategoryId | 'all'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+function applyTimeFilter(txns: Transaction[], filter: TimeFilter): Transaction[] {
+  const now = new Date();
+  return txns.filter(t => {
+    const d = new Date(t.date);
+    if (filter === 'today') return d.toDateString() === now.toDateString();
+    if (filter === 'week')  {
+      const w = new Date();
+      w.setDate(now.getDate() - 7);
+      return d >= w;
+    }
+    if (filter === 'month') {
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }
+    return true;
+  });
+}
 
-  const handleEdit = (id: string) => {
-    const transaction = transactions.find(t => t.id === id);
-    if (transaction) setEditingTransaction(transaction);
-  };
+// ─── Filter chip ─────────────────────────────────────────────
 
-  const { addToast } = useToastStore();
+interface ChipProps {
+  active:    boolean;
+  onClick:   () => void;
+  color?:    string;
+  children:  React.ReactNode;
+}
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this transaction?')) return;
-    // API deletion not available yet
-    addToast('Deletion coming soon.', 'warning');
-  };
-
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((t) => {
-      // Time filter
-      const date = new Date(t.date);
-      const now = new Date();
-
-      if (timeFilter === 'today' && date.toDateString() !== now.toDateString()) return false;
-      if (timeFilter === 'week') {
-        const weekAgo = new Date();
-        weekAgo.setDate(now.getDate() - 7);
-        if (date < weekAgo) return false;
-      }
-      if (timeFilter === 'month' && (date.getMonth() !== now.getMonth() || date.getFullYear() !== now.getFullYear())) return false;
-
-      // Category filter
-      if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
-
-      // Search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const merchant = (t.merchant || '').toLowerCase();
-        const description = t.description.toLowerCase();
-        if (!merchant.includes(query) && !description.includes(query)) return false;
-      }
-
-      return true;
-    });
-  }, [timeFilter, categoryFilter, searchQuery, transactions]);
+function Chip({ active, onClick, color, children }: ChipProps): React.JSX.Element {
+  const baseClass = cn(
+    'px-3.5 py-1.5 rounded-full text-[13px] font-semibold border whitespace-nowrap transition-all duration-150',
+    active
+      ? 'bg-rust/12 border-rust text-rust'
+      : 'bg-transparent border-white/[0.10] text-cream/50 hover:text-cream'
+  );
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full bg-[var(--color-bg-secondary)]"
+    <button
+      type="button"
+      onClick={onClick}
+      className={baseClass}
+      style={
+        active && color != null
+          ? {
+              borderColor: color,
+              color,
+              background: `color-mix(in srgb, ${color} 12%, transparent)`,
+            }
+          : undefined
+      }
     >
-      {/* Search & Filter Header */}
-      <div className="px-[16px] py-[16px] space-y-[16px] border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-bg-secondary)] z-20 shadow-[var(--shadow-shadow-sm)]">
-        <div className="relative">
-          <SearchIcon className="absolute left-[12px] top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" size={20} />
-          <input
-            type="text"
-            placeholder="Search transactions..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-[48px] pl-[40px] pr-[16px] bg-[var(--color-bg-elevated)] rounded-[12px] border border-transparent focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)] focus:shadow-[var(--shadow-shadow-accent)] transition-all outline-none text-[15px] font-[500] placeholder-[var(--color-text-muted)]"
+      {children}
+    </button>
+  );
+}
+
+// ─── History page ────────────────────────────────────────────
+
+const TIME_FILTERS: readonly TimeFilter[] = ['all', 'today', 'week', 'month'] as const;
+
+export default function History(): React.JSX.Element {
+  const [search,     setSearch]     = useState<string>('');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+  const [catFilter,  setCatFilter]  = useState<string>('all');
+  const [editing,    setEditing]    = useState<Transaction | null>(null);
+
+  const { transactions, isLoading } = useTransactions();
+  // Fall back to mock data while the API loads or returns empty
+  const source = isLoading || transactions.length === 0 ? mockTransactions : transactions;
+
+  const filtered = useMemo<Transaction[]>(() => {
+    let list = applyTimeFilter(source, timeFilter);
+
+    if (catFilter !== 'all') {
+      list = list.filter(t => t.category === catFilter);
+    }
+
+    if (search.trim().length > 0) {
+      const q = search.toLowerCase();
+      list = list.filter(t =>
+        (t.merchant ?? '').toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q)
+      );
+    }
+
+    return list;
+  }, [source, search, timeFilter, catFilter]);
+
+  return (
+    <div className="flex flex-col pt-4">
+
+      {/* ── Sticky filter header ─────────────────────── */}
+      <div className="sticky top-0 z-20 bg-forge-bg/90 backdrop-blur-md pb-3 border-b border-white/[0.06] mb-4 space-y-3">
+
+        {/* Search input */}
+        <div className="relative pt-4">
+          <Search
+            size={17}
+            className="absolute left-3.5 top-1/2 translate-y-[calc(-50%+8px)] text-cream/30 pointer-events-none"
           />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search transactions…"
+            className="w-full h-11 pl-10 pr-10 bg-forge-surface border border-white/[0.10] rounded-xl text-[14px] text-cream placeholder:text-cream/30 outline-none focus:border-rust/50 focus:ring-2 focus:ring-rust/20 transition-all"
+          />
+          {search.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="absolute right-3.5 top-1/2 translate-y-[calc(-50%+8px)] text-cream/30 hover:text-cream transition-colors"
+              aria-label="Clear search"
+            >
+              <X size={15} />
+            </button>
+          )}
         </div>
 
-        <div className="flex gap-[8px] overflow-x-auto pb-[4px] scrollbar-hide">
-          {(['all', 'today', 'week', 'month'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setTimeFilter(f)}
-              className={cn(
-                "px-[16px] py-[8px] rounded-[9999px] text-[13px] font-[600] capitalize transition-all whitespace-nowrap border-[1px]",
-                timeFilter === f ? "bg-[var(--color-accent)] text-[#121212] border-[var(--color-accent)] shadow-[var(--shadow-shadow-sm)]" : "bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)]"
-              )}
-            >
-              {f}
-            </button>
+        {/* Time chips */}
+        <div className="flex gap-2 overflow-x-auto pb-0.5">
+          {TIME_FILTERS.map(f => (
+            <Chip key={f} active={timeFilter === f} onClick={() => setTimeFilter(f)}>
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </Chip>
           ))}
         </div>
 
-        <div className="flex gap-[8px] overflow-x-auto pb-[4px] scrollbar-hide">
-          <button
-            onClick={() => setCategoryFilter('all')}
-            className={cn(
-              "px-[16px] py-[8px] rounded-[12px] text-[12px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border-[1px]",
-              categoryFilter === 'all' ? "bg-[var(--color-text-primary)] text-[var(--color-bg-secondary)] border-[var(--color-text-primary)]" : "bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border)]"
-            )}
-          >
-            All
-          </button>
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.Icon;
+        {/* Category chips */}
+        <div className="flex gap-2 overflow-x-auto pb-0.5">
+          <Chip active={catFilter === 'all'} onClick={() => setCatFilter('all')}>All</Chip>
+          {CATEGORIES.map(cat => {
+            const Icon   = cat.Icon;
+            const active = catFilter === cat.id;
             return (
-              <button
+              <Chip
                 key={cat.id}
-                onClick={() => setCategoryFilter(cat.id)}
-                className={cn(
-                  "px-[16px] py-[8px] rounded-[12px] text-[12px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border-[1px] flex items-center gap-[6px]",
-                  categoryFilter === cat.id
-                    ? "bg-[rgba(0,135,81,0.05)] border-[var(--color-accent)] text-[var(--color-text-primary)] shadow-[var(--shadow-shadow-sm)]"
-                    : "bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)]"
-                )}
-                style={{
-                  borderColor: categoryFilter === cat.id ? cat.color : undefined,
-                  color: categoryFilter === cat.id ? cat.color : undefined
-                }}
-                aria-label={`Filter by ${cat.label}`}
+                active={active}
+                color={cat.color}
+                onClick={() => setCatFilter(cat.id)}
               >
-                <Icon size={14} style={{ color: categoryFilter === cat.id ? cat.color : undefined }} />
-                {cat.label}
-              </button>
+                <span className="flex items-center gap-1.5">
+                  <Icon size={12} />
+                  {cat.label}
+                </span>
+              </Chip>
             );
           })}
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex-1 p-[16px] space-y-[16px]">
+      {/* ── Results ──────────────────────────────────── */}
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+          <div className="w-16 h-16 rounded-3xl bg-forge-elevated flex items-center justify-center">
+            <Search size={28} className="text-cream/20" />
+          </div>
+          <div>
+            <p className="text-[16px] font-bold text-cream mb-1">No transactions found</p>
+            <p className="text-[14px] text-cream/40">Try adjusting your filters</p>
+          </div>
+        </div>
+      ) : isLoading ? (
+        <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="w-full h-[64px] skeleton rounded-[16px]"></div>
+            <div key={i} className="h-[68px] rounded-2xl bg-forge-surface animate-pulse" />
           ))}
         </div>
-      ) : error ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-[24px] text-center">
-          <p className="text-[var(--color-danger)] font-bold">Failed to load transactions.</p>
-        </div>
       ) : (
-        <div className="flex-1 overflow-y-auto pb-[72px]">
-          <TransactionFeed
-            transactions={filteredTransactions}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </div>
-      )}
+        <>
+          <Card variant="default" className="!p-0 overflow-hidden mb-4">
+            {filtered.map((t, i) => (
+              <TransactionItem
+                key={t.id}
+                transaction={t}
+                isLast={i === filtered.length - 1}
+                onEdit={() => setEditing(t)}
+              />
+            ))}
+          </Card>
+          <p className="text-center text-[12px] text-cream/30 font-medium pb-4">
+            {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
+          </p>
 
-      <EditTransactionModal
-        transaction={editingTransaction}
-        isOpen={!!editingTransaction}
-        onClose={() => setEditingTransaction(null)}
-      />
-    </motion.div>
+          <EditTransactionModal
+            transaction={editing}
+            isOpen={!!editing}
+            onClose={() => setEditing(null)}
+          />
+        </>
+      )}
+    </div>
   );
 }
