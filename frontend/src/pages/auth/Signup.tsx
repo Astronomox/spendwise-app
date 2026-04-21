@@ -1,38 +1,57 @@
-// src/pages/auth/Signup.jsx
-import { useState } from 'react';
+// src/pages/auth/Signup.tsx
+import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
-export default function Signup() {
+interface SignupFormState {
+  name:     string;
+  email:    string;
+  password: string;
+}
+
+interface SignupFormErrors {
+  name?:     string;
+  email?:    string;
+  password?: string;
+}
+
+export default function Signup(): React.JSX.Element {
   const navigate = useNavigate();
-  const [form,    setForm]    = useState({ name: '', email: '', password: '' });
-  const [errors,  setErrors]  = useState({});
-  const [loading, setLoading] = useState(false);
 
-  const set = (key) => (e) => {
-    setForm(f => ({ ...f, [key]: e.target.value }));
-    setErrors(v => ({ ...v, [key]: '' }));
-  };
+  const [form, setForm] = useState<SignupFormState>({
+    name:     '',
+    email:    '',
+    password: '',
+  });
+  const [errors,  setErrors]  = useState<SignupFormErrors>({});
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const validate = () => {
-    const e = {};
+  const setField =
+    (key: keyof SignupFormState) =>
+    (e: ChangeEvent<HTMLInputElement>): void => {
+      setForm(f => ({ ...f, [key]: e.target.value }));
+      setErrors(v => ({ ...v, [key]: undefined }));
+    };
+
+  const validate = (): boolean => {
+    const e: SignupFormErrors = {};
     if (!form.name.trim())                          e.name     = 'Full name is required';
     if (!form.email)                                e.email    = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(form.email))     e.email    = 'Enter a valid email';
     if (!form.password)                             e.password = 'Password is required';
     else if (form.password.length < 6)             e.password = 'At least 6 characters';
     setErrors(e);
-    return !Object.keys(e).length;
+    return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    // Simulate signup — replace with real API call
-    await new Promise(r => setTimeout(r, 1000));
+    // Simulate signup delay — replace with real API call
+    await new Promise<void>(resolve => setTimeout(resolve, 1000));
     setLoading(false);
     navigate('/dashboard');
   };
@@ -57,13 +76,13 @@ export default function Signup() {
           Start tracking your spending today — free forever.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <Input
             inverse
             label="Full Name"
             placeholder="Adeola Okafor"
             value={form.name}
-            onChange={set('name')}
+            onChange={setField('name')}
             error={errors.name}
           />
           <Input
@@ -72,7 +91,7 @@ export default function Signup() {
             type="email"
             placeholder="adeola@spendwise.ng"
             value={form.email}
-            onChange={set('email')}
+            onChange={setField('email')}
             error={errors.email}
           />
           <Input
@@ -81,10 +100,9 @@ export default function Signup() {
             type="password"
             placeholder="Create a strong password"
             value={form.password}
-            onChange={set('password')}
+            onChange={setField('password')}
             error={errors.password}
           />
-
           <Button
             type="submit"
             isLoading={loading}

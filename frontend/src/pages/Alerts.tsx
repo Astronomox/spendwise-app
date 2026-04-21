@@ -1,31 +1,46 @@
-// src/pages/Alerts.jsx
+// src/pages/Alerts.tsx
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Flame, AlertTriangle, TrendingUp, Sparkles } from 'lucide-react';
+import { Bell, Flame, AlertTriangle, TrendingUp, Sparkles, type LucideIcon } from 'lucide-react';
 import { mockAlerts } from '@/data/mockData';
 import { getTimeAgo, cn } from '@/lib/utils';
+import type { Alert, AlertType } from '@/types/alerts';
 import Badge from '@/components/ui/Badge';
 
-const ALERT_META = {
-  budget_warning: { Icon: AlertTriangle, color: '#FBBF24', preset: 'warning' },
-  high_spend:     { Icon: TrendingUp,    color: '#F43F5E', preset: 'danger'  },
-  streak:         { Icon: Flame,         color: '#F59E0B', preset: 'warning' },
-  goal_reached:   { Icon: Sparkles,      color: '#2DB37A', preset: 'success' },
+// ─── Alert metadata ──────────────────────────────────────────
+
+interface AlertMeta {
+  Icon:   LucideIcon;
+  color:  string;
+}
+
+const ALERT_META: Record<AlertType, AlertMeta> = {
+  budget_warning: { Icon: AlertTriangle, color: '#FBBF24' },
+  high_spend:     { Icon: TrendingUp,    color: '#F43F5E' },
+  streak:         { Icon: Flame,         color: '#F59E0B' },
+  goal_reached:   { Icon: Sparkles,      color: '#2DB37A' },
 };
 
-function AlertCard({ alert, onRead }) {
-  const meta  = ALERT_META[alert.type] ?? { Icon: Bell, color: '#94A3B8', preset: 'muted' };
+// ─── Alert card ──────────────────────────────────────────────
+
+interface AlertCardProps {
+  alert:   Alert;
+  onRead:  (id: string) => void;
+}
+
+function AlertCard({ alert, onRead }: AlertCardProps): React.JSX.Element {
+  const meta  = ALERT_META[alert.type];
   const Icon  = meta.Icon;
 
   return (
     <motion.div
       whileHover={!alert.read ? { x: 2 } : undefined}
-      onClick={() => !alert.read && onRead(alert.id)}
+      onClick={() => { if (!alert.read) onRead(alert.id); }}
       className={cn(
         'p-5 rounded-3xl border flex gap-4 transition-all duration-200',
         alert.read
           ? 'bg-transparent border-white/[0.06] opacity-55'
-          : 'bg-forge-surface border-white/[0.1] cursor-pointer hover:shadow-card'
+          : 'bg-forge-surface border-white/[0.10] cursor-pointer hover:shadow-card'
       )}
       style={!alert.read ? { borderLeft: `3px solid ${meta.color}` } : undefined}
     >
@@ -63,20 +78,24 @@ function AlertCard({ alert, onRead }) {
   );
 }
 
-export default function Alerts() {
-  const [alerts, setAlerts] = useState(mockAlerts);
+// ─── Alerts page ─────────────────────────────────────────────
+
+export default function Alerts(): React.JSX.Element {
+  const [alerts, setAlerts] = useState<Alert[]>(mockAlerts);
   const unread = alerts.filter(a => !a.read).length;
 
-  const markRead = (id) => setAlerts(as => as.map(a => a.id === id ? { ...a, read: true } : a));
+  const markRead = (id: string): void => {
+    setAlerts(as => as.map(a => a.id === id ? { ...a, read: true } : a));
+  };
 
-  // Sort: unread first, then by date desc
   const sorted = [...alerts].sort((a, b) => {
     if (a.read !== b.read) return a.read ? 1 : -1;
-    return new Date(b.createdAt) - new Date(a.createdAt);
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   return (
     <div className="pt-6 pb-8">
+
       {/* Header */}
       <div className="flex items-end justify-between mb-6">
         <div>
@@ -86,7 +105,7 @@ export default function Alerts() {
         {unread > 0 && <Badge preset="danger">{unread} new</Badge>}
       </div>
 
-      {/* List */}
+      {/* List or empty state */}
       {sorted.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
           <div className="w-16 h-16 rounded-3xl bg-forge-elevated border border-white/[0.06] flex items-center justify-center">
@@ -94,7 +113,7 @@ export default function Alerts() {
           </div>
           <div>
             <p className="text-[16px] font-bold text-cream mb-1">All caught up</p>
-            <p className="text-[14px] text-cream/40">No alerts right now. You're doing great!</p>
+            <p className="text-[14px] text-cream/40">No alerts right now. Keep it up!</p>
           </div>
         </div>
       ) : (

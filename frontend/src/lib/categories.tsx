@@ -1,6 +1,5 @@
-// src/lib/categories.jsx
-// Single source of truth for expense categories.
-// Icons from lucide-react — swap freely.
+// src/lib/categories.tsx
+// Single source of truth for expense categories used across the app.
 
 import {
   UtensilsCrossed,
@@ -12,10 +11,20 @@ import {
   Music2,
   PiggyBank,
   MoreHorizontal,
+  type LucideIcon,
 } from 'lucide-react';
 
-/** @type {Array<{ id: string, label: string, Icon: import('lucide-react').LucideIcon, color: string, twColor: string }>} */
-export const CATEGORIES = [
+export interface Category {
+  id:      string;
+  label:   string;
+  Icon:    LucideIcon;
+  /** Hex colour used for icons and tinted backgrounds */
+  color:   string;
+  /** Tailwind text-* class for the colour (kept for legacy use) */
+  twColor: string;
+}
+
+export const CATEGORIES: readonly Category[] = [
   { id: 'food',          label: 'Food',          Icon: UtensilsCrossed, color: '#F59E0B', twColor: 'text-cat-food'          },
   { id: 'transport',     label: 'Transport',     Icon: Car,             color: '#3B82F6', twColor: 'text-cat-transport'     },
   { id: 'airtime',       label: 'Airtime',       Icon: Smartphone,      color: '#8B5CF6', twColor: 'text-cat-airtime'       },
@@ -25,9 +34,12 @@ export const CATEGORIES = [
   { id: 'entertainment', label: 'Entertainment', Icon: Music2,          color: '#F43F5E', twColor: 'text-cat-entertainment' },
   { id: 'savings',       label: 'Savings',       Icon: PiggyBank,       color: '#00E5A0', twColor: 'text-cat-savings'       },
   { id: 'other',         label: 'Other',         Icon: MoreHorizontal,  color: '#94A3B8', twColor: 'text-cat-other'         },
-];
+] as const;
 
-/** Lookup a category by id, falling back to "other". */
-export function getCategoryById(id) {
-  return CATEGORIES.find(c => c.id === id) ?? CATEGORIES[CATEGORIES.length - 1];
+/** Look up a category by id. Falls back to "other" if not found. */
+export function getCategoryById(id: string): Category {
+  return (
+    CATEGORIES.find(c => c.id === id) ??
+    (CATEGORIES[CATEGORIES.length - 1] as Category)
+  );
 }

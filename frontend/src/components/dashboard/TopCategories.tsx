@@ -1,12 +1,13 @@
-// src/components/dashboard/TopCategories.jsx
+// src/components/dashboard/TopCategories.tsx
 import { motion } from 'framer-motion';
 import { getCategoryById } from '@/lib/categories';
 import { formatNaira } from '@/lib/utils';
 
-/**
- * @param {{ spendByCategory: Record<string, number> }} props
- */
-export default function TopCategories({ spendByCategory }) {
+export interface TopCategoriesProps {
+  spendByCategory: Record<string, number>;
+}
+
+export default function TopCategories({ spendByCategory }: TopCategoriesProps): React.JSX.Element {
   const top = Object.entries(spendByCategory)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5)
@@ -22,7 +23,7 @@ export default function TopCategories({ spendByCategory }) {
             initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.07, duration: 0.3 }}
-            className="flex items-center gap-2.5 px-3.5 py-2.5 bg-forge-surface border border-white/[0.06] rounded-2xl flex-shrink-0 hover:border-white/[0.1] transition-colors cursor-default"
+            className="flex items-center gap-2.5 px-3.5 py-2.5 bg-forge-surface border border-white/[0.06] rounded-2xl flex-shrink-0 hover:border-white/[0.10] transition-colors cursor-default"
           >
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"

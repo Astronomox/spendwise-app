@@ -1,24 +1,67 @@
-// src/pages/Logger.jsx
+// src/pages/Logger.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { CATEGORIES } from '@/lib/categories';
+import type { Category } from '@/lib/categories';
 import { formatNaira, cn } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
-const NUMPAD_KEYS = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+type Step = 1 | 2;
 
-function CategoryGrid({ selected, onSelect }) {
+// ─── Numpad ──────────────────────────────────────────────────
+
+const NUMPAD_KEYS = ['1','2','3','4','5','6','7','8','9','','0','⌫'] as const;
+type NumpadKey = typeof NUMPAD_KEYS[number];
+
+interface NumpadProps {
+  onPress: (key: NumpadKey) => void;
+}
+
+function Numpad({ onPress }: NumpadProps): React.JSX.Element {
+  return (
+    <div className="grid grid-cols-3 gap-3 max-w-xs mx-auto w-full">
+      {NUMPAD_KEYS.map((key, i) => (
+        <motion.button
+          key={i}
+          type="button"
+          whileTap={key !== '' ? { scale: 0.92 } : undefined}
+          onClick={() => key !== '' && onPress(key)}
+          className={cn(
+            'h-14 rounded-2xl flex items-center justify-center text-[20px] font-bold font-display transition-colors',
+            key === '⌫'
+              ? 'bg-rust/10 text-rust border border-rust/20'
+              : key === ''
+                ? 'invisible'
+                : 'bg-forge-surface border border-white/[0.07] text-cream hover:bg-forge-elevated'
+          )}
+        >
+          {key}
+        </motion.button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Category grid ───────────────────────────────────────────
+
+interface CategoryGridProps {
+  selected: string | null;
+  onSelect: (id: string) => void;
+}
+
+function CategoryGrid({ selected, onSelect }: CategoryGridProps): React.JSX.Element {
   return (
     <div className="grid grid-cols-3 gap-3">
-      {CATEGORIES.map(cat => {
-        const Icon      = cat.Icon;
-        const isActive  = selected === cat.id;
+      {CATEGORIES.map((cat: Category) => {
+        const Icon     = cat.Icon;
+        const isActive = selected === cat.id;
         return (
           <motion.button
             key={cat.id}
+            type="button"
             whileTap={{ scale: 0.95 }}
             onClick={() => onSelect(cat.id)}
             className={cn(
@@ -29,7 +72,7 @@ function CategoryGrid({ selected, onSelect }) {
             )}
             style={isActive ? {
               borderColor: cat.color,
-              background: `color-mix(in srgb, ${cat.color} 10%, #161210)`,
+              background:  `color-mix(in srgb, ${cat.color} 10%, #161210)`,
             } : undefined}
           >
             <div
@@ -51,52 +94,38 @@ function CategoryGrid({ selected, onSelect }) {
   );
 }
 
-function Numpad({ onPress }) {
-  return (
-    <div className="grid grid-cols-3 gap-3 max-w-xs mx-auto w-full">
-      {NUMPAD_KEYS.map((key, i) => (
-        <motion.button
-          key={i}
-          whileTap={key ? { scale: 0.92 } : undefined}
-          onClick={() => key && onPress(key)}
-          className={cn(
-            'h-14 rounded-2xl flex items-center justify-center text-[20px] font-bold font-display transition-colors',
-            key === '⌫'
-              ? 'bg-rust/10 text-rust border border-rust/20'
-              : key === ''
-                ? 'invisible'
-                : 'bg-forge-surface border border-white/[0.07] text-cream hover:bg-forge-elevated'
-          )}
-        >
-          {key}
-        </motion.button>
-      ))}
-    </div>
-  );
-}
+// ─── Logger page ─────────────────────────────────────────────
 
-export default function Logger() {
+export default function Logger(): React.JSX.Element {
   const navigate = useNavigate();
-  const [step,       setStep]     = useState(1);
-  const [catId,      setCatId]    = useState(null);
-  const [amount,     setAmount]   = useState('');
-  const [note,       setNote]     = useState('');
-  const [success,    setSuccess]  = useState(false);
 
-  const selectedCat  = CATEGORIES.find(c => c.id === catId);
+  const [step,    setStep]    = useState<Step>(1);
+  const [catId,   setCatId]   = useState<string | null>(null);
+  const [amount,  setAmount]  = useState<string>('');
+  const [note,    setNote]    = useState<string>('');
+  const [success, setSuccess] = useState<boolean>(false);
+
+  const selectedCat  = CATEGORIES.find(c => c.id === catId) ?? null;
   const numericAmount = Number(amount) || 0;
 
-  const handleCatSelect = (id) => { setCatId(id); setStep(2); };
+  const handleCatSelect = (id: string): void => {
+    setCatId(id);
+    setStep(2);
+  };
 
-  const handleNumpad = (key) => {
-    if (key === '⌫') { setAmount(a => a.slice(0, -1)); return; }
+  const handleNumpad = (key: NumpadKey): void => {
+    if (key === '⌫') {
+      setAmount(a => a.slice(0, -1));
+      return;
+    }
+    if (key === '') return;
     setAmount(a => {
       const next = a + key;
-      return next.replace(/^0+([1-9])/, '$1'); // strip leading zeros
+      return next.replace(/^0+([1-9])/, '$1');
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (): void => {
     if (numericAmount <= 0) return;
     setSuccess(true);
     setTimeout(() => navigate('/dashboard'), 1800);
@@ -104,9 +133,11 @@ export default function Logger() {
 
   return (
     <div className="flex flex-col h-screen bg-forge-bg overflow-hidden relative">
+
       {/* Header */}
       <header className="h-14 flex items-center justify-between px-4 border-b border-white/[0.06] flex-shrink-0">
         <button
+          type="button"
           onClick={() => step === 2 ? setStep(1) : navigate('/dashboard')}
           className="flex items-center gap-1.5 text-[14px] font-semibold text-cream/55 hover:text-cream transition-colors"
         >
@@ -114,12 +145,12 @@ export default function Logger() {
           {step === 2 ? 'Back' : 'Cancel'}
         </button>
         <h1 className="text-[17px] font-bold font-display text-cream">Log Expense</h1>
-        <div className="w-16" />
+        <div className="w-16" aria-hidden="true" />
       </header>
 
       {/* Step indicator */}
       <div className="flex gap-1.5 px-4 pt-3 flex-shrink-0">
-        {[1, 2].map(s => (
+        {([1, 2] as const).map(s => (
           <motion.div
             key={s}
             animate={{ backgroundColor: s <= step ? '#B7410E' : '#211A14' }}
@@ -155,10 +186,10 @@ export default function Logger() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -16 }}
               transition={{ duration: 0.25 }}
-              className="flex flex-col gap-6 h-full"
+              className="flex flex-col gap-6"
             >
               {/* Selected category badge */}
-              {selectedCat && (
+              {selectedCat != null && (
                 <div className="flex items-center gap-3 p-4 bg-forge-surface border border-white/[0.07] rounded-2xl">
                   <div
                     className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -167,7 +198,10 @@ export default function Logger() {
                     <selectedCat.Icon size={22} style={{ color: selectedCat.color }} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-[13px] font-bold uppercase tracking-wide" style={{ color: selectedCat.color }}>
+                    <p
+                      className="text-[13px] font-bold uppercase tracking-wide"
+                      style={{ color: selectedCat.color }}
+                    >
                       {selectedCat.label}
                     </p>
                     <p className="text-[12px] text-cream/30">Tap Back to change</p>
@@ -175,9 +209,11 @@ export default function Logger() {
                 </div>
               )}
 
-              {/* Amount display */}
+              {/* Amount display + numpad */}
               <div className="flex flex-col items-center py-4 gap-6">
-                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-cream/30">Enter amount</p>
+                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-cream/30">
+                  Enter amount
+                </p>
                 <div className="flex items-start gap-1">
                   <span className="text-[32px] font-bold text-cream/40 mt-2 font-display">₦</span>
                   <span className={cn(
@@ -190,7 +226,7 @@ export default function Logger() {
                 <Numpad onPress={handleNumpad} />
               </div>
 
-              {/* Note + CTA */}
+              {/* Note + submit */}
               <div className="space-y-4 pb-4">
                 <Input
                   label="Note (optional)"
@@ -231,9 +267,11 @@ export default function Logger() {
               <CheckCircle size={52} className="text-rust-light" />
             </motion.div>
             <div>
-              <h2 className="text-[36px] font-extrabold font-display text-cream tracking-tight">Logged!</h2>
+              <h2 className="text-[36px] font-extrabold font-display text-cream tracking-tight">
+                Logged!
+              </h2>
               <p className="text-[18px] text-cream/50 font-medium mt-1">
-                {formatNaira(numericAmount)} on {selectedCat?.label}
+                {formatNaira(numericAmount)} on {selectedCat?.label ?? ''}
               </p>
             </div>
           </motion.div>

@@ -1,28 +1,50 @@
-// src/components/charts/WeeklyBarChart.jsx
+// src/components/charts/WeeklyBarChart.tsx
 import {
-  BarChart, Bar, ResponsiveContainer,
-  XAxis, YAxis, Cell, Tooltip,
+  BarChart,
+  Bar,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Cell,
+  Tooltip,
+  type TooltipProps,
 } from 'recharts';
+import { type ValueType, type NameType } from 'recharts/types/component/DefaultTooltipContent';
 import { formatNaira } from '@/lib/utils';
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
-function CustomTooltip({ active, payload }) {
+interface ChartEntry {
+  name:    string;
+  value:   number;
+  isToday: boolean;
+}
+
+function CustomTooltip({
+  active,
+  payload,
+}: TooltipProps<ValueType, NameType>): React.JSX.Element | null {
   if (!active || !payload?.length) return null;
+  const raw = payload[0]?.value;
+  const amount = typeof raw === 'number' ? raw : 0;
   return (
-    <div className="bg-forge-elevated border border-white/[0.1] rounded-xl px-3 py-2 text-[12px] font-bold text-cream shadow-card-lg">
-      {formatNaira(payload[0].value)}
+    <div className="bg-forge-elevated border border-white/[0.10] rounded-xl px-3 py-2 text-[12px] font-bold text-cream shadow-card-lg">
+      {formatNaira(amount)}
     </div>
   );
 }
 
-/**
- * @param {{ data: number[] }} props  7-element array Mon→Sun
- */
-export default function WeeklyBarChart({ data }) {
-  const todayIdx  = (new Date().getDay() + 6) % 7; // 0=Mon … 6=Sun
-  const chartData = data.map((value, i) => ({
-    name: DAYS[i],
+export interface WeeklyBarChartProps {
+  /** 7-element array: index 0 = Monday … index 6 = Sunday */
+  data: readonly number[];
+}
+
+export default function WeeklyBarChart({ data }: WeeklyBarChartProps): React.JSX.Element {
+  // Sunday = 0 in JS; convert to Mon-based index
+  const todayIdx = (new Date().getDay() + 6) % 7;
+
+  const chartData: ChartEntry[] = data.map((value, i) => ({
+    name:    DAYS[i] ?? '',
     value,
     isToday: i === todayIdx,
   }));
@@ -47,9 +69,9 @@ export default function WeeklyBarChart({ data }) {
             axisLine={false}
             tickLine={false}
             tick={{
-              fontSize: 11,
+              fontSize:   11,
               fontWeight: 600,
-              fill: 'rgba(245,241,235,0.3)',
+              fill:       'rgba(245,241,235,0.3)',
               fontFamily: 'Inter, sans-serif',
             }}
             dy={8}

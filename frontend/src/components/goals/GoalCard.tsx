@@ -1,26 +1,30 @@
-// src/components/goals/GoalCard.jsx
+// src/components/goals/GoalCard.tsx
 import { motion } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 import { getCategoryById } from '@/lib/categories';
 import { formatNaira } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
+import type { Goal } from '@/types/goals';
 
-/**
- * @param {{ goal: object, onEdit: () => void, onDelete: () => void }} props
- */
-export default function GoalCard({ goal, onEdit, onDelete }) {
-  const pct      = goal.targetAmount > 0
+export interface GoalCardProps {
+  goal:     Goal;
+  onEdit:   () => void;
+  onDelete: () => void;
+}
+
+export default function GoalCard({ goal, onEdit, onDelete }: GoalCardProps): React.JSX.Element {
+  const pct = goal.targetAmount > 0
     ? Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100))
     : 0;
-  const isComplete = pct >= 100;
-  const cat      = getCategoryById(goal.icon);
-  const Icon     = cat.Icon;
-  const daysLeft = Math.max(0, Math.ceil((new Date(goal.deadline) - Date.now()) / 86400000));
-  const dailySave = daysLeft > 0 ? (goal.targetAmount - goal.currentAmount) / daysLeft : 0;
+  const isComplete  = pct >= 100;
+  const cat         = getCategoryById(goal.icon);
+  const Icon        = cat.Icon;
+  const daysLeft    = Math.max(0, Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / 86_400_000));
+  const dailySave   = daysLeft > 0 ? (goal.targetAmount - goal.currentAmount) / daysLeft : 0;
 
-  // SVG ring
-  const R    = 22;
-  const circ = 2 * Math.PI * R;
+  // SVG progress ring
+  const R           = 22;
+  const circ        = 2 * Math.PI * R;
   const strokeColor = isComplete ? '#2DB37A' : '#B7410E';
 
   return (
@@ -74,11 +78,12 @@ export default function GoalCard({ goal, onEdit, onDelete }) {
         )}
       </div>
 
-      {/* Delete */}
+      {/* Delete button */}
       <button
         onClick={(e) => { e.stopPropagation(); onDelete(); }}
         className="p-2 rounded-xl text-cream/20 hover:text-danger hover:bg-danger/10 transition-all flex-shrink-0"
         aria-label="Delete goal"
+        type="button"
       >
         <Trash2 size={16} />
       </button>

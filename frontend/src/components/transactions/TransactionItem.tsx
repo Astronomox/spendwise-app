@@ -1,14 +1,22 @@
-// src/components/transactions/TransactionItem.jsx
+// src/components/transactions/TransactionItem.tsx
 import { motion } from 'framer-motion';
 import { getCategoryById } from '@/lib/categories';
 import { formatNaira, getTimeAgo, cn } from '@/lib/utils';
+import type { Transaction } from '@/types/transactions';
 
-/**
- * @param {{ transaction: object, isLast?: boolean, onEdit?: (id:string)=>void }} props
- */
-export default function TransactionItem({ transaction: t, isLast = false, onEdit }) {
-  const cat    = getCategoryById(t.category);
-  const Icon   = cat.Icon;
+export interface TransactionItemProps {
+  transaction: Transaction;
+  isLast?:     boolean;
+  onEdit?:     (id: string) => void;
+}
+
+export default function TransactionItem({
+  transaction: t,
+  isLast = false,
+  onEdit,
+}: TransactionItemProps): React.JSX.Element {
+  const cat      = getCategoryById(t.category);
+  const Icon     = cat.Icon;
   const isCredit = t.direction === 'credit';
 
   return (
@@ -18,11 +26,11 @@ export default function TransactionItem({ transaction: t, isLast = false, onEdit
       onClick={() => onEdit?.(t.id)}
       className={cn(
         'flex items-center gap-3 px-4 py-3.5 transition-colors',
-        onEdit && 'cursor-pointer',
+        onEdit != null && 'cursor-pointer',
         !isLast && 'border-b border-white/[0.06]'
       )}
     >
-      {/* Category bubble */}
+      {/* Category icon bubble */}
       <div
         className="w-10 h-10 rounded-[14px] flex items-center justify-center flex-shrink-0"
         style={{ backgroundColor: `color-mix(in srgb, ${cat.color} 15%, transparent)` }}
@@ -34,10 +42,10 @@ export default function TransactionItem({ transaction: t, isLast = false, onEdit
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="text-[14px] font-bold font-display text-cream truncate">
-            {t.merchant || t.description}
+            {t.merchant ?? t.description}
           </p>
           {t.source === 'sms' && (
-            <span className="flex-shrink-0 text-[9px] px-1.5 py-0.5 bg-forge-elevated border border-white/[0.1] text-cream/40 rounded font-bold uppercase tracking-wider">
+            <span className="flex-shrink-0 text-[9px] px-1.5 py-0.5 bg-forge-elevated border border-white/[0.10] text-cream/40 rounded font-bold uppercase tracking-wider">
               SMS
             </span>
           )}

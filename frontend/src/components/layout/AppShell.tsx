@@ -1,18 +1,33 @@
-// src/components/layout/AppShell.jsx
+// src/components/layout/AppShell.tsx
+import { type ReactNode } from 'react';
 import { useLocation, useNavigate, NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Clock, Target, Bell, Plus, LogOut } from 'lucide-react';
+import { Home, Clock, Target, Bell, Plus, LogOut, type LucideIcon } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
 import { mockUser, mockAlerts } from '@/data/mockData';
 
-const NAV_ITEMS = [
+// ─── Nav item definitions ────────────────────────────────────
+
+interface NavItem {
+  to:    string;
+  icon:  LucideIcon;
+  label: string;
+}
+
+const NAV_ITEMS: readonly NavItem[] = [
   { to: '/dashboard', icon: Home,   label: 'Home'    },
   { to: '/history',   icon: Clock,  label: 'History' },
   { to: '/goals',     icon: Target, label: 'Goals'   },
   { to: '/alerts',    icon: Bell,   label: 'Alerts'  },
-];
+] as const;
 
-function SidebarTab({ to, icon: Icon, label, badge }) {
+// ─── Sidebar tab (desktop) ───────────────────────────────────
+
+interface SidebarTabProps extends NavItem {
+  badge?: number;
+}
+
+function SidebarTab({ to, icon: Icon, label, badge = 0 }: SidebarTabProps): React.JSX.Element {
   return (
     <NavLink
       to={to}
@@ -35,7 +50,11 @@ function SidebarTab({ to, icon: Icon, label, badge }) {
   );
 }
 
-function BottomTab({ to, icon: Icon, label }) {
+// ─── Bottom nav tab (mobile) ─────────────────────────────────
+
+interface BottomTabProps extends NavItem {}
+
+function BottomTab({ to, icon: Icon, label }: BottomTabProps): React.JSX.Element {
   return (
     <NavLink
       to={to}
@@ -61,9 +80,16 @@ function BottomTab({ to, icon: Icon, label }) {
   );
 }
 
-export default function AppShell({ children }) {
+// ─── AppShell ────────────────────────────────────────────────
+
+export interface AppShellProps {
+  children: ReactNode;
+}
+
+export default function AppShell({ children }: AppShellProps): React.JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
+
   const isAuth   = location.pathname.startsWith('/auth');
   const isLogger = location.pathname === '/logger';
   const unread   = mockAlerts.filter(a => !a.read).length;
@@ -76,7 +102,7 @@ export default function AppShell({ children }) {
   return (
     <div className="flex min-h-screen w-full bg-forge-bg">
 
-      {/* ── Desktop Sidebar ──────────────────────────────── */}
+      {/* ── Desktop sidebar ──────────────────────────────── */}
       {!isLogger && (
         <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-60 flex-col z-50 py-6 bg-forge-surface border-r border-white/[0.06]">
           {/* Logo */}
@@ -86,7 +112,7 @@ export default function AppShell({ children }) {
             </h1>
           </div>
 
-          {/* Nav */}
+          {/* Nav links */}
           <nav className="flex-1 flex flex-col gap-1 px-3">
             {NAV_ITEMS.map(item => (
               <SidebarTab
@@ -151,7 +177,7 @@ export default function AppShell({ children }) {
           </header>
         )}
 
-        {/* Page content with page-transition */}
+        {/* Animated page content */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className={cn(
             'max-w-[1100px] mx-auto',
@@ -163,7 +189,7 @@ export default function AppShell({ children }) {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.28, ease: 'easeOut' }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
               >
                 {children}
               </motion.div>
@@ -172,16 +198,16 @@ export default function AppShell({ children }) {
         </main>
       </div>
 
-      {/* ── Mobile Bottom Nav ────────────────────────────── */}
+      {/* ── Mobile bottom nav ────────────────────────────── */}
       {!isLogger && (
         <nav
           className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center glass border-t border-white/[0.06]"
           style={{
-            height: 'calc(64px + env(safe-area-inset-bottom))',
+            height:        'calc(64px + env(safe-area-inset-bottom))',
             paddingBottom: 'env(safe-area-inset-bottom)',
           }}
         >
-          <BottomTab to="/dashboard" icon={Home}   label="Home" />
+          <BottomTab to="/dashboard" icon={Home}   label="Home"    />
           <BottomTab to="/history"   icon={Clock}  label="History" />
 
           {/* Centre FAB */}

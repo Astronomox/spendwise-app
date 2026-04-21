@@ -1,57 +1,74 @@
-// src/pages/auth/Login.jsx
-import { useState } from 'react';
+// src/pages/auth/Login.tsx
+import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
-const FEATURES = [
-  { title: 'Auto-log from SMS',  body: 'Capture bank alerts instantly, no manual entry needed.' },
-  { title: 'Spend analytics',    body: 'Weekly & monthly breakdowns at a glance.'               },
-  { title: 'Savings goals',      body: 'Set targets and track your progress every day.'         },
-];
+interface LoginFormErrors {
+  email?:    string;
+  password?: string;
+}
 
-export default function Login() {
+interface Feature {
+  title: string;
+  body:  string;
+}
+
+const FEATURES: readonly Feature[] = [
+  { title: 'Auto-log from SMS',  body: 'Capture bank alerts instantly — no manual entry needed.' },
+  { title: 'Spend analytics',    body: 'Weekly and monthly breakdowns at a glance.'              },
+  { title: 'Savings goals',      body: 'Set targets and track your progress every day.'          },
+] as const;
+
+export default function Login(): React.JSX.Element {
   const navigate = useNavigate();
-  const [email,    setEmail]    = useState('');
-  const [password, setPassword] = useState('');
-  const [errors,   setErrors]   = useState({});
-  const [loading,  setLoading]  = useState(false);
 
-  const validate = () => {
-    const e = {};
-    if (!email)                              e.email    = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(email))   e.email    = 'Enter a valid email address';
-    if (!password)                           e.password = 'Password is required';
-    else if (password.length < 6)           e.password = 'At least 6 characters required';
+  const [email,    setEmail]    = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [errors,   setErrors]   = useState<LoginFormErrors>({});
+  const [loading,  setLoading]  = useState<boolean>(false);
+
+  const validate = (): boolean => {
+    const e: LoginFormErrors = {};
+    if (!email)                             e.email    = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(email))  e.email    = 'Enter a valid email address';
+    if (!password)                          e.password = 'Password is required';
+    else if (password.length < 6)          e.password = 'At least 6 characters required';
     setErrors(e);
-    return !Object.keys(e).length;
+    return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    // Simulate auth — replace with real API call
-    await new Promise(r => setTimeout(r, 1000));
+    // Simulate auth delay — replace with real API call
+    await new Promise<void>(resolve => setTimeout(resolve, 1000));
     setLoading(false);
     navigate('/dashboard');
   };
 
   return (
     <div className="flex min-h-screen w-full">
-      {/* ── Left hero panel (desktop only) ─────────── */}
+
+      {/* ── Left hero panel (desktop) ─────────────────── */}
       <div className="hidden lg:flex w-1/2 relative flex-col justify-between p-12 overflow-hidden bg-[#0D0906]">
-        {/* Ambient glows */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at 20% 80%, rgba(183,65,14,0.4) 0%, transparent 55%)' }} />
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at 80% 20%, rgba(184,115,51,0.18) 0%, transparent 50%)' }} />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at 20% 80%, rgba(183,65,14,0.4) 0%, transparent 55%)' }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at 80% 20%, rgba(184,115,51,0.18) 0%, transparent 50%)' }}
+        />
 
         {/* Logo */}
         <div className="relative z-10">
-          <h1 className="text-[28px] font-black font-display text-gradient-rust tracking-tight">SpendWise.</h1>
+          <h1 className="text-[28px] font-black font-display text-gradient-rust tracking-tight">
+            SpendWise.
+          </h1>
         </div>
 
         {/* Headline */}
@@ -65,7 +82,7 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Feature list */}
+        {/* Feature grid */}
         <div className="relative z-10 grid grid-cols-3 gap-5">
           {FEATURES.map(f => (
             <div key={f.title}>
@@ -79,7 +96,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* ── Right form panel ──────────────────────── */}
+      {/* ── Right form panel ──────────────────────────── */}
       <div className="flex-1 flex items-center justify-center p-6 bg-[#FAF8F5]">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
@@ -99,14 +116,14 @@ export default function Login() {
             Sign in to your account to continue.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <Input
               inverse
               label="Email"
               type="email"
               placeholder="adeola@spendwise.ng"
               value={email}
-              onChange={e => { setEmail(e.target.value); setErrors(v => ({ ...v, email: '' })); }}
+              onChange={e => { setEmail(e.target.value); setErrors(v => ({ ...v, email: undefined })); }}
               error={errors.email}
             />
             <Input
@@ -115,7 +132,7 @@ export default function Login() {
               type="password"
               placeholder="••••••••"
               value={password}
-              onChange={e => { setPassword(e.target.value); setErrors(v => ({ ...v, password: '' })); }}
+              onChange={e => { setPassword(e.target.value); setErrors(v => ({ ...v, password: undefined })); }}
               error={errors.password}
             />
             <Button
@@ -135,9 +152,14 @@ export default function Login() {
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
-          {/* Google SSO */}
-          <Button variant="white" size="md" className="w-full border border-gray-200 shadow-sm gap-3">
-            <svg width="18" height="18" viewBox="0 0 24 24">
+          {/* Google SSO placeholder */}
+          <Button
+            type="button"
+            variant="white"
+            size="md"
+            className="w-full border border-gray-200 shadow-sm gap-3"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
