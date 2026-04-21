@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Flame, AlertTriangle, TrendingUp, Sparkles, type LucideIcon } from 'lucide-react';
 import { mockAlerts } from '@/data/mockData';
+import { useAlerts } from '@/hooks/useAlerts';
 import { getTimeAgo, cn } from '@/lib/utils';
 import type { Alert, AlertType } from '@/types/alerts';
 import Badge from '@/components/ui/Badge';
@@ -81,11 +82,21 @@ function AlertCard({ alert, onRead }: AlertCardProps): React.JSX.Element {
 // ─── Alerts page ─────────────────────────────────────────────
 
 export default function Alerts(): React.JSX.Element {
-  const [alerts, setAlerts] = useState<Alert[]>(mockAlerts);
-  const unread = alerts.filter(a => !a.read).length;
+  const { alerts: liveAlerts, isLoading, markRead: markReadApi } = useAlerts();
 
-  const markRead = (id: string): void => {
-    setAlerts(as => as.map(a => a.id === id ? { ...a, read: true } : a));
+  // Local state mirrors live data; falls back to mock while API is unavailable
+  const [localAlerts, setLocalAlerts] = useState<Alert[]>(mockAlerts);
+  const alerts  = liveAlerts.length > 0 ? liveAlerts : localAlerts;
+  const unread  = alerts.filter(a => !a.read).length;
+
+  const markRead = async (id: string): Promise<void> => {
+    // Optimistic local update first
+    setLocalAlerts(as => as.map(a => a.id === id ? { ...a, read: true } : a));
+    try {
+      await markReadApi(id);
+    } catch {
+      // API not available yet — local state already updated
+    }
   };
 
   const sorted = [...alerts].sort((a, b) => {
@@ -106,7 +117,13 @@ export default function Alerts(): React.JSX.Element {
       </div>
 
       {/* List or empty state */}
-      {sorted.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 rounded-3xl bg-forge-surface animate-pulse" />
+          ))}
+        </div>
+      ) : sorted.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
           <div className="w-16 h-16 rounded-3xl bg-forge-elevated border border-white/[0.06] flex items-center justify-center">
             <Bell size={28} className="text-cream/20" />
@@ -119,7 +136,7 @@ export default function Alerts(): React.JSX.Element {
       ) : (
         <div className="space-y-3">
           {sorted.map(alert => (
-            <AlertCard key={alert.id} alert={alert} onRead={markRead} />
+            <AlertCard key={alert.id} alert={alert} onRead={(id) => { void markRead(id); }} />
           ))}
         </div>
       )}

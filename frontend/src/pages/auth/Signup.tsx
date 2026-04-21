@@ -53,7 +53,7 @@ export default function Signup(): React.JSX.Element {
     // Simulate signup delay — replace with real API call
     await new Promise<void>(resolve => setTimeout(resolve, 1000));
     setLoading(false);
-    navigate('/dashboard');
+    navigate('/onboarding');
   };
 
   return (

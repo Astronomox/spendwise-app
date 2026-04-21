@@ -4,6 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Share2 } from 'lucide-react';
 import { mockUser, mockDashboard, mockTransactions, mockGoals } from '@/data/mockData';
+import { useDashboardSummary } from '@/hooks/useDashboard';
+import { useTransactions }     from '@/hooks/useTransactions';
+import { useGoals }            from '@/hooks/useGoals';
+import { useAppStore }         from '@/lib/store';
 import { formatNaira, getGreeting, cn } from '@/lib/utils';
 import type { DashboardData } from '@/types/user';
 import Card from '@/components/ui/Card';
@@ -40,17 +44,31 @@ function StatCard({ label, value, accent }: StatCardProps): React.JSX.Element {
 
 export default function Dashboard(): React.JSX.Element {
   const navigate = useNavigate();
-  const data: DashboardData = mockDashboard;
 
-  const budgetPct = Math.min(100, (data.totalSpent / data.monthlyBudget) * 100);
+  // ── Real data (fall back to mock while API loads / errors) ──
+  const dashQuery = useDashboardSummary();
+  const txQuery   = useTransactions();
+  const goalQuery = useGoals();
+  const storeUser = useAppStore((s) => s.user);
+
+  const data: DashboardData = dashQuery.data ?? mockDashboard;
+  const allTransactions     = txQuery.isLoading || txQuery.transactions.length === 0
+    ? mockTransactions
+    : txQuery.transactions;
+  const allGoals            = goalQuery.isLoading || goalQuery.goals.length === 0
+    ? mockGoals
+    : goalQuery.goals;
+  const displayUser         = storeUser ?? mockUser;
+
+  const budgetPct = Math.min(100, (data.totalSpent / (data.monthlyBudget || 1)) * 100);
   const remaining = data.monthlyBudget - data.totalSpent;
 
   const spentToday = useMemo<number>(() => {
     const today = new Date().toDateString();
-    return mockTransactions
+    return allTransactions
       .filter(t => new Date(t.date).toDateString() === today && t.direction === 'debit')
       .reduce((sum, t) => sum + t.amount, 0);
-  }, []);
+  }, [allTransactions]);
 
   const progressClass =
     budgetPct >= 90 ? 'bg-danger' :
@@ -72,7 +90,7 @@ export default function Dashboard(): React.JSX.Element {
             <div className="flex items-start justify-between mb-7">
               <div>
                 <p className="text-[13px] text-cream/50 font-medium mb-1">
-                  Good {getGreeting()}, {mockUser.fullName.split(' ')[0]}
+                  Good {getGreeting()}, {displayUser.fullName.split(' ')[0]}
                 </p>
                 <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-cream/30">
                   Spent this month
@@ -161,13 +179,17 @@ export default function Dashboard(): React.JSX.Element {
               </button>
             </div>
             <Card variant="default" className="!p-0 overflow-hidden">
-              {mockTransactions.slice(0, 5).map((t, i) => (
-                <TransactionItem
-                  key={t.id}
-                  transaction={t}
-                  isLast={i === 4}
-                />
-              ))}
+              {txQuery.isLoading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="h-[68px] border-b border-white/[0.04] bg-forge-surface animate-pulse last:border-0" />
+                  ))
+                : allTransactions.slice(0, 5).map((t, i) => (
+                    <TransactionItem
+                      key={t.id}
+                      transaction={t}
+                      isLast={i === Math.min(allTransactions.length, 5) - 1}
+                    />
+                  ))}
             </Card>
           </div>
         </div>
@@ -186,7 +208,7 @@ export default function Dashboard(): React.JSX.Element {
               </button>
             </div>
             <div className="space-y-3">
-              {mockGoals.map(g => (
+              {allGoals.map(g => (
                 <GoalCard
                   key={g.id}
                   goal={g}

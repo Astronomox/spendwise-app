@@ -10,12 +10,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "framer-motion":    "^11.3.0",
-    "lucide-react":     "^0.408.0",
-    "react":            "^18.3.1",
-    "react-dom":        "^18.3.1",
-    "react-router-dom": "^6.24.1",
-    "recharts":         "^2.12.7"
+    "@tanstack/react-query": "^5.51.1",
+    "framer-motion":         "^11.3.0",
+    "lucide-react":          "^0.408.0",
+    "react":                 "^18.3.1",
+    "react-dom":             "^18.3.1",
+    "react-router-dom":      "^6.24.1",
+    "recharts":              "^2.12.7",
+    "zustand":               "^4.5.4"
   },
   "devDependencies": {
     "@types/node":       "^20.14.0",

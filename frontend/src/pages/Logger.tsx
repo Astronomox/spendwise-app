@@ -8,6 +8,7 @@ import type { Category } from '@/lib/categories';
 import { formatNaira, cn } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { useTransactions } from '@/hooks/useTransactions';
 
 type Step = 1 | 2;
 
@@ -99,6 +100,8 @@ function CategoryGrid({ selected, onSelect }: CategoryGridProps): React.JSX.Elem
 export default function Logger(): React.JSX.Element {
   const navigate = useNavigate();
 
+  const { addTransaction, isAdding } = useTransactions();
+
   const [step,    setStep]    = useState<Step>(1);
   const [catId,   setCatId]   = useState<string | null>(null);
   const [amount,  setAmount]  = useState<string>('');
@@ -125,8 +128,23 @@ export default function Logger(): React.JSX.Element {
     });
   };
 
-  const handleSubmit = (): void => {
-    if (numericAmount <= 0) return;
+  const handleSubmit = async (): Promise<void> => {
+    if (numericAmount <= 0 || !catId) return;
+    try {
+      await addTransaction({
+        merchant:    null,
+        category:    catId,
+        amount:      numericAmount,
+        direction:   'debit',
+        date:        new Date().toISOString(),
+        source:      'manual',
+        status:      'confirmed',
+        description: note.trim() || (selectedCat?.label ?? ''),
+      });
+    } catch {
+      // toast is shown by the hook on error — just don't show success
+      return;
+    }
     setSuccess(true);
     setTimeout(() => navigate('/dashboard'), 1800);
   };
@@ -238,8 +256,9 @@ export default function Logger(): React.JSX.Element {
                 <Button
                   size="lg"
                   className="w-full"
-                  disabled={numericAmount <= 0}
-                  onClick={handleSubmit}
+                  disabled={numericAmount <= 0 || isAdding}
+                  isLoading={isAdding}
+                  onClick={() => { void handleSubmit(); }}
                 >
                   Log {numericAmount > 0 ? formatNaira(numericAmount) : 'Expense'}
                 </Button>

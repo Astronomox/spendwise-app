@@ -2,7 +2,7 @@
 import { type ReactNode } from 'react';
 import { useLocation, useNavigate, NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Clock, Target, Bell, Plus, LogOut, type LucideIcon } from 'lucide-react';
+import { Home, Clock, Target, Bell, Plus, LogOut, MessageSquare, type LucideIcon } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
 import { mockUser, mockAlerts } from '@/data/mockData';
 
@@ -15,10 +15,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: readonly NavItem[] = [
-  { to: '/dashboard', icon: Home,   label: 'Home'    },
-  { to: '/history',   icon: Clock,  label: 'History' },
-  { to: '/goals',     icon: Target, label: 'Goals'   },
-  { to: '/alerts',    icon: Bell,   label: 'Alerts'  },
+  { to: '/dashboard', icon: Home,          label: 'Home'      },
+  { to: '/history',   icon: Clock,         label: 'History'   },
+  { to: '/goals',     icon: Target,        label: 'Goals'     },
+  { to: '/alerts',    icon: Bell,          label: 'Alerts'    },
+  { to: '/sms-queue', icon: MessageSquare, label: 'SMS Queue' },
 ] as const;
 
 // ─── Sidebar tab (desktop) ───────────────────────────────────

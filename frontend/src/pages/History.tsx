@@ -2,11 +2,13 @@
 import { useState, useMemo } from 'react';
 import { Search, X } from 'lucide-react';
 import { mockTransactions } from '@/data/mockData';
+import { useTransactions } from '@/hooks/useTransactions';
 import { CATEGORIES } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 import type { Transaction } from '@/types/transactions';
 import Card from '@/components/ui/Card';
 import TransactionItem from '@/components/transactions/TransactionItem';
+import { EditTransactionModal } from '@/components/transactions/EditTransactionModal';
 
 type TimeFilter = 'all' | 'today' | 'week' | 'month';
 
@@ -72,9 +74,14 @@ export default function History(): React.JSX.Element {
   const [search,     setSearch]     = useState<string>('');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [catFilter,  setCatFilter]  = useState<string>('all');
+  const [editing,    setEditing]    = useState<Transaction | null>(null);
+
+  const { transactions, isLoading } = useTransactions();
+  // Fall back to mock data while the API loads or returns empty
+  const source = isLoading || transactions.length === 0 ? mockTransactions : transactions;
 
   const filtered = useMemo<Transaction[]>(() => {
-    let list = applyTimeFilter(mockTransactions, timeFilter);
+    let list = applyTimeFilter(source, timeFilter);
 
     if (catFilter !== 'all') {
       list = list.filter(t => t.category === catFilter);
@@ -89,7 +96,7 @@ export default function History(): React.JSX.Element {
     }
 
     return list;
-  }, [search, timeFilter, catFilter]);
+  }, [source, search, timeFilter, catFilter]);
 
   return (
     <div className="flex flex-col pt-4">
@@ -164,6 +171,12 @@ export default function History(): React.JSX.Element {
             <p className="text-[14px] text-cream/40">Try adjusting your filters</p>
           </div>
         </div>
+      ) : isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-[68px] rounded-2xl bg-forge-surface animate-pulse" />
+          ))}
+        </div>
       ) : (
         <>
           <Card variant="default" className="!p-0 overflow-hidden mb-4">
@@ -172,12 +185,19 @@ export default function History(): React.JSX.Element {
                 key={t.id}
                 transaction={t}
                 isLast={i === filtered.length - 1}
+                onEdit={() => setEditing(t)}
               />
             ))}
           </Card>
           <p className="text-center text-[12px] text-cream/30 font-medium pb-4">
             {filtered.length} transaction{filtered.length !== 1 ? 's' : ''}
           </p>
+
+          <EditTransactionModal
+            transaction={editing}
+            isOpen={!!editing}
+            onClose={() => setEditing(null)}
+          />
         </>
       )}
     </div>
