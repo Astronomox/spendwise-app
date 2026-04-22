@@ -3,6 +3,8 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { requestLogger } from "./middleware/requestLogger.js";
+import { setupSwagger } from "./swagger.js";
+
 
 
 // LOAD ENV VARIABLES
@@ -25,7 +27,8 @@ app.use(requestLogger); // LOG ALL REQUESTS WITH TIMING AND SLOW REQUEST HIGHLIG
 app.use("/api/auth", authRoutes); // AUTH ROUTES
 app.use("/api/transactions", transactionRoutes); // TRANSACTION ROUTES
 app.use("/api/analytics", analyticsRoutes); // ANALYTICS ROUTES
-app.use("/api/auth", authRoutes); //GOOGLE AUTH ROUTES
+
+setupSwagger(app); // Setup Swagger documentation
 
 // HEALTH CHECK ENDPOINT
 app.get("/", (req, res) => {
