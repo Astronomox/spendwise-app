@@ -219,6 +219,17 @@ const options = {
                         message: { type: 'string', example: 'Validation failed' },
                     },
                 },
+                SMSIngestInput: {
+                    type: 'object',
+                    required: ['message'],
+                    properties: {
+                        message: {
+                            type: 'string',
+                            example: 'Credit alert: N5000 received from XYZ',
+                            description: 'Raw SMS message text for parsing amount, type, category',
+                        },
+                    },
+                },
             },
         },
         security: [

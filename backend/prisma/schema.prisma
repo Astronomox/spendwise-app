@@ -8,13 +8,13 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
+  id           String  @id @default(uuid())
+  email        String  @unique
   passwordHash String?
   fullName     String
 
-  provider     String        @default("local")        // "google" | "apple" | "local"
-  providerId   String?       // googleId or apple sub
+  provider     String        @default("local") // "google" | "apple" | "local"
+  providerId   String? // googleId or apple sub
   createdAt    DateTime      @default(now())
   transactions Transaction[]
 }
@@ -23,39 +23,49 @@ model Category {
   id           String        @id @default(uuid())
   name         String        @unique
   isSystem     Boolean       @default(false)
- transactions Transaction[]
+  transactions Transaction[]
 
-  keywords CategoryKeyword[]
+  keywords         CategoryKeyword[]
+  merchantKeywords MerchantKeyword[]
 }
 
 model CategoryKeyword {
-  id          String   @id @default(uuid())
-  keyword     String
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
+  id         String   @id @default(uuid())
+  keyword    String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
 
   @@index([keyword])
 }
 
 model Transaction {
-  id               String   @id @default(uuid())
-  userId           String
-  categoryId       String?
-  amountKobo       Int
-  type             TransactionType
-  description      String?
-  transactionDate  DateTime @default(now())
-  createdAt        DateTime @default(now())
+  id              String          @id @default(uuid())
+  userId          String
+  categoryId      String?
+  amountKobo      Int
+  type            TransactionType
+  description     String?
+  transactionDate DateTime        @default(now())
+  createdAt       DateTime        @default(now())
 
-  user             User      @relation(fields: [userId], references: [id])
-  category         Category? @relation(fields: [categoryId], references: [id])
+  user     User      @relation(fields: [userId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
 
   @@index([userId])
   @@index([userId, transactionDate])
   @@index([userId, categoryId])
   @@index([userId, type])
 }
+
 enum TransactionType {
   INCOME
   EXPENSE
+}
+
+model MerchantKeyword {
+  id         String   @id @default(uuid())
+  keyword    String   @unique
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime @default(now())
 }
