@@ -3,6 +3,7 @@ import { getTotalIncome } from "./incomeService.js";
 import { getCategoryBreakdownByType } from "./categoryService.js";
 import { getBurnRate } from "./burnrateService.js";
 import { toNaira } from "../../utils/money.js";
+import { calculateDailySafeSpend } from "../finance/savingsEngine.js";
 
 export const getAnalyticsSummary = async (userId, startDate, endDate) => {
     const [
@@ -18,6 +19,14 @@ export const getAnalyticsSummary = async (userId, startDate, endDate) => {
         getCategoryBreakdownByType(userId, "INCOME", startDate, endDate),
         getBurnRate(userId, startDate, endDate)    ]);
 
+    const savings = calculateDailySafeSpend({
+        totalIncomeKobo: totalIncome,
+        totalExpensesKobo: totalExpenses,
+        savingsGoalKobo: 50000 * 100, // TEMP (later from DB)
+        startDate,
+        endDate,
+    });
+
     const netBalance = totalIncome - totalExpenses;
 
     return {
@@ -31,6 +40,8 @@ export const getAnalyticsSummary = async (userId, startDate, endDate) => {
         netBalanceNaira: toNaira(netBalance),
 
         burnRate,
+
+        savings, 
 
         expenseBreakdown: expenseCategories,
         incomeBreakdown: incomeCategories,
