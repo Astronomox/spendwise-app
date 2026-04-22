@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Share2 } from 'lucide-react';
-import { mockUser, mockDashboard, mockTransactions, mockGoals } from '@/data/mockData';
 import { useDashboardSummary } from '@/hooks/useDashboard';
 import { useTransactions }     from '@/hooks/useTransactions';
 import { useGoals }            from '@/hooks/useGoals';
@@ -17,7 +16,7 @@ import TopCategories from '@/components/dashboard/TopCategories';
 import TransactionItem from '@/components/transactions/TransactionItem';
 import GoalCard from '@/components/goals/GoalCard';
 
-// ─── Stat card ───────────────────────────────────────────────
+// ——— Stat card ———
 
 interface StatCardProps {
   label:  string;
@@ -40,25 +39,31 @@ function StatCard({ label, value, accent }: StatCardProps): React.JSX.Element {
   );
 }
 
-// ─── Dashboard ───────────────────────────────────────────────
+// ——— Empty state defaults ———
+
+const emptyDashboard: DashboardData = {
+  totalSpent: 0,
+  monthlyBudget: 0,
+  daysLeftInMonth: 1,
+  dailySafeSpend: 0,
+  weeklySpend: [0, 0, 0, 0, 0, 0, 0],
+  spendByCategory: {},
+};
+
+// ——— Dashboard ———
 
 export default function Dashboard(): React.JSX.Element {
   const navigate = useNavigate();
 
-  // ── Real data (fall back to mock while API loads / errors) ──
   const dashQuery = useDashboardSummary();
   const txQuery   = useTransactions();
   const goalQuery = useGoals();
-  const storeUser = useAppStore((s) => s.user);
+  const user      = useAppStore((s) => s.user);
 
-  const data: DashboardData = dashQuery.data ?? mockDashboard;
-  const allTransactions     = txQuery.isLoading || txQuery.transactions.length === 0
-    ? mockTransactions
-    : txQuery.transactions;
-  const allGoals            = goalQuery.isLoading || goalQuery.goals.length === 0
-    ? mockGoals
-    : goalQuery.goals;
-  const displayUser         = storeUser ?? mockUser;
+  const data: DashboardData   = dashQuery.data ?? emptyDashboard;
+  const allTransactions       = txQuery.transactions;
+  const allGoals              = goalQuery.goals;
+  const displayName           = user?.fullName ?? 'User';
 
   const budgetPct = Math.min(100, (data.totalSpent / (data.monthlyBudget || 1)) * 100);
   const remaining = data.monthlyBudget - data.totalSpent;
@@ -78,7 +83,7 @@ export default function Dashboard(): React.JSX.Element {
   return (
     <div className="space-y-6 pt-6 lg:pt-8">
 
-      {/* ── Hero card ──────────────────────────────────── */}
+      {/* —— Hero card —— */}
       <section>
         <div className="relative rounded-4xl overflow-hidden bg-hero-mesh border border-rust/[0.22] shadow-card-lg p-7">
           <div className="absolute inset-0 hero-glow-1 pointer-events-none" />
@@ -90,7 +95,7 @@ export default function Dashboard(): React.JSX.Element {
             <div className="flex items-start justify-between mb-7">
               <div>
                 <p className="text-[13px] text-cream/50 font-medium mb-1">
-                  Good {getGreeting()}, {displayUser.fullName.split(' ')[0]}
+                  Good {getGreeting()}, {displayName.split(' ')[0]}
                 </p>
                 <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-cream/30">
                   Spent this month
@@ -135,7 +140,7 @@ export default function Dashboard(): React.JSX.Element {
         </div>
       </section>
 
-      {/* ── Two-column grid (desktop) ───────────────────── */}
+      {/* —— Two-column grid (desktop) —— */}
       <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-8 lg:items-start space-y-6 lg:space-y-0">
 
         {/* Left column */}
@@ -183,7 +188,9 @@ export default function Dashboard(): React.JSX.Element {
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="h-[68px] border-b border-white/[0.04] bg-forge-surface animate-pulse last:border-0" />
                   ))
-                : allTransactions.slice(0, 5).map((t, i) => (
+                : allTransactions.length === 0
+                  ? <p className="p-6 text-center text-cream/40 text-sm">No transactions yet. Log your first expense!</p>
+                  : allTransactions.slice(0, 5).map((t, i) => (
                     <TransactionItem
                       key={t.id}
                       transaction={t}
@@ -208,14 +215,16 @@ export default function Dashboard(): React.JSX.Element {
               </button>
             </div>
             <div className="space-y-3">
-              {allGoals.map(g => (
-                <GoalCard
-                  key={g.id}
-                  goal={g}
-                  onEdit={() => navigate('/goals')}
-                  onDelete={() => undefined}
-                />
-              ))}
+              {allGoals.length === 0
+                ? <p className="text-center text-cream/40 text-sm py-6">No goals yet. Set your first savings target!</p>
+                : allGoals.map(g => (
+                  <GoalCard
+                    key={g.id}
+                    goal={g}
+                    onEdit={() => navigate('/goals')}
+                    onDelete={() => undefined}
+                  />
+                ))}
             </div>
           </div>
         </div>
