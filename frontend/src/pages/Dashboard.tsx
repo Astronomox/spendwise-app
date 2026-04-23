@@ -46,6 +46,8 @@ const emptyDashboard: DashboardData = {
   monthlyBudget: 0,
   daysLeftInMonth: 1,
   dailySafeSpend: 0,
+  dailyBurnRate: 0,
+  projectedMonthlyBurn: 0,
   weeklySpend: [0, 0, 0, 0, 0, 0, 0],
   spendByCategory: {},
 };
