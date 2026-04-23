@@ -10,9 +10,16 @@ Production Swagger UI: [https://spendwise-app-39vv.onrender.com/api-docs](https:
 
 ## Project Overview
 
-SpendWise is a personal finance backend system that enables users to track income and expenses, categorize spending automatically, and generate real-time financial analytics. It is optimized for integration with web and mobile dashboards.
+SpendWise is a comprehensive personal finance backend system that enables users to track income and expenses, categorize spending automatically, ingest SMS transaction alerts, and generate real-time financial analytics. It is optimized for integration with web and mobile dashboards.
 
-The system supports both manual categorization and AI-assisted category detection based on transaction descriptions.
+**Key capabilities:**
+- **Transaction Tracking**: Manual entry or SMS-based auto-import from bank alerts
+- **Smart Categorization**: Automatic category detection based on transaction descriptions and SMS keywords
+- **Financial Analytics**: Real-time income/expense breakdown, burn rate analysis, and financial summaries
+- **Savings Planning**: Personalized safe spend recommendations based on financial goals
+- **Multi-Auth**: Email/password and Google OAuth 2.0 authentication
+
+The system supports both manual categorization and intelligent SMS parsing for seamless transaction creation.
 
 ## Tech Stack
 
@@ -115,6 +122,49 @@ Predefined categories with keyword-based auto-detection.
 - Keyword mapping for auto-detection
 - Handles uncategorized transactions gracefully
 - Keyword-based category mapping via `CategoryKeyword` table
+
+---
+
+### SMS Ingestion
+
+Automatically parse bank and merchant SMS alerts to create transactions without manual data entry.
+
+**Endpoints:**
+
+- POST `/api/sms/ingest` — Parse SMS and create transaction
+
+**Features:**
+
+- Intelligent SMS parsing to extract amounts and details
+- Auto-detection of transaction type (INCOME/EXPENSE)
+- Keyword-based category auto-detection
+- Supports messages from banks, merchants, and service providers
+- No manual categorization needed for common transaction types
+
+**Example:**
+
+```
+Input: "Credit alert: N5000 received from XYZ"
+Output: Transaction created with type=INCOME, category=Income
+```
+
+---
+
+### Savings Planning
+
+Generate personalized savings plans based on income, expenses, and financial goals.
+
+**Endpoints:**
+
+- GET `/api/savings/plan?startDate=&endDate=` — Get savings recommendations
+
+**Features:**
+
+- Calculates disposable income automatically
+- Allocates funds for savings goals
+- Recommends safe daily spending limits
+- Distributes savings across remaining period
+- Provides both kobo and naira values
 
 ---
 
@@ -278,14 +328,18 @@ backend/
 ├── controllers/
 │   ├── authController.js              # Auth logic (signup, login, Google OAuth)
 │   ├── transactionController.js       # Transaction CRUD
-│   └── analyticsController.js         # Analytics & burn-rate
+│   ├── analyticsController.js         # Analytics & burn-rate
+│   ├── smsController.js               # SMS message ingestion
+│   └── savingsController.js           # Savings plan calculations
 ├── middleware/
 │   ├── authMiddleware.js              # JWT verification
 │   └── requestLogger.js               # Request timing & logging
 ├── routes/
 │   ├── authRoutes.js                  # /api/auth endpoints
 │   ├── transactionRoutes.js           # /api/transactions endpoints
-│   └── analyticsRoutes.js             # /api/analytics endpoints
+│   ├── analyticsRoutes.js             # /api/analytics endpoints
+│   ├── smsRoutes.js                   # /api/sms endpoints
+│   └── savingsRoutes.js               # /api/savings endpoints
 ├── services/
 │   ├── auth/
 │   │   └── googleAuthService.js       # Google OAuth token verification
@@ -295,18 +349,31 @@ backend/
 │   │   ├── analyticsUtils.js          # Helper utilities
 │   │   ├── burnrateService.js         # Daily average & velocity
 │   │   ├── categoryService.js         # Category aggregation
-│   │   └── spendingService.js         # Spending calculations
+│   │   ├── incomeService.js           # Income tracking
+│   │   ├── spendingService.js         # Spending calculations
+│   │   └── summaryService.js          # Summary calculations
+│   ├── merchant/
+│   │   └── merchantService.js         # Merchant data management
+│   ├── sms/
+│   │   └── smsParser.js               # SMS message parsing & extraction
+│   └── finance/
+│   │   └── savingsEngine.js           # Savings plan engine
 ├── utils/
 │   ├── apiResponse.js                 # Standard response wrapper
 │   └── money.js                       # Kobo/Naira conversion
 ├── prisma/
 │   ├── schema.prisma                  # Database schema
 │   ├── seed.js                        # Seed script (categories, keywords)
+│   ├── merchantSeed.js                # Merchant seed data
 │   └── migrations/                    # Database migration history
 │   │   ├── migration_lock.toml
 │   │   ├── 20260415233029_init/
 │   │   ├── 20260419141349_add_oauth_fields/
 │   │   └── ...
+├── tests/
+│   ├── parserTest.js                  # SMS parser tests
+│   ├── savingsTest.js                 # Savings plan tests
+│   └── test.js                        # General tests
 ├── google-test.html                   # OAuth testing utility
 └── test.js                            # Test file
 ```
@@ -400,6 +467,104 @@ See detailed **Analytics API** section above for full specification, including c
 
 - `GET /api/analytics/summary?startDate=&endDate=`
 - `GET /api/analytics/burn-rate?days=30`
+
+**Auth required:** `Authorization: Bearer <token>`
+
+---
+
+### SMS Ingestion API
+
+Automatically create transactions from SMS messages with intelligent parsing and auto-categorization.
+
+**Endpoint:**
+
+**POST /api/sms/ingest**
+
+Parses SMS message, auto-detects category and transaction type (INCOME/EXPENSE based on keywords like 'credit'), and creates transaction record.
+
+**Request:**
+
+```json
+{
+  "message": "Credit alert: N5000 received from XYZ"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "transaction": {
+    "id": "uuid",
+    "amount": 5000,
+    "type": "INCOME",
+    "category": "Income",
+    "description": "Credit alert: N5000 received from XYZ",
+    "transactionDate": "2026-04-22T10:30:00Z"
+  }
+}
+```
+
+**Features:**
+
+- Intelligent SMS parsing to extract amount and description
+- Auto-detection of transaction type (INCOME/EXPENSE) using keyword matching
+- Automatic category detection based on SMS content
+- Creates transaction record with parsed data
+- Works with SMS messages from banks and merchants
+
+**Auth required:** `Authorization: Bearer <token>`
+
+---
+
+### Savings Plan API
+
+Get personalized savings recommendations based on income, expenses, and savings goals.
+
+**Endpoint:**
+
+**GET /api/savings/plan?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD**
+
+Calculates a daily safe spend amount based on user's income, expenses, and a predefined savings goal for a specified date range.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalDays": 30,
+    "remainingDays": 15,
+    "disposableKobo": 11000000,
+    "disposableNaira": 110000.00,
+    "dailySavingsTargetKobo": 666666,
+    "dailySavingsTargetNaira": 6666.66,
+    "reservedSavingsKobo": 3333333,
+    "reservedSavingsNaira": 33333.33,
+    "safeSpendPoolKobo": 7666667,
+    "safeSpendPoolNaira": 76666.67,
+    "dailySafeSpendKobo": 511111,
+    "dailySafeSpendNaira": 5111.11
+  }
+}
+```
+
+**Fields Explained:**
+
+- **disposableNaira**: Total available funds (income - expenses)
+- **dailySavingsTargetNaira**: Recommended daily savings amount
+- **reservedSavingsNaira**: Total amount to reserve for savings goal
+- **safeSpendPoolNaira**: Amount available for safe spending (disposable - reserved savings)
+- **dailySafeSpendNaira**: Safe daily spending amount (safeSpendPool / remainingDays)
+
+**Features:**
+
+- Calculates disposable income based on user transactions
+- Allocates percentage for savings goals
+- Distributes remaining funds across remaining days
+- Provides daily safe spend recommendations
+- All values in both Kobo and Naira
 
 **Auth required:** `Authorization: Bearer <token>`
 
