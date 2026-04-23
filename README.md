@@ -85,6 +85,26 @@ All amounts are stored and transmitted in **kobo** (integer) to avoid floating-p
 
 **Auth:** JWT bearer token in the `Authorization` header.
 
+## Project Structure
+
+```bash
+src/
+├── components/
+│   ├── layout/        # AppShell, navigation
+│   ├── ui/            # Button, Card, Input, Toast, Icons
+│   ├── charts/        # WeeklyBarChart
+│   ├── dashboard/     # ShareableSummaryCard, TopCategories
+│   ├── logger/        # CategoryPicker, AmountInput
+│   ├── transactions/  # TransactionFeed, TransactionItem, EditModal
+│   └── goals/         # GoalCard, GoalModal
+├── hooks/             # useTransactions, useGoals, useAlerts, useDashboard
+├── lib/               # Supabase client, Zustand store, query client, utils
+├── pages/             # Dashboard, History, Logger, Goals, Alerts, SmsQueue
+│   └── auth/          # Login, Signup, Onboarding
+├── types/             # TypeScript interfaces
+└── index.css          # Design tokens and global styles
+```
+
 ### Endpoints
 POST  /api/auth/signup              { email, password, fullName }
 POST  /api/auth/login               { email, password } → { token, user }
