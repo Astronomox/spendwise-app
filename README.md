@@ -44,17 +44,55 @@ Generate a beautiful visual summary of your month — total spent, top categorie
 
 ## Tech Stack
 
+### Frontend
+
 | Layer | Technology |
 | --- | --- |
-| Frontend | React 19 + Vite |
+| Framework | React 19 + Vite |
+| Language | TypeScript |
 | Routing | React Router v7 |
 | Styling | Tailwind CSS v4 + CSS Variables |
 | Animation | Framer Motion |
-| State | Zustand |
+| Client state | Zustand |
 | Server state | TanStack Query (React Query v5) |
 | Charts | Recharts |
-| Backend | Supabase (PostgreSQL + Auth + RLS) |
+| Hosting | Vercel |
 | Package manager | pnpm |
+
+### Backend
+
+| Layer | Technology |
+| --- | --- |
+| Runtime | Node.js (ES modules) |
+| Framework | Express 5 |
+| Database | PostgreSQL |
+| ORM | Prisma 5 (`@prisma/adapter-pg`) |
+| Auth | JWT (`jsonwebtoken`) + `bcryptjs` |
+| OAuth | Google Sign-In (`google-auth-library`) |
+| API docs | Swagger (`swagger-jsdoc` + `swagger-ui-express`) |
+| Middleware | `cors`, `dotenv` |
+| Hosting | Render |
+
+### Money Handling
+
+All amounts are stored and transmitted in **kobo** (integer) to avoid floating-point errors. API responses include both kobo and naira representations for display convenience.
+
+---
+
+## API
+
+**Base URL (production):** `https://spendwise-app-39vv.onrender.com`
+
+**Auth:** JWT bearer token in the `Authorization` header.
+
+### Endpoints
+POST  /api/auth/signup              { email, password, fullName }
+POST  /api/auth/login               { email, password } → { token, user }
+GET   /api/transactions             ?categoryId&category&type&startDate&endDate&page&limit
+POST  /api/transactions             { amount (kobo), type, categoryId, description? }
+GET   /api/analytics                ?startDate&endDate
+GET   /api/analytics/burn-rate      ?days
+Full interactive docs available at `/api/docs` (Swagger UI).
 
 ---
 
@@ -64,102 +102,80 @@ Generate a beautiful visual summary of your month — total spent, top categorie
 
 - Node.js 18+
 - pnpm
-- A Supabase project
+- PostgreSQL (local or hosted)
 
 ### 1. Clone the repo
 
-```bash
+
 git clone https://github.com/Astronomox/spendwise-app.git
 cd spendwise-app
-```
-
-### 2. Install dependencies
-
-```bash
+2. Backend setup
+cd backend
+npm install
+Create a .env file in backend/:
+DATABASE_URL=postgresql://user:password@host:5432/spendwise
+JWT_SECRET=your-long-random-secret
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
+PORT=4000
+Run migrations and seed:
+npx prisma migrate deploy
+npx prisma db seed
+npm run dev
+3. Frontend setup
+cd ../frontend
 pnpm install
-```
-
-### 3. Set up environment variables
-
-Create a `.env.local` file in the root:
-
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-publishable-key
-```
-
-### 4. Set up the database
-
-Run these SQL migrations in your Supabase SQL Editor in order:
-
-**Tables** — `profiles`, `transactions`, `savings_goals`, `alerts`
-
-**Dashboard RPC** — `supabase/migrations/001_dashboard_summary.sql`
-
-Full migration files are in the `/supabase/migrations` directory.
-
-### 5. Run the app
-
-```bash
+Create a .env.local file in frontend/:
+VITE_API_URL=http://localhost:4000
+Run the app:
 pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000)
-
----
-
-## Database Schema
-
-profiles         — user settings, monthly budget, bank preferences
-transactions     — all income/expense entries (manual + SMS)
-savings_goals    — user savings targets with deadlines
-alerts           — system-generated spend warnings and streaks
-
-Row Level Security (RLS) is enabled on all tables. Users can only access their own data.
-
----
-
-## Project Structure
-
-src/
-├── components/
-│   ├── layout/        # AppShell, navigation
-│   ├── ui/            # Button, Card, Input, Toast, Icons
-│   ├── charts/        # WeeklyBarChart
-│   ├── dashboard/     # ShareableSummaryCard, TopCategories
-│   ├── logger/        # CategoryPicker, AmountInput
-│   ├── transactions/  # TransactionFeed, TransactionItem, EditModal
-│   └── goals/         # GoalCard, GoalModal
-├── hooks/             # useTransactions, useGoals, useAlerts, useDashboard
-├── lib/               # Supabase client, Zustand store, query client, utils
-├── pages/             # Dashboard, History, Logger, Goals, Alerts, SmsQueue
-│   └── auth/          # Login, Signup, Onboarding
-├── types/             # TypeScript interfaces
-└── index.css          # Design tokens and global styles
-
----
-
-## Design System
-
+Open http://localhost:3000
+Database Schema
+profiles — user settings, monthly budget, bank preferences
+transactions — all income/expense entries (manual + SMS), amounts in kobo
+categories — transaction categories (food, transport, bills, etc.)
+savings_goals — user savings targets with deadlines
+alerts — system-generated spend warnings and streaks
+Schema is managed via Prisma migrations in backend/prisma/.
+Project Structure
+spendwise-app/
+├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   ├── migrations/
+│   │   └── seed.js
+│   ├── src/
+│   │   ├── routes/        # auth, transactions, analytics
+│   │   ├── controllers/
+│   │   ├── middleware/    # auth, error handling
+│   │   ├── lib/           # prisma client, jwt, google auth
+│   │   └── utils/
+│   └── server.js
+└── frontend/
+    └── src/
+        ├── components/
+        │   ├── layout/        # AppShell, navigation
+        │   ├── ui/            # Button, Card, Input, Toast, Icons
+        │   ├── charts/        # WeeklyBarChart
+        │   ├── dashboard/     # ShareableSummaryCard, TopCategories
+        │   ├── logger/        # CategoryPicker, AmountInput
+        │   ├── transactions/  # TransactionFeed, TransactionItem, EditModal
+        │   └── goals/         # GoalCard, GoalModal
+        ├── hooks/             # useTransactions, useGoals, useAlerts, useDashboard
+        ├── lib/               # api client, Zustand store, query client, utils
+        ├── pages/             # Dashboard, History, Logger, Goals, Alerts, SmsQueue
+        │   └── auth/          # Login, Signup, Onboarding
+        ├── types/             # TypeScript interfaces
+        └── index.css          # Design tokens and global styles
+Design System
 SpendWise uses a dark navy + green fintech palette with a consistent 8px spacing grid.
-
-- **Display font** — Syne (headings, amounts, brand)
-- **Body font** — DM Sans (UI text, descriptions)
-- **Primary colour** — `#008751` (Nigerian green)
-- **All colours** via CSS custom properties — no hardcoded hex in components
-
----
-
-## Built By
-
-**Adeola** — Frontend / Full Stack  
-**Semilore** — Backend / Data  
-**Oreoluwa** — Project Manager
-
-To  be built in a 14-day sprint. Bismillah.
-
----
-
-## License
-
+Display font — Syne (headings, amounts, brand)
+Body font — DM Sans (UI text, descriptions)
+Primary colour — #008751 (Nigerian green)
+All colours via CSS custom properties — no hardcoded hex in components
+Built By
+Adeola — Frontend / Full Stack
+Semilore — Backend / Data
+Oreoluwa — Project Manager
+Built in a 14-day sprint. Bismillah.
+License
 Private repository. All rights reserved.
