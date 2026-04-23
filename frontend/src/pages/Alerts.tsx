@@ -2,13 +2,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Flame, AlertTriangle, TrendingUp, Sparkles, type LucideIcon } from 'lucide-react';
-import { mockAlerts } from '@/data/mockData';
 import { useAlerts } from '@/hooks/useAlerts';
 import { getTimeAgo, cn } from '@/lib/utils';
 import type { Alert, AlertType } from '@/types/alerts';
 import Badge from '@/components/ui/Badge';
 
-// ─── Alert metadata ──────────────────────────────────────────
+// ——— Alert metadata ———
 
 interface AlertMeta {
   Icon:   LucideIcon;
@@ -22,7 +21,7 @@ const ALERT_META: Record<AlertType, AlertMeta> = {
   goal_reached:   { Icon: Sparkles,      color: '#2DB37A' },
 };
 
-// ─── Alert card ──────────────────────────────────────────────
+// ——— Alert card ———
 
 interface AlertCardProps {
   alert:   Alert;
@@ -45,7 +44,6 @@ function AlertCard({ alert, onRead }: AlertCardProps): React.JSX.Element {
       )}
       style={!alert.read ? { borderLeft: `3px solid ${meta.color}` } : undefined}
     >
-      {/* Icon bubble */}
       <div
         className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
         style={{
@@ -56,7 +54,6 @@ function AlertCard({ alert, onRead }: AlertCardProps): React.JSX.Element {
         <Icon size={18} />
       </div>
 
-      {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-1">
           <h4 className={cn(
@@ -79,19 +76,20 @@ function AlertCard({ alert, onRead }: AlertCardProps): React.JSX.Element {
   );
 }
 
-// ─── Alerts page ─────────────────────────────────────────────
+// ——— Alerts page ———
 
 export default function Alerts(): React.JSX.Element {
-  const { alerts: liveAlerts, isLoading, markRead: markReadApi } = useAlerts();
+  const { alerts, isLoading, markRead: markReadApi } = useAlerts();
+  const unread = alerts.filter(a => !a.read).length;
 
-  // Local state mirrors live data; falls back to mock while API is unavailable
-  const [localAlerts, setLocalAlerts] = useState<Alert[]>(mockAlerts);
-  const alerts  = liveAlerts.length > 0 ? liveAlerts : localAlerts;
-  const unread  = alerts.filter(a => !a.read).length;
+  const [localReadIds, setLocalReadIds] = useState<Set<string>>(new Set());
+
+  const displayAlerts = alerts.map(a =>
+    localReadIds.has(a.id) ? { ...a, read: true } : a
+  );
 
   const markRead = async (id: string): Promise<void> => {
-    // Optimistic local update first
-    setLocalAlerts(as => as.map(a => a.id === id ? { ...a, read: true } : a));
+    setLocalReadIds(prev => new Set(prev).add(id));
     try {
       await markReadApi(id);
     } catch {
@@ -99,7 +97,7 @@ export default function Alerts(): React.JSX.Element {
     }
   };
 
-  const sorted = [...alerts].sort((a, b) => {
+  const sorted = [...displayAlerts].sort((a, b) => {
     if (a.read !== b.read) return a.read ? 1 : -1;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
@@ -107,7 +105,6 @@ export default function Alerts(): React.JSX.Element {
   return (
     <div className="pt-6 pb-8">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-6">
         <div>
           <h1 className="text-[28px] font-extrabold font-display text-cream tracking-tight">Alerts</h1>
@@ -116,7 +113,6 @@ export default function Alerts(): React.JSX.Element {
         {unread > 0 && <Badge preset="danger">{unread} new</Badge>}
       </div>
 
-      {/* List or empty state */}
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (

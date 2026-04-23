@@ -1,7 +1,6 @@
 // src/pages/Goals.tsx
 import { useState } from 'react';
 import { Plus, Target } from 'lucide-react';
-import { mockGoals } from '@/data/mockData';
 import { useGoals } from '@/hooks/useGoals';
 import { formatNaira } from '@/lib/utils';
 import type { Goal, GoalFormValues } from '@/types/goals';
@@ -10,26 +9,22 @@ import Card from '@/components/ui/Card';
 import GoalCard from '@/components/goals/GoalCard';
 import { GoalModal } from '@/components/goals/GoalModal';
 
-// ─── Goals page ──────────────────────────────────────────────
+// ——— Goals page ———
 
 export default function Goals(): React.JSX.Element {
   const {
-    goals: liveGoals,
+    goals,
     isLoading,
     addGoal,
     updateGoal,
     deleteGoal,
   } = useGoals();
 
-  // Local optimistic state — used only while Goals API is stubbed
-  const [localGoals, setLocalGoals] = useState<Goal[]>(mockGoals);
-  const displayGoals = liveGoals.length > 0 ? liveGoals : localGoals;
-
   const [showModal, setShowModal] = useState<boolean>(false);
   const [editing, setEditing] = useState<Goal | null>(null);
 
-  const totalSaved  = displayGoals.reduce((s, g) => s + g.currentAmount, 0);
-  const totalTarget = displayGoals.reduce((s, g) => s + g.targetAmount,  0);
+  const totalSaved  = goals.reduce((s, g) => s + g.currentAmount, 0);
+  const totalTarget = goals.reduce((s, g) => s + g.targetAmount,  0);
 
   const openCreate = (): void => { setEditing(null); setShowModal(true); };
   const openEdit   = (g: Goal): void => { setEditing(g); setShowModal(true); };
@@ -43,21 +38,7 @@ export default function Goals(): React.JSX.Element {
         await addGoal({ name, targetAmount });
       }
     } catch {
-      // API not available yet — fall back to local state
-      if (editing != null) {
-        setLocalGoals(gs => gs.map(g => g.id === editing.id ? { ...g, name, targetAmount } : g));
-      } else {
-        const newGoal: Goal = {
-          id:            `g${Date.now()}`,
-          name,
-          targetAmount,
-          currentAmount: 0,
-          deadline:      new Date(Date.now() + 90 * 86_400_000).toISOString(),
-          icon:          'savings',
-          userId:        'u1',
-        };
-        setLocalGoals(gs => [...gs, newGoal]);
-      }
+      // Handle error silently
     }
     closeModal();
   };
@@ -66,14 +47,13 @@ export default function Goals(): React.JSX.Element {
     try {
       await deleteGoal(id);
     } catch {
-      setLocalGoals(gs => gs.filter(g => g.id !== id));
+      // Handle error silently
     }
   };
 
   return (
     <div className="pt-6 pb-8">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-6">
         <div>
           <h1 className="text-[28px] font-extrabold font-display text-cream tracking-tight">
@@ -83,15 +63,14 @@ export default function Goals(): React.JSX.Element {
             What are you building towards?
           </p>
         </div>
-        {displayGoals.length > 0 && (
+        {goals.length > 0 && (
           <Button size="sm" onClick={openCreate}>
             <Plus size={15} /> New Goal
           </Button>
         )}
       </div>
 
-      {/* Summary banner */}
-      {displayGoals.length > 0 && (
+      {goals.length > 0 && (
         <Card variant="accent" className="p-5 mb-6 flex justify-between items-center">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-cream/40 mb-1.5">
@@ -112,14 +91,13 @@ export default function Goals(): React.JSX.Element {
         </Card>
       )}
 
-      {/* List or empty state */}
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="h-28 rounded-3xl bg-forge-surface animate-pulse" />
           ))}
         </div>
-      ) : displayGoals.length === 0 ? (
+      ) : goals.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-5">
           <div className="w-[72px] h-[72px] rounded-3xl bg-rust/10 border border-rust/20 flex items-center justify-center text-rust">
             <Target size={36} />
@@ -136,7 +114,7 @@ export default function Goals(): React.JSX.Element {
         </div>
       ) : (
         <div className="space-y-3">
-          {displayGoals.map(g => (
+          {goals.map(g => (
             <GoalCard
               key={g.id}
               goal={g}
@@ -147,7 +125,6 @@ export default function Goals(): React.JSX.Element {
         </div>
       )}
 
-      {/* Modal */}
       <GoalModal
         goal={editing}
         isOpen={showModal}

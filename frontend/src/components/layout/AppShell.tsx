@@ -4,9 +4,10 @@ import { useLocation, useNavigate, NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Clock, Target, Bell, Plus, LogOut, MessageSquare, type LucideIcon } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
-import { mockUser, mockAlerts } from '@/data/mockData';
+import { useAppStore } from '@/lib/store';
+import { useAlerts } from '@/hooks/useAlerts';
 
-// ─── Nav item definitions ────────────────────────────────────
+// ——— Nav item definitions ———
 
 interface NavItem {
   to:    string;
@@ -22,7 +23,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { to: '/sms-queue', icon: MessageSquare, label: 'SMS Queue' },
 ] as const;
 
-// ─── Sidebar tab (desktop) ───────────────────────────────────
+// ——— Sidebar tab (desktop) ———
 
 interface SidebarTabProps extends NavItem {
   badge?: number;
@@ -51,7 +52,7 @@ function SidebarTab({ to, icon: Icon, label, badge = 0 }: SidebarTabProps): Reac
   );
 }
 
-// ─── Bottom nav tab (mobile) ─────────────────────────────────
+// ——— Bottom nav tab (mobile) ———
 
 interface BottomTabProps extends NavItem {}
 
@@ -81,7 +82,7 @@ function BottomTab({ to, icon: Icon, label }: BottomTabProps): React.JSX.Element
   );
 }
 
-// ─── AppShell ────────────────────────────────────────────────
+// ——— AppShell ———
 
 export interface AppShellProps {
   children: ReactNode;
@@ -91,10 +92,15 @@ export default function AppShell({ children }: AppShellProps): React.JSX.Element
   const location = useLocation();
   const navigate = useNavigate();
 
+  const user      = useAppStore((s) => s.user);
+  const clearUser = useAppStore((s) => s.clearUser);
+  const { alerts } = useAlerts();
+
   const isAuth   = location.pathname.startsWith('/auth');
   const isLogger = location.pathname === '/logger';
-  const unread   = mockAlerts.filter(a => !a.read).length;
-  const initials = getInitials(mockUser.fullName);
+  const unread   = alerts.filter(a => !a.read).length;
+  const fullName = user?.fullName ?? 'User';
+  const initials = getInitials(fullName);
 
   if (isAuth) {
     return <div className="min-h-screen flex w-full">{children}</div>;
@@ -103,7 +109,7 @@ export default function AppShell({ children }: AppShellProps): React.JSX.Element
   return (
     <div className="flex min-h-screen w-full bg-forge-bg">
 
-      {/* ── Desktop sidebar ──────────────────────────────── */}
+      {/* —— Desktop sidebar —— */}
       {!isLogger && (
         <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-60 flex-col z-50 py-6 bg-forge-surface border-r border-white/[0.06]">
           {/* Logo */}
@@ -140,9 +146,12 @@ export default function AppShell({ children }: AppShellProps): React.JSX.Element
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-cream truncate">{mockUser.fullName}</p>
+                <p className="text-[13px] font-bold text-cream truncate">{fullName}</p>
                 <button
-                  onClick={() => navigate('/auth/login')}
+                  onClick={() => {
+                    clearUser();
+                    navigate('/auth/login');
+                  }}
                   className="flex items-center gap-1 text-[11px] font-semibold text-cream/30 hover:text-danger transition-colors"
                 >
                   <LogOut size={11} /> Sign out
@@ -153,7 +162,7 @@ export default function AppShell({ children }: AppShellProps): React.JSX.Element
         </aside>
       )}
 
-      {/* ── Main column ──────────────────────────────────── */}
+      {/* —— Main column —— */}
       <div className={cn('flex-1 flex flex-col w-full', !isLogger && 'lg:ml-60')}>
 
         {/* Mobile header */}
@@ -203,7 +212,7 @@ export default function AppShell({ children }: AppShellProps): React.JSX.Element
         </main>
       </div>
 
-      {/* ── Mobile bottom nav ────────────────────────────── */}
+      {/* —— Mobile bottom nav —— */}
       {!isLogger && (
         <nav
           className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center glass border-t border-white/[0.06]"

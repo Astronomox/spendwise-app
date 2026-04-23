@@ -2,7 +2,7 @@
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://spendwise-app-39vv.onrender.com';
 
-// ─── Internal helpers ────────────────────────────────────────────────────────
+// ——— Internal helpers ———
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('sw_token');
@@ -21,9 +21,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-// ─── Auth ────────────────────────────────────────────────────────────────────
+// ——— Auth ———
 
-// Backend returns a flat object: { id, email, fullName, token }
 export interface AuthResponse {
   id:       string;
   email:    string;
@@ -43,22 +42,25 @@ export const auth = {
       method: 'POST',
       body: JSON.stringify({ email, password, fullName }),
     }),
+
+  google: (idToken: string) =>
+    request<AuthResponse>('/api/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    }),
 };
 
-// ─── Transactions ─────────────────────────────────────────────────────────────
+// ——— Transactions ———
 
 export type TransactionFilters = Partial<Record<string, string | number>>;
 
-/** Shape the backend expects when creating a transaction. */
 export interface CreateTransactionPayload {
-  /** Amount in kobo (multiply naira × 100 before sending). */
   amount: number;
   type: 'EXPENSE' | 'INCOME';
   categoryId?: string;
   description?: string;
 }
 
-/** Raw transaction row as returned by the API (amount is in kobo). */
 export interface RawTransaction {
   id?: string;
   _id?: string;
@@ -83,6 +85,9 @@ export const transactions = {
     return request<RawTransaction[]>(`/api/transactions${qs ? `?${qs}` : ''}`);
   },
 
+  get: (id: string) =>
+    request<RawTransaction>(`/api/transactions/${id}`),
+
   create: (data: CreateTransactionPayload) =>
     request<RawTransaction>('/api/transactions', {
       method: 'POST',
@@ -90,31 +95,67 @@ export const transactions = {
     }),
 };
 
-// ─── Analytics ────────────────────────────────────────────────────────────────
+// ——— Analytics ———
 
-export interface AnalyticsSummaryResponse {
-  totalSpentNaira: number;
-  categoryBreakdown: Record<string, number>;
+export interface AnalyticsCategory {
+  categoryName: string;
+  totalSpent: number;
+  percentage: number;
+  transactionCount: number;
 }
 
-export interface BurnRateResponse {
-  burnRate: number;
-  projectedMonthlySpend: number;
+export interface AnalyticsData {
+  totalIncome: number;
+  totalExpenses: number;
+  netBalance: number;
+  transactionCount: number;
+  byCategory: AnalyticsCategory[];
+}
+
+export interface AnalyticsApiResponse {
+  success: boolean;
+  data: AnalyticsData;
+}
+
+export interface BurnRateData {
+  dailyBurnRate: number;
+  projectedMonthlyBurn: number;
+  daysAnalyzed: number;
+  totalExpenses: number;
+}
+
+export interface BurnRateApiResponse {
+  success: boolean;
+  data: BurnRateData;
 }
 
 export const analytics = {
   summary: (startDate?: string, endDate?: string) => {
     const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
+    const now = new Date();
+    const start = startDate || new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const end = endDate || new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+    params.append('startDate', start);
+    params.append('endDate', end);
     const qs = params.toString();
-    return request<AnalyticsSummaryResponse>(`/api/analytics${qs ? `?${qs}` : ''}`);
+    return request<AnalyticsApiResponse>(`/api/analytics?${qs}`);
   },
 
   burnRate: (days?: number) => {
     const params = new URLSearchParams();
     if (days !== undefined) params.append('days', String(days));
     const qs = params.toString();
-    return request<BurnRateResponse>(`/api/analytics/burn-rate${qs ? `?${qs}` : ''}`);
+    return request<BurnRateApiResponse>(`/api/analytics/burn-rate${qs ? `?${qs}` : ''}`);
+  },
+
+  financialSummary: (startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    const now = new Date();
+    const start = startDate || new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const end = endDate || new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+    params.append('startDate', start);
+    params.append('endDate', end);
+    const qs = params.toString();
+    return request<AnalyticsApiResponse>(`/api/analytics/summary?${qs}`);
   },
 };

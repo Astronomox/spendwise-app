@@ -6,6 +6,7 @@ import { CheckCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useAppStore } from '@/lib/store';
+import { auth } from '@/lib/api';
 
 interface LoginFormErrors {
   email?:    string;
@@ -51,52 +52,66 @@ export default function Login(): React.JSX.Element {
     setErrors({});
 
     try {
-      const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined)
-        ?? 'https://spendwise-app-39vv.onrender.com';
-
-      const res = await fetch(`${BASE_URL}/api/auth/login`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, password }),
-      });
-
-      // API returns flat shape: { id, email, fullName, token }
-      const data = await res.json() as {
-        id?:       string;
-        email?:    string;
-        fullName?: string;
-        token?:    string;
-        message?:  string;
-      };
-
-      if (!res.ok) {
-        setErrors({ form: data.message ?? 'Invalid email or password' });
-        return;
-      }
+      const data = await auth.login(email, password);
 
       // Persist token for authenticated API requests
-      localStorage.setItem('sw_token', data.token ?? '');
+      localStorage.setItem('sw_token', data.token);
 
-      // Save user to global store — sets isAuthenticated: true
+      // Save user to global store
       setUser({
-        id:            data.id       ?? '',
-        fullName:      data.fullName ?? '',
-        email:         data.email    ?? '',
+        id:            data.id,
+        fullName:      data.fullName,
+        email:         data.email,
         monthlyBudget: 150_000,
       });
 
       navigate('/dashboard', { replace: true });
-    } catch {
-      setErrors({ form: 'Network error — please try again.' });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Invalid email or password';
+      setErrors({ form: message });
     } finally {
       setLoading(false);
     }
   };
 
+  const handleGoogleLogin = (): void => {
+    const google = (window as any).google;
+    if (!google) {
+      setErrors({ form: 'Google sign-in not loaded. Please refresh.' });
+      return;
+    }
+
+    google.accounts.id.initialize({
+      client_id: '590097550968-tu100dhfsq4789opb214do9d3bahpe48.apps.googleusercontent.com',
+      callback: async (response: any) => {
+        setLoading(true);
+        setErrors({});
+        try {
+          const data = await auth.google(response.credential);
+          localStorage.setItem('sw_token', data.token);
+          setUser({
+            id:            data.id,
+            fullName:      data.fullName,
+            email:         data.email,
+            monthlyBudget: 0,
+          });
+          navigate('/dashboard', { replace: true });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Google sign-in failed';
+          setErrors({ form: message });
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+
+    google.accounts.id.prompt();
+  };
+
   return (
     <div className="flex min-h-screen w-full">
 
-      {/* ── Left hero panel (desktop) ─────────────────── */}
+      {/* —— Left hero panel (desktop) —— */}
       <div className="hidden lg:flex w-1/2 relative flex-col justify-between p-12 overflow-hidden bg-[#0D0906]">
         <div
           className="absolute inset-0 pointer-events-none"
@@ -107,14 +122,12 @@ export default function Login(): React.JSX.Element {
           style={{ background: 'radial-gradient(ellipse at 80% 20%, rgba(184,115,51,0.18) 0%, transparent 50%)' }}
         />
 
-        {/* Logo */}
         <div className="relative z-10">
           <h1 className="text-[28px] font-black font-display text-gradient-rust tracking-tight">
             SpendWise.
           </h1>
         </div>
 
-        {/* Headline */}
         <div className="relative z-10">
           <h2 className="text-[44px] font-extrabold font-display text-cream leading-[1.08] tracking-tight mb-4">
             Track every naira.<br />
@@ -125,7 +138,6 @@ export default function Login(): React.JSX.Element {
           </p>
         </div>
 
-        {/* Feature grid */}
         <div className="relative z-10 grid grid-cols-3 gap-5">
           {FEATURES.map(f => (
             <div key={f.title}>
@@ -139,7 +151,7 @@ export default function Login(): React.JSX.Element {
         </div>
       </div>
 
-      {/* ── Right form panel ──────────────────────────── */}
+      {/* —— Right form panel —— */}
       <div className="flex-1 flex items-center justify-center p-6 bg-[#FAF8F5]">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
@@ -147,7 +159,6 @@ export default function Login(): React.JSX.Element {
           transition={{ duration: 0.4 }}
           className="w-full max-w-sm"
         >
-          {/* Mobile logo */}
           <div className="lg:hidden mb-8">
             <h1 className="text-[22px] font-black font-display text-gradient-rust">SpendWise.</h1>
           </div>
@@ -179,7 +190,6 @@ export default function Login(): React.JSX.Element {
               error={errors.password}
             />
 
-            {/* Form-level error */}
             {errors.form != null && (
               <p className="text-[13px] font-semibold text-red-500 text-center">
                 {errors.form}
@@ -196,19 +206,18 @@ export default function Login(): React.JSX.Element {
             </Button>
           </form>
 
-          {/* Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-gray-200" />
             <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">or</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
-          {/* Google SSO placeholder */}
           <Button
             type="button"
             variant="white"
             size="md"
             className="w-full border border-gray-200 shadow-sm gap-3"
+            onClick={handleGoogleLogin}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

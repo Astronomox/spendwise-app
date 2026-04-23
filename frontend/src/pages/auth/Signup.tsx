@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { useAppStore } from '@/lib/store';
+import { auth } from '@/lib/api';
 
 interface SignupFormState {
   name:     string;
@@ -15,10 +17,12 @@ interface SignupFormErrors {
   name?:     string;
   email?:    string;
   password?: string;
+  form?:     string;
 }
 
 export default function Signup(): React.JSX.Element {
   const navigate = useNavigate();
+  const setUser  = useAppStore((s) => s.setUser);
 
   const [form, setForm] = useState<SignupFormState>({
     name:     '',
@@ -32,7 +36,7 @@ export default function Signup(): React.JSX.Element {
     (key: keyof SignupFormState) =>
     (e: ChangeEvent<HTMLInputElement>): void => {
       setForm(f => ({ ...f, [key]: e.target.value }));
-      setErrors(v => ({ ...v, [key]: undefined }));
+      setErrors(v => ({ ...v, [key]: undefined, form: undefined }));
     };
 
   const validate = (): boolean => {
@@ -49,11 +53,31 @@ export default function Signup(): React.JSX.Element {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!validate()) return;
+
     setLoading(true);
-    // Simulate signup delay — replace with real API call
-    await new Promise<void>(resolve => setTimeout(resolve, 1000));
-    setLoading(false);
-    navigate('/onboarding');
+    setErrors({});
+
+    try {
+      const data = await auth.signup(form.email, form.password, form.name);
+
+      // Persist token
+      localStorage.setItem('sw_token', data.token);
+
+      // Save user to global store
+      setUser({
+        id:            data.id,
+        fullName:      data.fullName,
+        email:         data.email,
+        monthlyBudget: 0,
+      });
+
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Signup failed. Please try again.';
+      setErrors({ form: message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,7 +88,6 @@ export default function Signup(): React.JSX.Element {
         transition={{ duration: 0.4 }}
         className="w-full max-w-sm"
       >
-        {/* Logo */}
         <div className="mb-10">
           <h1 className="text-[22px] font-black font-display text-gradient-rust">SpendWise.</h1>
         </div>
@@ -103,6 +126,13 @@ export default function Signup(): React.JSX.Element {
             onChange={setField('password')}
             error={errors.password}
           />
+
+          {errors.form != null && (
+            <p className="text-[13px] font-semibold text-red-500 text-center">
+              {errors.form}
+            </p>
+          )}
+
           <Button
             type="submit"
             isLoading={loading}
