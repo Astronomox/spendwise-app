@@ -121,6 +121,7 @@ Row Level Security (RLS) is enabled on all tables. Users can only access their o
 
 ## Project Structure
 
+```bash
 src/
 ├── components/
 │   ├── layout/        # AppShell, navigation
@@ -136,6 +137,7 @@ src/
 │   └── auth/          # Login, Signup, Onboarding
 ├── types/             # TypeScript interfaces
 └── index.css          # Design tokens and global styles
+```
 
 ---
 
