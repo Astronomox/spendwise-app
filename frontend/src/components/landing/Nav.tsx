@@ -43,11 +43,11 @@ export default function Nav(): React.JSX.Element {
 
         {/* CTA */}
         <a
-          href="#cta"
+          href="/auth/login"
           className="bg-[#B7410E] hover:bg-[#8C3209] text-white text-[14px] font-semibold
                      px-5 py-2.5 rounded-full transition-colors duration-200"
         >
-          Get Early Access
+          Login
         </a>
       </div>
     </motion.nav>
