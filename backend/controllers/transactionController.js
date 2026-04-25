@@ -48,13 +48,9 @@ export const createTransaction = async (req, res) => {
 
         // Validate category ownership (if provided manually)
         if (categoryId) {
-            const categoryExists = await prisma.category.findFirst({
+            const categoryExists = await prisma.category.findUnique({
                 where: {
                     id: categoryId,
-                    OR: [
-                        { userId: req.user.id },
-                        { userId: null },
-                    ],
                 },
             });
 
@@ -75,13 +71,9 @@ export const createTransaction = async (req, res) => {
 
         // Validate detected category
         if (finalCategoryId) {
-            const categoryExists = await prisma.category.findFirst({
+            const categoryExists = await prisma.category.findUnique({
                 where: {
                     id: finalCategoryId,
-                    OR: [
-                        { userId: req.user.id },
-                        { userId: null },
-                    ],
                 },
             });
 
