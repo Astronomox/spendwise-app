@@ -1,6 +1,6 @@
 // src/components/layout/AppShell.tsx
 import { type ReactNode } from 'react';
-import { useLocation, useNavigate, NavLink } from 'react-router-dom';
+import { useLocation, useNavigate, NavLink, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Clock, Target, Bell, Plus, LogOut, MessageSquare, type LucideIcon } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
@@ -10,16 +10,16 @@ import { useAlerts } from '@/hooks/useAlerts';
 // ——— Nav item definitions ———
 
 interface NavItem {
-  to:    string;
-  icon:  LucideIcon;
+  to: string;
+  icon: LucideIcon;
   label: string;
 }
 
 const NAV_ITEMS: readonly NavItem[] = [
-  { to: '/dashboard', icon: Home,          label: 'Home'      },
-  { to: '/history',   icon: Clock,         label: 'History'   },
-  { to: '/goals',     icon: Target,        label: 'Goals'     },
-  { to: '/alerts',    icon: Bell,          label: 'Alerts'    },
+  { to: '/dashboard', icon: Home, label: 'Home' },
+  { to: '/history', icon: Clock, label: 'History' },
+  { to: '/goals', icon: Target, label: 'Goals' },
+  { to: '/alerts', icon: Bell, label: 'Alerts' },
   { to: '/sms-queue', icon: MessageSquare, label: 'SMS Queue' },
 ] as const;
 
@@ -54,7 +54,7 @@ function SidebarTab({ to, icon: Icon, label, badge = 0 }: SidebarTabProps): Reac
 
 // ——— Bottom nav tab (mobile) ———
 
-interface BottomTabProps extends NavItem {}
+interface BottomTabProps extends NavItem { }
 
 function BottomTab({ to, icon: Icon, label }: BottomTabProps): React.JSX.Element {
   return (
@@ -92,18 +92,19 @@ export default function AppShell({ children }: AppShellProps): React.JSX.Element
   const location = useLocation();
   const navigate = useNavigate();
 
-  const user      = useAppStore((s) => s.user);
+  const user = useAppStore((s) => s.user);
   const clearUser = useAppStore((s) => s.clearUser);
   const { alerts } = useAlerts();
 
-  const isAuth   = location.pathname.startsWith('/auth');
+  const isAuth = location.pathname.startsWith('/auth');
+  const isLanding = location.pathname === '/';
   const isLogger = location.pathname === '/logger';
-  const unread   = alerts.filter(a => !a.read).length;
+  const unread = alerts.filter(a => !a.read).length;
   const fullName = user?.fullName ?? 'User';
   const initials = getInitials(fullName);
 
-  if (isAuth) {
-    return <div className="min-h-screen flex w-full">{children}</div>;
+  if (isAuth || isLanding) {
+      return <>{children}</>; // Don't render the shell for auth or landing pages
   }
 
   return (
@@ -217,12 +218,12 @@ export default function AppShell({ children }: AppShellProps): React.JSX.Element
         <nav
           className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center glass border-t border-white/[0.06]"
           style={{
-            height:        'calc(64px + env(safe-area-inset-bottom))',
+            height: 'calc(64px + env(safe-area-inset-bottom))',
             paddingBottom: 'env(safe-area-inset-bottom)',
           }}
         >
-          <BottomTab to="/dashboard" icon={Home}   label="Home"    />
-          <BottomTab to="/history"   icon={Clock}  label="History" />
+          <BottomTab to="/dashboard" icon={Home} label="Home" />
+          <BottomTab to="/history" icon={Clock} label="History" />
 
           {/* Centre FAB */}
           <div className="flex-1 flex justify-center">
@@ -236,8 +237,8 @@ export default function AppShell({ children }: AppShellProps): React.JSX.Element
             </button>
           </div>
 
-          <BottomTab to="/goals"  icon={Target} label="Goals"  />
-          <BottomTab to="/alerts" icon={Bell}   label="Alerts" />
+          <BottomTab to="/goals" icon={Target} label="Goals" />
+          <BottomTab to="/alerts" icon={Bell} label="Alerts" />
         </nav>
       )}
     </div>

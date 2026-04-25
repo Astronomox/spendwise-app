@@ -12,6 +12,8 @@ import Onboarding from '@/pages/Onboarding';
 import Profile    from '@/pages/Profile';
 import Login      from '@/pages/auth/Login';
 import Signup     from '@/pages/auth/Signup';
+import Landing    from '@/pages/Landing';
+
 
 function PrivateRoute({ element }: { element: React.JSX.Element }): React.JSX.Element {
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
@@ -23,18 +25,18 @@ export default function App(): React.JSX.Element {
     <BrowserRouter>
       <AppShell>
         <Routes>
-          <Route path="/"            element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard"   element={<PrivateRoute element={<Dashboard />}  />} />
-          <Route path="/history"     element={<PrivateRoute element={<History />}    />} />
-          <Route path="/logger"      element={<PrivateRoute element={<Logger />}     />} />
-          <Route path="/goals"       element={<PrivateRoute element={<Goals />}      />} />
-          <Route path="/alerts"      element={<PrivateRoute element={<Alerts />}     />} />
-          <Route path="/sms-queue"   element={<PrivateRoute element={<SmsQueue />}   />} />
-          <Route path="/profile"     element={<PrivateRoute element={<Profile />}    />} />
-          <Route path="/onboarding"  element={<Onboarding />} />
-          <Route path="/auth/login"  element={<Login />}  />
+          <Route path="/"            element={<Landing />} />
+          <Route path="/auth/login"  element={<Login />} />
           <Route path="/auth/signup" element={<Signup />} />
-          <Route path="*"            element={<Navigate to="/dashboard" replace />} />
+          <Route path="/onboarding"  element={<Onboarding />} />
+          <Route path="/dashboard"   element={<PrivateRoute element={<Dashboard />} />} />
+          <Route path="/history"     element={<PrivateRoute element={<History />} />} />
+          <Route path="/logger"      element={<PrivateRoute element={<Logger />} />} />
+          <Route path="/goals"       element={<PrivateRoute element={<Goals />} />} />
+          <Route path="/alerts"      element={<PrivateRoute element={<Alerts />} />} />
+          <Route path="/sms-queue"   element={<PrivateRoute element={<SmsQueue />} />} />
+          <Route path="/profile"     element={<PrivateRoute element={<Profile />} />} />
+          <Route path="*"            element={<Navigate to="/" replace />} />
         </Routes>
       </AppShell>
     </BrowserRouter>
