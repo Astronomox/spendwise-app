@@ -57,9 +57,18 @@ export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        console.time("find-user");
         const user = await prisma.user.findUnique({
-        where: { email },
+            where: { email },
+            select: {
+                id: true,
+                email: true,
+                fullName: true,
+                passwordHash: true,
+                provider: true,
+        },
         });
+        console.timeEnd("find-user");
 
         if (!user) {
             return res.status(400).json({ message: "Email address not found" });
@@ -71,7 +80,9 @@ export const login = async (req, res) => {
             });
         }
 
+        console.time("password-compare");
         const isMatch = await bcrypt.compare(password, user.passwordHash);
+        console.timeEnd("password-compare");
 
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid password" });
