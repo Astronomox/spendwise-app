@@ -1,5 +1,4 @@
 // src/pages/Alerts.tsx
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Flame, AlertTriangle, TrendingUp, Sparkles, CheckCheck, Trash2, type LucideIcon } from 'lucide-react';
 import { useAlerts } from '@/hooks/useAlerts';

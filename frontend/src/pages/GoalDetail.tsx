@@ -17,7 +17,7 @@ import { getCategoryById } from '@/lib/categories';
 import { formatNaira } from '@/lib/utils';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
+
 import { DepositModal } from '@/components/goals/DepositModal';
 import { GoalModal } from '@/components/goals/GoalModal';
 import { MilestoneCelebration } from '@/components/goals/MilestoneCelebration';

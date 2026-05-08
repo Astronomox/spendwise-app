@@ -171,7 +171,7 @@ class CapacitorSmsService implements SmsService {
         filter: { minDate: since, maxCount: 200 },
       });
       const list = result.smsList ?? [];
-      return list.flatMap((sms) => {
+      return list.flatMap((sms: any) => {
         const sender  = String(sms.address ?? '');
         const pattern = PATTERNS.find(p => p.senders.some(rx => rx.test(sender)));
         if (!pattern) return [];

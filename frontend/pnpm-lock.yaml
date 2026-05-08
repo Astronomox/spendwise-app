@@ -36,6 +36,9 @@ importers:
         specifier: ^4.5.4
         version: 4.5.7(@types/react@18.3.28)(react@18.3.1)
     devDependencies:
+      '@capacitor/core':
+        specifier: ^8.3.2
+        version: 8.3.2
       '@types/node':
         specifier: ^20.14.0
         version: 20.19.39
@@ -51,6 +54,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.19
         version: 10.5.0(postcss@8.5.10)
+      capacitor-sms-inbox:
+        specifier: ^1.3.0
+        version: 1.3.0(@capacitor/core@8.3.2)
       postcss:
         specifier: ^8.4.40
         version: 8.5.10
@@ -156,6 +162,9 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@capacitor/core@8.3.2':
+    resolution: {integrity: sha512-6Y0ksciqhkH4Bm2K5RxSFnuyRkeX3+vy+aLprRR5gzJnv85YYd52eIH4hjVhFAv/mFbPz5E4256yZ5ti0dh7Uw==}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -570,6 +579,11 @@ packages:
 
   caniuse-lite@1.0.30001788:
     resolution: {integrity: sha512-6q8HFp+lOQtcf7wBK+uEenxymVWkGKkjFpCvw5W25cmMwEDU45p1xQFBQv8JDlMMry7eNxyBaR+qxgmTUZkIRQ==}
+
+  capacitor-sms-inbox@1.3.0:
+    resolution: {integrity: sha512-WmrA+y9IOOjPbtc4USkOu9YZOa8BckK16WvhkCxmj9saS8GD1g902SezNk5eV+4Wg+H9gaZnxqaL+hMjkSxkxQ==}
+    peerDependencies:
+      '@capacitor/core': ^7.2.0
 
   chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
@@ -1253,6 +1267,10 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@capacitor/core@8.3.2':
+    dependencies:
+      tslib: 2.8.1
+
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
 
@@ -1552,6 +1570,10 @@ snapshots:
   camelcase-css@2.0.1: {}
 
   caniuse-lite@1.0.30001788: {}
+
+  capacitor-sms-inbox@1.3.0(@capacitor/core@8.3.2):
+    dependencies:
+      '@capacitor/core': 8.3.2
 
   chokidar@3.6.0:
     dependencies:
