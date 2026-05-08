@@ -11,12 +11,12 @@
 import { Capacitor } from '@capacitor/core';
 
 // Conditional import — keeps web bundle from choking on the native plugin.
-let SmsInbox: typeof import('capacitor-sms-inbox').SmsInbox | null = null;
+let SmsInbox: any = null;
 async function loadPlugin(): Promise<void> {
   if (SmsInbox) return;
   try {
     const mod = await import('capacitor-sms-inbox');
-    SmsInbox = mod.SmsInbox;
+    SmsInbox = mod.SMSInboxReader;
   } catch {
     SmsInbox = null;
   }

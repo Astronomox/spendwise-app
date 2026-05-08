@@ -1,7 +1,7 @@
 // src/pages/History.tsx
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, X, Download, TrendingDown, TrendingUp } from 'lucide-react';
+import { Search, X, TrendingDown, TrendingUp } from 'lucide-react';
 import { useTransactions } from '@/hooks/useTransactions';
 import { CATEGORIES } from '@/lib/categories';
 import { formatNaira, cn } from '@/lib/utils';
