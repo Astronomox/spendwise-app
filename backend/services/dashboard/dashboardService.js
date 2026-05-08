@@ -1,5 +1,6 @@
 import prisma from "../../config/prisma.js";
 import cacheService from "../cache/cacheService.js";
+import { toNaira } from "../../utils/money.js";
 import { calculateDailySafeSpend } from "../finance/savingsEngine.js";
 
 const DASHBOARD_TTL = 60; // Cache dashboard data for 60 seconds
@@ -55,15 +56,19 @@ export const getDashboardData = async (userId) => {
     const payload = {
         balance: {
             currentBalanceKobo: balance,
-            currentBalanceNaira: balance / 100,
+            currentBalanceNaira: balance.toNaira(),
         },
         spending: {
             totalIncomeKobo: income,
+            totalIncomeNaira: income.toNaira(),
+
             totalExpensesKobo: expenses,
+            totalExpensesNaira: expenses.toNaira(),
+
         },
         safeSpend: {
             dailySafeSpendKobo: savingsPlan.dailySafeSpend,
-            dailySafeSpendNaira: savingsPlan.dailySafeSpend / 100,
+            dailySafeSpendNaira: savingsPlan.dailySafeSpend.toNaira(),
         },
         recentTransactions,
     };

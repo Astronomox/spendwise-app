@@ -1,34 +1,36 @@
 import jwt from "jsonwebtoken";
-import prisma from "../config/prisma.js";
 
-// Global middleware to protect routes and ensure the user is authenticated
+// Global middleware to protect routes
 export const protect = async (req, res, next) => {
-    let token;
+    try {
+        const authHeader = req.headers.authorization;
 
-    if (
-        req.headers.authorization &&
-        req.headers.authorization.startsWith("Bearer")
-    ) {
-        try {
-        token = req.headers.authorization.split(" ")[1];
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        const user = await prisma.user.findUnique({
-            where: { id: decoded.id },
-        });
-
-        if (!user) {
-            return res.status(401).json({ message: "User not found" });
+        if (!authHeader?.startsWith("Bearer ")) {
+            return res.status(401).json({
+                message: "No token provided",
+            });
         }
 
-        req.user = user;
+        const token = authHeader.split(" ")[1];
+
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
+
+        // Attach JWT payload directly
+        req.user = {
+            id: decoded.id,
+            email: decoded.email,
+            fullName: decoded.fullName,
+            provider: decoded.provider,
+        };
 
         next();
-        } catch (err) {
-            return res.status(401).json({ message: "Token invalid" });
-        }
-    } else {
-        return res.status(401).json({ message: "No token provided" });
+
+    } catch (error) {
+        return res.status(401).json({
+            message: "Token invalid",
+        });
     }
 };

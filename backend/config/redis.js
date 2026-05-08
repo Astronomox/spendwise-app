@@ -4,11 +4,15 @@ const redis = new Redis(process.env.REDIS_URL, {
     maxRetriesPerRequest: 3,
 
     retryStrategy(times) {
-        const delay = Math.min(times * 200, 2000);
-        return delay;
+        return Math.min(times * 200, 2000);
     },
 
     enableReadyCheck: true,
+
+    tls:
+        process.env.NODE_ENV === "production"
+            ? {}
+            : undefined,
 });
 
 redis.on("connect", () => {
@@ -16,7 +20,7 @@ redis.on("connect", () => {
 });
 
 redis.on("error", (err) => {
-    console.error("Redis error:", err.message);
+    console.error("Redis error FULL:", err);
 });
 
 export default redis;

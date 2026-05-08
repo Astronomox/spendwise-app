@@ -3,11 +3,20 @@ import jwt from "jsonwebtoken";
 import prisma from "../config/prisma.js";
 import { verifyGoogleToken } from "../services/auth/googleAuthService.js";
 
-// Helper function to generate JWT token
-const generateToken = (userId) => {
-    return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-        expiresIn: "7d",
-    });
+// Function to generate JWT token
+const generateToken = (user) => {
+    return jwt.sign(
+        {
+            id: user.id,
+            email: user.email,
+            fullName: user.fullName,
+            provider: user.provider,
+        },
+        process.env.JWT_SECRET,
+        {
+            expiresIn: "7d",
+        }
+    );
 };
 
 // SIGNUP LOGIC
@@ -37,7 +46,7 @@ export const signup = async (req, res) => {
             },
     });
 
-    const token = generateToken(user.id);
+    const token = generateToken(user);
 
     res.status(201).json({
         id: user.id,
@@ -88,7 +97,7 @@ export const login = async (req, res) => {
             return res.status(400).json({ message: "Invalid password" });
         }
 
-        const token = generateToken(user.id);
+        const token = generateToken(user);
 
         res.json({
             id: user.id,
@@ -148,7 +157,7 @@ export const googleAuth = async (req, res) => {
             });
         }
 
-        const token = generateToken(user.id);
+        const token = generateToken(user);
 
         return res.json({
             success: true,
