@@ -146,7 +146,7 @@ export function ShareableSummaryCard({
     }
     lines.push('');
     lines.push(`Ref: ${refNumber}`);
-    lines.push(`Track every naira → spendwise.ng 🇳🇬`);
+    lines.push(`Track every naira https://spendwise-app-snowy.vercel.app/ 🇳🇬`);
     return lines.join('\n');
   };
 
