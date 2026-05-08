@@ -1,7 +1,6 @@
 // src/pages/History.tsx
 import { useState, useMemo } from 'react';
 import { Search, X } from 'lucide-react';
-import { mockTransactions } from '@/data/mockData';
 import { useTransactions } from '@/hooks/useTransactions';
 import { CATEGORIES } from '@/lib/categories';
 import { cn } from '@/lib/utils';
@@ -29,7 +28,7 @@ function applyTimeFilter(txns: Transaction[], filter: TimeFilter): Transaction[]
   });
 }
 
-// ─── Filter chip ─────────────────────────────────────────────
+// ——— Filter chip ———
 
 interface ChipProps {
   active:    boolean;
@@ -66,7 +65,7 @@ function Chip({ active, onClick, color, children }: ChipProps): React.JSX.Elemen
   );
 }
 
-// ─── History page ────────────────────────────────────────────
+// ——— History page ———
 
 const TIME_FILTERS: readonly TimeFilter[] = ['all', 'today', 'week', 'month'] as const;
 
@@ -77,11 +76,9 @@ export default function History(): React.JSX.Element {
   const [editing,    setEditing]    = useState<Transaction | null>(null);
 
   const { transactions, isLoading } = useTransactions();
-  // Fall back to mock data while the API loads or returns empty
-  const source = isLoading || transactions.length === 0 ? mockTransactions : transactions;
 
   const filtered = useMemo<Transaction[]>(() => {
-    let list = applyTimeFilter(source, timeFilter);
+    let list = applyTimeFilter(transactions, timeFilter);
 
     if (catFilter !== 'all') {
       list = list.filter(t => t.category === catFilter);
@@ -96,15 +93,14 @@ export default function History(): React.JSX.Element {
     }
 
     return list;
-  }, [source, search, timeFilter, catFilter]);
+  }, [transactions, search, timeFilter, catFilter]);
 
   return (
     <div className="flex flex-col pt-4">
 
-      {/* ── Sticky filter header ─────────────────────── */}
+      {/* —— Sticky filter header —— */}
       <div className="sticky top-0 z-20 bg-forge-bg/90 backdrop-blur-md pb-3 border-b border-white/[0.06] mb-4 space-y-3">
 
-        {/* Search input */}
         <div className="relative pt-4">
           <Search
             size={17}
@@ -128,7 +124,6 @@ export default function History(): React.JSX.Element {
           )}
         </div>
 
-        {/* Time chips */}
         <div className="flex gap-2 overflow-x-auto pb-0.5">
           {TIME_FILTERS.map(f => (
             <Chip key={f} active={timeFilter === f} onClick={() => setTimeFilter(f)}>
@@ -137,7 +132,6 @@ export default function History(): React.JSX.Element {
           ))}
         </div>
 
-        {/* Category chips */}
         <div className="flex gap-2 overflow-x-auto pb-0.5">
           <Chip active={catFilter === 'all'} onClick={() => setCatFilter('all')}>All</Chip>
           {CATEGORIES.map(cat => {
@@ -160,22 +154,26 @@ export default function History(): React.JSX.Element {
         </div>
       </div>
 
-      {/* ── Results ──────────────────────────────────── */}
-      {filtered.length === 0 ? (
+      {/* —— Results —— */}
+      {isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-[68px] rounded-2xl bg-forge-surface animate-pulse" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
           <div className="w-16 h-16 rounded-3xl bg-forge-elevated flex items-center justify-center">
             <Search size={28} className="text-cream/20" />
           </div>
           <div>
             <p className="text-[16px] font-bold text-cream mb-1">No transactions found</p>
-            <p className="text-[14px] text-cream/40">Try adjusting your filters</p>
+            <p className="text-[14px] text-cream/40">
+              {transactions.length === 0
+                ? 'Log your first expense to see it here!'
+                : 'Try adjusting your filters'}
+            </p>
           </div>
-        </div>
-      ) : isLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-[68px] rounded-2xl bg-forge-surface animate-pulse" />
-          ))}
         </div>
       ) : (
         <>

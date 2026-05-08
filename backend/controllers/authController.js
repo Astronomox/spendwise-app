@@ -33,6 +33,7 @@ export const signup = async (req, res) => {
                 email,
                 passwordHash: hashedPassword,
                 fullName,
+                provider: "local",
             },
     });
 
@@ -43,6 +44,8 @@ export const signup = async (req, res) => {
         email: user.email,
         fullName: user.fullName,
         token,
+
+        provider: user.provider,
     });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -60,6 +63,12 @@ export const login = async (req, res) => {
 
         if (!user) {
             return res.status(400).json({ message: "Email address not found" });
+        }
+
+        if (!user.passwordHash) {
+            return res.status(400).json({
+                message: "This account uses Google login. Please sign in with Google."
+            });
         }
 
         const isMatch = await bcrypt.compare(password, user.passwordHash);
@@ -92,7 +101,6 @@ export const googleAuth = async (req, res) => {
             });
         }
 
-        // 1. Verify Google token
         const googleUser = await verifyGoogleToken(idToken);
 
         if (!googleUser?.email) {
@@ -101,12 +109,11 @@ export const googleAuth = async (req, res) => {
             });
         }
 
-        // 2. Check if user exists
         let user = await prisma.user.findUnique({
             where: { email: googleUser.email },
         });
 
-        // 3. Create user if not exists
+        // CASE 1: user does not exist - create new user with google link
         if (!user) {
             user = await prisma.user.create({
                 data: {
@@ -114,12 +121,23 @@ export const googleAuth = async (req, res) => {
                     fullName: googleUser.fullName,
                     provider: "google",
                     providerId: googleUser.googleId,
+                    passwordHash: null,
                 },
             });
         }
 
-        // 4. Generate JWT
-        const token = generateToken(user);
+        // CASE 2: user exists but has no google link - update user with google link
+        if (!user.providerId && user.provider !== "google") {
+            user = await prisma.user.update({
+                where: { email: googleUser.email },
+                data: {
+                    provider: "google",
+                    providerId: googleUser.googleId,
+                },
+            });
+        }
+
+        const token = generateToken(user.id);
 
         return res.json({
             success: true,

@@ -1,4 +1,3 @@
-// src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppStore } from '@/lib/store';
 import AppShell   from '@/components/layout/AppShell';
@@ -12,6 +11,7 @@ import Onboarding from '@/pages/Onboarding';
 import Profile    from '@/pages/Profile';
 import Login      from '@/pages/auth/Login';
 import Signup     from '@/pages/auth/Signup';
+import Landing    from '@/pages/Landing';
 
 function PrivateRoute({ element }: { element: React.JSX.Element }): React.JSX.Element {
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
@@ -21,22 +21,27 @@ function PrivateRoute({ element }: { element: React.JSX.Element }): React.JSX.El
 export default function App(): React.JSX.Element {
   return (
     <BrowserRouter>
-      <AppShell>
-        <Routes>
-          <Route path="/"            element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard"   element={<PrivateRoute element={<Dashboard />}  />} />
-          <Route path="/history"     element={<PrivateRoute element={<History />}    />} />
-          <Route path="/logger"      element={<PrivateRoute element={<Logger />}     />} />
-          <Route path="/goals"       element={<PrivateRoute element={<Goals />}      />} />
-          <Route path="/alerts"      element={<PrivateRoute element={<Alerts />}     />} />
-          <Route path="/sms-queue"   element={<PrivateRoute element={<SmsQueue />}   />} />
-          <Route path="/profile"     element={<PrivateRoute element={<Profile />}    />} />
-          <Route path="/onboarding"  element={<Onboarding />} />
-          <Route path="/auth/login"  element={<Login />}  />
-          <Route path="/auth/signup" element={<Signup />} />
-          <Route path="*"            element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </AppShell>
+      <Routes>
+        {/* --- Public Pages (NO Sidebar/Dashboard Features) --- */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/auth/login" element={<Login />} />
+        <Route path="/auth/signup" element={<Signup />} />
+        <Route path="/onboarding" element={<Onboarding />} />
+
+        {/* --- Dashboard Pages (WITH Sidebar/Nav Features) --- */}
+        <Route element={<PrivateRoute element={<AppShell />} />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/logger" element={<Logger />} />
+          <Route path="/goals" element={<Goals />} />
+          <Route path="/alerts" element={<Alerts />} />
+          <Route path="/sms-queue" element={<SmsQueue />} />
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+
+        {/* Catch-all: Send unknown paths back to Landing */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 }

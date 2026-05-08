@@ -2,28 +2,40 @@
 
 A production-ready personal finance backend service that tracks transactions, manages analytics, and handles user authentication. Built with Node.js 18+, Express.js, and Prisma ORM for PostgreSQL.
 
----
+## Quick Start API Docs
+
+Interactive Swagger UI (local): [http://localhost:5002/api-docs](http://localhost:5002/api-docs)
+
+Production Swagger UI: [https://spendwise-app-39vv.onrender.com/api-docs](https://spendwise-app-39vv.onrender.com/api-docs)
 
 ## Project Overview
 
-SpendWise is a personal finance backend system that enables users to track income and expenses, categorize spending automatically, and generate real-time financial analytics. It is optimized for integration with web and mobile dashboards.
+SpendWise is a comprehensive personal finance backend system that enables users to track income and expenses, categorize spending automatically, ingest SMS transaction alerts, and generate real-time financial analytics. It is optimized for integration with web and mobile dashboards.
 
-The system supports both manual categorization and AI-assisted category detection based on transaction descriptions.
+**Key capabilities:**
+- **Transaction Tracking**: Manual entry or SMS-based auto-import from bank alerts
+- **Smart Categorization**: Automatic category detection based on transaction descriptions and SMS keywords
+- **Financial Analytics**: Real-time income/expense breakdown, burn rate analysis, and financial summaries
+- **Savings Planning**: Personalized safe spend recommendations based on financial goals
+- **Multi-Auth**: Email/password and Google OAuth 2.0 authentication
 
----
+The system supports both manual categorization and intelligent SMS parsing for seamless transaction creation.
 
 ## Tech Stack
 
-- **Runtime**: Node.js (ES Modules)
-- **Framework**: Express.js
-- **Database**: PostgreSQL
-- **ORM**: Prisma
-- **Authentication**: JWT + Google OAuth 2.0
-- **Password Hashing**: bcryptjs
-- **CORS**: Enabled for frontend integration
-- **Logging**: Custom request logger with timing
+- **Runtime**: Node.js 18+ (ES Modules)
+- **Framework**: Express.js ^5.2.1
+- **Database**: PostgreSQL (via @prisma/adapter-pg)
+- **ORM**: Prisma ^5.22.0
+- **Authentication**: JWT (^9.0.3) + Google OAuth 2.0 (google-auth-library)
+- **Password Hashing**: bcryptjs ^3.0.3
+- **API Docs**: Swagger (swagger-jsdoc + swagger-ui-express)
+- **Other**: cors ^2.8.6, dotenv ^17.4.2, request logging
 
----
+**Scripts** (package.json):
+
+- `npm run dev` - nodemon server.js
+- `npm start` - node server.js
 
 ## Core Features
 
@@ -113,29 +125,137 @@ Predefined categories with keyword-based auto-detection.
 
 ---
 
-### Analytics Engine
+### SMS Ingestion
 
-Real-time financial insights with optimized aggregations.
+Automatically parse bank and merchant SMS alerts to create transactions without manual data entry.
 
 **Endpoints:**
 
-- GET `/api/analytics?startDate=&endDate=` — Total spending & category breakdown
-- GET `/api/analytics/burn-rate?days=30` — Spending velocity & daily average
+- POST `/api/sms/ingest` — Parse SMS and create transaction
 
-**Returns:**
+**Features:**
 
-- Total spent over period
-- Spending by category
-- Daily average spend
-- Spending velocity
-- Per-transaction averages
-- Uncategorized transaction handling
+- Intelligent SMS parsing to extract amounts and details
+- Auto-detection of transaction type (INCOME/EXPENSE)
+- Keyword-based category auto-detection
+- Supports messages from banks, merchants, and service providers
+- No manual categorization needed for common transaction types
+
+**Example:**
+
+```
+Input: "Credit alert: N5000 received from XYZ"
+Output: Transaction created with type=INCOME, category=Income
+```
+
+---
+
+### Savings Planning
+
+Generate personalized savings plans based on income, expenses, and financial goals.
+
+**Endpoints:**
+
+- GET `/api/savings/plan?startDate=&endDate=` — Get savings recommendations
+
+**Features:**
+
+- Calculates disposable income automatically
+- Allocates funds for savings goals
+- Recommends safe daily spending limits
+- Distributes savings across remaining period
+- Provides both kobo and naira values
+
+---
+
+### Analytics API
+
+The analytics module provides financial insights for users including income tracking, expense analysis, category breakdown, and burn rate calculations.
+
+#### Base Endpoint
+
+**GET /api/analytics/summary?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD**
+
+Get full financial overview
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalIncomeKobo": 15000000,
+    "totalIncomeNaira": 150000,
+    "totalExpensesKobo": 4000000,
+    "totalExpensesNaira": 40000,
+    "netBalanceKobo": 11000000,
+    "netBalanceNaira": 110000,
+    "burnRate": {
+      "totalSpentKobo": 4000000,
+      "totalSpentNaira": 40000,
+      "dailyAverageKobo": 1094.99,
+      "dailyAverageNaira": 10.95,
+      "avgPerTransaction": 666666.66,
+      "days": 3653
+    },
+    "expenseBreakdown": [
+      {
+        "category": "Food",
+        "totalKobo": 800000,
+        "totalNaira": 8000
+      }
+    ],
+    "incomeBreakdown": [
+      {
+        "category": "Income",
+        "totalKobo": 15000000,
+        "totalNaira": 150000
+      }
+    ]
+  }
+}
+```
+
+#### Burn Rate Endpoint
+
+**GET /api/analytics/burn-rate?days=30**
+
+Get spending velocity over time
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalSpentKobo": 4000000,
+    "totalSpentNaira": 40000,
+    "dailyAverageKobo": 133333.33,
+    "dailyAverageNaira": 1333.33,
+    "avgPerTransaction": 666666.66,
+    "days": 30
+  }
+}
+```
+
+**Features:**
+
+- Income Tracking: Total income per period, Income breakdown by category
+- Expense Tracking: Total spending, Category-based breakdown
+- Net Balance: Income – Expenses calculation
+- Burn Rate Analysis: Daily average spending, Spending velocity trends
+
+**Design Notes:**
+
+- All monetary values stored in kobo
+- Converted to naira via utility layer
+- Date-range based analytics (no hardcoded time windows)
+- Category system is system-wide (not user-specific)
 
 **Performance:**
 
-- Moved heavy computation to service layer
-- Minimal controller logic
-- Database indexes on userId, transactionDate, categoryId, type
+- Service layer computations (analyticsService.js, burnrateService.js, etc.)
+- Database indexes: userId, transactionDate, categoryId, type
 
 ---
 
@@ -208,14 +328,18 @@ backend/
 ├── controllers/
 │   ├── authController.js              # Auth logic (signup, login, Google OAuth)
 │   ├── transactionController.js       # Transaction CRUD
-│   └── analyticsController.js         # Analytics & burn-rate
+│   ├── analyticsController.js         # Analytics & burn-rate
+│   ├── smsController.js               # SMS message ingestion
+│   └── savingsController.js           # Savings plan calculations
 ├── middleware/
 │   ├── authMiddleware.js              # JWT verification
 │   └── requestLogger.js               # Request timing & logging
 ├── routes/
 │   ├── authRoutes.js                  # /api/auth endpoints
 │   ├── transactionRoutes.js           # /api/transactions endpoints
-│   └── analyticsRoutes.js             # /api/analytics endpoints
+│   ├── analyticsRoutes.js             # /api/analytics endpoints
+│   ├── smsRoutes.js                   # /api/sms endpoints
+│   └── savingsRoutes.js               # /api/savings endpoints
 ├── services/
 │   ├── auth/
 │   │   └── googleAuthService.js       # Google OAuth token verification
@@ -225,18 +349,31 @@ backend/
 │   │   ├── analyticsUtils.js          # Helper utilities
 │   │   ├── burnrateService.js         # Daily average & velocity
 │   │   ├── categoryService.js         # Category aggregation
-│   │   └── spendingService.js         # Spending calculations
+│   │   ├── incomeService.js           # Income tracking
+│   │   ├── spendingService.js         # Spending calculations
+│   │   └── summaryService.js          # Summary calculations
+│   ├── merchant/
+│   │   └── merchantService.js         # Merchant data management
+│   ├── sms/
+│   │   └── smsParser.js               # SMS message parsing & extraction
+│   └── finance/
+│   │   └── savingsEngine.js           # Savings plan engine
 ├── utils/
 │   ├── apiResponse.js                 # Standard response wrapper
 │   └── money.js                       # Kobo/Naira conversion
 ├── prisma/
 │   ├── schema.prisma                  # Database schema
 │   ├── seed.js                        # Seed script (categories, keywords)
+│   ├── merchantSeed.js                # Merchant seed data
 │   └── migrations/                    # Database migration history
 │   │   ├── migration_lock.toml
 │   │   ├── 20260415233029_init/
 │   │   ├── 20260419141349_add_oauth_fields/
 │   │   └── ...
+├── tests/
+│   ├── parserTest.js                  # SMS parser tests
+│   ├── savingsTest.js                 # Savings plan tests
+│   └── test.js                        # General tests
 ├── google-test.html                   # OAuth testing utility
 └── test.js                            # Test file
 ```
@@ -324,34 +461,112 @@ Response: { transactions, total, page, limit }
 
 ### Analytics Endpoints
 
-#### Total Spending & Breakdown
+See detailed **Analytics API** section above for full specification, including complete request/response examples with Kobo/Naira values, breakdowns, and burn rate calculations.
+
+**Key endpoints:**
+
+- `GET /api/analytics/summary?startDate=&endDate=`
+- `GET /api/analytics/burn-rate?days=30`
+
+**Auth required:** `Authorization: Bearer <token>`
+
+---
+
+### SMS Ingestion API
+
+Automatically create transactions from SMS messages with intelligent parsing and auto-categorization.
+
+**Endpoint:**
+
+**POST /api/sms/ingest**
+
+Parses SMS message, auto-detects category and transaction type (INCOME/EXPENSE based on keywords like 'credit'), and creates transaction record.
+
+**Request:**
 
 ```json
-GET /api/analytics?startDate=2026-04-01&endDate=2026-04-30
-Authorization: Bearer <token>
-
-Response: {
-  totalSpent,
-  byCategory: [{ category, amount, percent }],
-  averageTransaction,
-  transactionCount
+{
+  "message": "Credit alert: N5000 received from XYZ"
 }
 ```
 
-#### Burn Rate & Velocity
+**Response:**
 
 ```json
-  GET /api/analytics/burn-rate?days=30
-  Authorization: Bearer <token>
-
-  Response: {
-    totalSpent,
-    dailyAverage,
-    days,
-    velocity,
-    byDay: [{ date, amount }]
+{
+  "success": true,
+  "transaction": {
+    "id": "uuid",
+    "amount": 5000,
+    "type": "INCOME",
+    "category": "Income",
+    "description": "Credit alert: N5000 received from XYZ",
+    "transactionDate": "2026-04-22T10:30:00Z"
+  }
 }
 ```
+
+**Features:**
+
+- Intelligent SMS parsing to extract amount and description
+- Auto-detection of transaction type (INCOME/EXPENSE) using keyword matching
+- Automatic category detection based on SMS content
+- Creates transaction record with parsed data
+- Works with SMS messages from banks and merchants
+
+**Auth required:** `Authorization: Bearer <token>`
+
+---
+
+### Savings Plan API
+
+Get personalized savings recommendations based on income, expenses, and savings goals.
+
+**Endpoint:**
+
+**GET /api/savings/plan?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD**
+
+Calculates a daily safe spend amount based on user's income, expenses, and a predefined savings goal for a specified date range.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalDays": 30,
+    "remainingDays": 15,
+    "disposableKobo": 11000000,
+    "disposableNaira": 110000.00,
+    "dailySavingsTargetKobo": 666666,
+    "dailySavingsTargetNaira": 6666.66,
+    "reservedSavingsKobo": 3333333,
+    "reservedSavingsNaira": 33333.33,
+    "safeSpendPoolKobo": 7666667,
+    "safeSpendPoolNaira": 76666.67,
+    "dailySafeSpendKobo": 511111,
+    "dailySafeSpendNaira": 5111.11
+  }
+}
+```
+
+**Fields Explained:**
+
+- **disposableNaira**: Total available funds (income - expenses)
+- **dailySavingsTargetNaira**: Recommended daily savings amount
+- **reservedSavingsNaira**: Total amount to reserve for savings goal
+- **safeSpendPoolNaira**: Amount available for safe spending (disposable - reserved savings)
+- **dailySafeSpendNaira**: Safe daily spending amount (safeSpendPool / remainingDays)
+
+**Features:**
+
+- Calculates disposable income based on user transactions
+- Allocates percentage for savings goals
+- Distributes remaining funds across remaining days
+- Provides daily safe spend recommendations
+- All values in both Kobo and Naira
+
+**Auth required:** `Authorization: Bearer <token>`
 
 ---
 
@@ -362,7 +577,7 @@ Response: {
 ```bash
 npm run dev      # Start with nodemon (hot reload)
 npm start        # Run production server
-npm test         # Run tests (not configured yet)
+npm test         # Run tests
 ```
 
 ### Debugging
@@ -383,18 +598,18 @@ Required `.env` file in backend root:
 
 ```env
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/spendwise
+DATABASE_URL=
 
 # JWT
-JWT_SECRET=your-super-secret-key-min-32-chars
+JWT_SECRET=
 
 # Google OAuth
-GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=xxxx
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 
 # Server
-PORT=5000
-NODE_ENV=development
+PORT=
+NODE_ENV=
 ```
 
 ---
@@ -409,26 +624,7 @@ NODE_ENV=development
 
 ---
 
-## Sample Analytics Response
-
-```json
-{
-  "success": true,
-  "data": {
-    "totalSpentKobo": 4500000,
-    "totalSpentNaira": 45000,
-    "categoryBreakdown": [
-      {
-        "category": "Shopping",
-        "totalKobo": 1500000,
-        "totalNaira": 15000
-      }
-    ],
-    "dailyAverageKobo": 12362,
-    "dailyAverageNaira": 123.62
-  }
-}
-```
+**Sample responses available in Analytics API section above.**
 
 ---
 
