@@ -285,47 +285,80 @@ export default function GoalDetail(): React.JSX.Element {
         </Card>
       )}
 
-      {/* Deposit history */}
+      {/* Deposit history — grouped by month */}
       <Card className="p-5">
-        <h3 className="text-[14px] font-bold font-display text-cream mb-4">
-          Deposit History
-        </h3>
+        <div className="flex items-baseline justify-between mb-4">
+          <h3 className="text-[14px] font-bold font-display text-cream">
+            Deposit History
+          </h3>
+          {(goal.deposits ?? []).length > 0 && (
+            <span className="text-[11px] font-bold text-cream/30 uppercase tracking-[0.06em]">
+              {(goal.deposits ?? []).length} {(goal.deposits ?? []).length === 1 ? 'deposit' : 'deposits'}
+            </span>
+          )}
+        </div>
         {(goal.deposits ?? []).length === 0 ? (
-          <p className="text-[13px] text-cream/30 text-center py-6">
-            No deposits yet. Start saving!
-          </p>
+          <div className="text-center py-8">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-rust/10 border border-rust/15 flex items-center justify-center">
+              <ArrowUpRight size={18} className="text-rust-light" />
+            </div>
+            <p className="text-[13px] font-bold text-cream/70">No deposits yet</p>
+            <p className="text-[11px] text-cream/35 mt-1 max-w-[220px] mx-auto">
+              Add ₦{Math.ceil(dailySave).toLocaleString('en-NG')}/day and you'll hit your goal on time.
+            </p>
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-4">
             <AnimatePresence>
-              {[...(goal.deposits ?? [])]
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .map((dep, i) => (
-                  <motion.div
-                    key={dep.id}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-forge-elevated border border-white/[0.04]"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0">
-                      <ArrowUpRight size={14} className="text-success" />
+              {Object.entries(
+                [...(goal.deposits ?? [])]
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .reduce<Record<string, typeof goal.deposits>>((acc, dep) => {
+                    const k = new Date(dep.date).toLocaleDateString('en-NG', { month: 'long', year: 'numeric' });
+                    (acc[k] = acc[k] || []).push(dep);
+                    return acc;
+                  }, {})
+              ).map(([month, deps]) => {
+                const monthTotal = deps.reduce((s, d) => s + d.amount, 0);
+                return (
+                  <div key={month}>
+                    <div className="flex items-baseline justify-between px-1 mb-2">
+                      <span className="text-[10px] font-bold text-cream/40 uppercase tracking-[0.12em]">
+                        {month}
+                      </span>
+                      <span className="text-[11px] font-bold text-cream/50 font-display">
+                        +{formatNaira(monthTotal)}
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-bold text-cream">
-                        +{formatNaira(dep.amount)}
-                      </p>
-                      {dep.note && (
-                        <p className="text-[11px] text-cream/30 truncate">{dep.note}</p>
-                      )}
+                    <div className="space-y-1.5">
+                      {deps.map((dep, i) => (
+                        <motion.div
+                          key={dep.id}
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.04 }}
+                          className="flex items-center gap-3 p-3 rounded-xl bg-forge-elevated border border-white/[0.04] hover:border-white/[0.08] transition-colors"
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0">
+                            <ArrowUpRight size={12} className="text-success" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-bold text-cream tabular-nums">
+                              +{formatNaira(dep.amount)}
+                            </p>
+                            {dep.note && (
+                              <p className="text-[11px] text-cream/30 truncate">{dep.note}</p>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-cream/25 flex-shrink-0 tabular-nums">
+                            {new Date(dep.date).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </motion.div>
+                      ))}
                     </div>
-                    <span className="text-[11px] text-cream/25 flex-shrink-0">
-                      {new Date(dep.date).toLocaleDateString('en-NG', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
-                  </motion.div>
-                ))}
+                  </div>
+                );
+              })}
             </AnimatePresence>
           </div>
         )}
