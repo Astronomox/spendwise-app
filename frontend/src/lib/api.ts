@@ -2,7 +2,7 @@
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://spendwise-app-39vv.onrender.com';
 
-// ——— Internal helpers ———
+// ─── Internal helpers ───
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('sw_token');
@@ -21,7 +21,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-// ——— Auth ———
+/** Check if a JWT token exists in localStorage */
+export function hasToken(): boolean {
+  return !!localStorage.getItem('sw_token');
+}
+
+// ─── Auth ───
 
 export interface AuthResponse {
   id:       string;
@@ -50,7 +55,35 @@ export const auth = {
     }),
 };
 
-// ——— Transactions ———
+// ─── Dashboard (single cached endpoint) ───
+
+export interface DashboardApiData {
+  balance: {
+    currentBalanceKobo: number;
+    currentBalanceNaira: number;
+  };
+  spending: {
+    totalIncomeKobo: number;
+    totalExpensesKobo: number;
+  };
+  safeSpend: {
+    dailySafeSpendKobo: number;
+    dailySafeSpendNaira: number;
+  };
+  recentTransactions: RawTransaction[];
+}
+
+export interface DashboardApiResponse {
+  success: boolean;
+  data: DashboardApiData;
+}
+
+export const dashboard = {
+  /** Single cached endpoint — replaces analytics + burn-rate + transactions on login */
+  get: () => request<DashboardApiResponse>('/api/dashboard'),
+};
+
+// ─── Transactions ───
 
 export type TransactionFilters = Partial<Record<string, string | number>>;
 
@@ -58,19 +91,34 @@ export interface CreateTransactionPayload {
   amount: number;
   type: 'EXPENSE' | 'INCOME';
   categoryId?: string;
+  category?: string;
   description?: string;
 }
 
 export interface RawTransaction {
   id?: string;
   _id?: string;
-  amount: number;
+  amountKobo?: number;
+  amountNaira?: number;
+  amount?: number;
   type: 'EXPENSE' | 'INCOME';
   categoryId?: string;
+  categoryName?: string;
   category?: string;
   description?: string;
+  transactionDate?: string;
   createdAt?: string;
   created_at?: string;
+}
+
+export interface TransactionListResponse {
+  success: boolean;
+  data: RawTransaction[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+  };
 }
 
 export const transactions = {
@@ -82,20 +130,20 @@ export const transactions = {
       }
     });
     const qs = params.toString();
-    return request<RawTransaction[]>(`/api/transactions${qs ? `?${qs}` : ''}`);
+    return request<TransactionListResponse>(`/api/transactions${qs ? `?${qs}` : ''}`);
   },
 
   get: (id: string) =>
-    request<RawTransaction>(`/api/transactions/${id}`),
+    request<{ success: boolean; data: RawTransaction }>(`/api/transactions/${id}`),
 
   create: (data: CreateTransactionPayload) =>
-    request<RawTransaction>('/api/transactions', {
+    request<{ success: boolean; data: RawTransaction }>('/api/transactions', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 };
 
-// ——— Analytics ———
+// ─── Analytics ───
 
 export interface AnalyticsCategory {
   categoryName: string;
@@ -158,4 +206,54 @@ export const analytics = {
     const qs = params.toString();
     return request<AnalyticsApiResponse>(`/api/analytics/summary?${qs}`);
   },
+};
+
+// ─── Savings ───
+
+export interface SavingsPlanData {
+  totalDays: number;
+  remainingDays: number;
+  disposableKobo: number;
+  disposableNaira: number;
+  dailySavingsTargetKobo: number;
+  dailySavingsTargetNaira: number;
+  reservedSavingsKobo: number;
+  reservedSavingsNaira: number;
+  safeSpendPoolKobo: number;
+  safeSpendPoolNaira: number;
+  dailySafeSpendKobo: number;
+  dailySafeSpendNaira: number;
+}
+
+export interface SavingsPlanResponse {
+  success: boolean;
+  data: SavingsPlanData;
+}
+
+export const savings = {
+  plan: (startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    const now = new Date();
+    const start = startDate || new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const end = endDate || new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+    params.append('startDate', start);
+    params.append('endDate', end);
+    const qs = params.toString();
+    return request<SavingsPlanResponse>(`/api/savings/plan?${qs}`);
+  },
+};
+
+// ─── SMS Ingestion ───
+
+export interface SmsIngestResponse {
+  success: boolean;
+  transaction: RawTransaction;
+}
+
+export const sms = {
+  ingest: (message: string) =>
+    request<SmsIngestResponse>('/sms/ingest', {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    }),
 };

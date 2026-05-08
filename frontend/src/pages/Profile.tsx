@@ -17,8 +17,10 @@ import {
   MessageSquare,
   Download,
   Smartphone,
+  Building2,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { useTransactions } from '@/hooks/useTransactions';
 import { formatNaira } from '@/lib/utils';
 import { useToastStore } from '@/components/ui/Toast';
 import Card from '@/components/ui/Card';
@@ -93,13 +95,16 @@ function MenuRow({ icon, label, detail, danger = false, badge, onClick }: MenuRo
 export default function Profile(): React.JSX.Element {
   const navigate  = useNavigate();
   const user      = useAppStore((s) => s.user);
+  const setUser   = useAppStore((s) => s.setUser);
   const clearUser = useAppStore((s) => s.clearUser);
   const addToast  = useToastStore((s) => s.addToast);
+  const { transactions } = useTransactions();
 
   const storedBudget = localStorage.getItem('sw_budget');
+  const storedBank   = localStorage.getItem('sw_bank');
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetValue,     setBudgetValue]     = useState(
-    storedBudget ?? user?.monthlyBudget?.toString() ?? '150000'
+    storedBudget ?? user?.monthlyBudget?.toString() ?? ''
   );
 
   const [smsEnabled, setSmsEnabled] = useState(() => {
@@ -119,6 +124,10 @@ export default function Profile(): React.JSX.Element {
   const handleBudgetSave = (): void => {
     localStorage.setItem('sw_budget', budgetValue);
     setIsEditingBudget(false);
+    // Sync budget to user store so dashboard reads it
+    if (user) {
+      setUser({ ...user, monthlyBudget: Number(budgetValue) || 0 });
+    }
     addToast('Budget updated!', 'success');
   };
 
@@ -132,9 +141,24 @@ export default function Profile(): React.JSX.Element {
   const handleExportData = (): void => {
     try {
       const data = {
+        user: {
+          name:  displayName,
+          email: displayEmail,
+          bank:  storedBank ?? 'Not set',
+        },
+        budget:       localStorage.getItem('sw_budget') ?? '0',
         goals:        JSON.parse(localStorage.getItem('sw_goals') ?? '[]'),
         alerts:       JSON.parse(localStorage.getItem('sw_alerts') ?? '[]'),
-        budget:       localStorage.getItem('sw_budget'),
+        categories:   JSON.parse(localStorage.getItem('sw_categories') ?? '[]'),
+        transactions: transactions.map(t => ({
+          id:          t.id,
+          amount:      t.amount,
+          direction:   t.direction,
+          category:    t.category,
+          description: t.description,
+          date:        t.date,
+        })),
+        transactionCount: transactions.length,
         exportedAt:   new Date().toISOString(),
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -177,6 +201,12 @@ export default function Profile(): React.JSX.Element {
           <Mail size={14} className="text-cream/30" />
           <p className="text-[14px] text-cream/40">{displayEmail}</p>
         </div>
+        {storedBank && (
+          <div className="flex items-center gap-1.5 mt-1">
+            <Building2 size={14} className="text-cream/30" />
+            <p className="text-[12px] text-cream/30">{storedBank}</p>
+          </div>
+        )}
       </motion.div>
 
       {/* Monthly budget card */}
@@ -212,7 +242,7 @@ export default function Profile(): React.JSX.Element {
                   type="button"
                   whileTap={{ scale: 0.9 }}
                   onClick={() => {
-                    setBudgetValue(storedBudget ?? user?.monthlyBudget?.toString() ?? '150000');
+                    setBudgetValue(storedBudget ?? user?.monthlyBudget?.toString() ?? '');
                     setIsEditingBudget(false);
                   }}
                   className="p-1.5 rounded-lg bg-[#F43F5E]/15 text-[#F43F5E] hover:bg-[#F43F5E]/25 transition-colors"
@@ -232,10 +262,17 @@ export default function Profile(): React.JSX.Element {
                 placeholder="e.g., 150000"
               />
             </div>
-          ) : (
+          ) : monthlyBudget > 0 ? (
             <p className="text-[28px] font-extrabold font-display text-cream tracking-tight mt-1">
               {formatNaira(monthlyBudget)}
             </p>
+          ) : (
+            <button
+              onClick={() => setIsEditingBudget(true)}
+              className="text-[14px] font-semibold text-rust mt-2 hover:underline"
+            >
+              Set your monthly budget →
+            </button>
           )}
         </Card>
       </motion.div>
@@ -283,7 +320,7 @@ export default function Profile(): React.JSX.Element {
           <MenuRow
             icon={<Download size={20} />}
             label="Export Data"
-            detail="Download your goals and settings"
+            detail={`${transactions.length} transactions, goals, and settings`}
             onClick={handleExportData}
           />
           <MenuRow
@@ -311,7 +348,7 @@ export default function Profile(): React.JSX.Element {
       <motion.div variants={fadeUp} className="flex flex-col items-center gap-2 text-center">
         <div className="flex items-center gap-1.5 text-cream/20">
           <Info size={14} />
-          <p className="text-[12px] font-medium">SpendWise v1.1.0</p>
+          <p className="text-[12px] font-medium">SpendWise v1.2.0</p>
         </div>
         <p className="text-[11px] text-cream/15">
           Track every naira. Build real wealth.

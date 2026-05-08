@@ -2,28 +2,36 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, PiggyBank, Bell, CheckCircle } from 'lucide-react';
+import { Home, PiggyBank, Bell, CheckCircle, Wallet } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
+import { useAppStore } from '@/lib/store';
 
-const BANKS = ['GTBank', 'Access Bank', 'Zenith Bank', 'UBA', 'First Bank', 'Other'];
+const BANKS = ['GTBank', 'Access Bank', 'Zenith Bank', 'UBA', 'First Bank', 'Kuda', 'Opay', 'Other'];
 const SPEND_CATS = ['Food', 'Transport', 'Utilities', 'Shopping', 'Health', 'Entertainment', 'Savings', 'Other'];
 
 const STEPS = [
   { label: 'Bank',       Icon: Home      },
+  { label: 'Budget',     Icon: Wallet    },
   { label: 'Categories', Icon: PiggyBank },
   { label: 'SMS',        Icon: Bell      },
 ] as const;
 
 export default function OnboardingPage(): React.JSX.Element {
   const navigate = useNavigate();
+  const user     = useAppStore((s) => s.user);
+  const setUser  = useAppStore((s) => s.setUser);
 
   const [step,               setStep]               = useState(1);
   const [selectedBank,       setSelectedBank]       = useState<string | null>(null);
+  const [budgetInput,        setBudgetInput]        = useState<string>('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [smsOptIn,           setSmsOptIn]           = useState(true);
   const [isSubmitting,       setIsSubmitting]       = useState(false);
   const [error,              setError]              = useState<string | null>(null);
+
+  const totalSteps = STEPS.length;
 
   const toggleCategory = (cat: string) =>
     setSelectedCategories((prev) =>
@@ -34,8 +42,35 @@ export default function OnboardingPage(): React.JSX.Element {
     setIsSubmitting(true);
     setError(null);
     try {
-      await new Promise<void>((r) => setTimeout(r, 500));
-      navigate('/dashboard');
+      // ── Persist all onboarding choices ──
+
+      // Bank
+      if (selectedBank) {
+        localStorage.setItem('sw_bank', selectedBank);
+      }
+
+      // Monthly budget
+      const budget = Number(budgetInput) || 0;
+      if (budget > 0) {
+        localStorage.setItem('sw_budget', String(budget));
+        // Also update the user object so dashboard reads it
+        if (user) {
+          setUser({ ...user, monthlyBudget: budget });
+        }
+      }
+
+      // Spending categories the user cares about
+      if (selectedCategories.length > 0) {
+        localStorage.setItem('sw_categories', JSON.stringify(selectedCategories));
+      }
+
+      // SMS opt-in
+      localStorage.setItem('sw_sms_enabled', String(smsOptIn));
+
+      // Mark onboarding as done so we don't show it again
+      localStorage.setItem('sw_onboarded', 'true');
+
+      navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save preferences. Please try again.');
     } finally {
@@ -43,9 +78,15 @@ export default function OnboardingPage(): React.JSX.Element {
     }
   };
 
+  const canAdvance = (): boolean => {
+    if (step === 1) return !!selectedBank;
+    if (step === 2) return true; // budget is optional
+    return true;
+  };
+
   const nextStep = () => {
-    if (step < 3) setStep(step + 1);
-    else handleComplete();
+    if (step < totalSteps) setStep(step + 1);
+    else void handleComplete();
   };
 
   return (
@@ -120,10 +161,67 @@ export default function OnboardingPage(): React.JSX.Element {
             </motion.div>
           )}
 
-          {/* Step 2 — Categories */}
+          {/* Step 2 — Budget */}
           {step === 2 && (
             <motion.div
               key="step2"
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -24 }}
+              className="space-y-6"
+            >
+              <div>
+                <div className="w-12 h-12 bg-rust/15 rounded-full flex items-center justify-center text-rust mb-4">
+                  <Wallet size={22} />
+                </div>
+                <h1 className="text-[28px] font-black font-display text-cream tracking-tight leading-tight">
+                  Set your monthly budget
+                </h1>
+                <p className="text-cream/50 text-[15px] font-medium mt-1">
+                  How much do you want to spend per month? You can change this later.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <Input
+                  label="Monthly budget (₦)"
+                  type="number"
+                  placeholder="e.g. 150000"
+                  value={budgetInput}
+                  onChange={(e) => setBudgetInput(e.target.value)}
+                  onClear={() => setBudgetInput('')}
+                />
+                {Number(budgetInput) > 0 && (
+                  <p className="text-[13px] text-cream/40">
+                    That's roughly ₦{Math.round(Number(budgetInput) / 30).toLocaleString('en-NG')}/day
+                  </p>
+                )}
+              </div>
+
+              {/* Quick presets */}
+              <div className="flex flex-wrap gap-2">
+                {[50000, 100000, 150000, 200000, 300000].map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => setBudgetInput(String(amt))}
+                    className={cn(
+                      'px-4 py-2 rounded-full border font-bold text-[13px] transition-all',
+                      Number(budgetInput) === amt
+                        ? 'border-rust bg-rust text-white'
+                        : 'border-white/[0.08] text-cream/50 hover:border-white/25'
+                    )}
+                  >
+                    ₦{amt.toLocaleString('en-NG')}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Step 3 — Categories */}
+          {step === 3 && (
+            <motion.div
+              key="step3"
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -24 }}
@@ -163,10 +261,10 @@ export default function OnboardingPage(): React.JSX.Element {
             </motion.div>
           )}
 
-          {/* Step 3 — SMS */}
-          {step === 3 && (
+          {/* Step 4 — SMS */}
+          {step === 4 && (
             <motion.div
-              key="step3"
+              key="step4"
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -24 }}
@@ -217,14 +315,22 @@ export default function OnboardingPage(): React.JSX.Element {
 
       {/* Sticky CTA */}
       <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-forge-bg via-forge-bg/95 to-transparent pt-12">
+        {step > 1 && (
+          <button
+            onClick={() => setStep(step - 1)}
+            className="w-full text-center text-[14px] font-semibold text-cream/40 hover:text-cream mb-3 transition-colors"
+          >
+            Back
+          </button>
+        )}
         <Button
           className="w-full"
           size="lg"
           onClick={nextStep}
-          disabled={(step === 1 && !selectedBank) || isSubmitting}
+          disabled={!canAdvance() || isSubmitting}
           isLoading={isSubmitting}
         >
-          {step === 3 ? "Let's go →" : 'Continue'}
+          {step === totalSteps ? "Let's go →" : 'Continue'}
         </Button>
       </div>
     </motion.div>

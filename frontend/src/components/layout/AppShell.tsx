@@ -101,9 +101,11 @@ export default function AppShell(): React.JSX.Element {
           </nav>
           <div className="px-3">
             <div className="p-3 bg-forge-elevated rounded-2xl border border-white/[0.06] flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-rust/20 border border-rust/30 flex items-center justify-center text-[11px] font-bold text-rust flex-shrink-0">{initials}</div>
+              <button onClick={() => navigate('/profile')} className="w-8 h-8 rounded-full bg-rust/20 border border-rust/30 flex items-center justify-center text-[11px] font-bold text-rust flex-shrink-0 hover:bg-rust/30 transition-colors">{initials}</button>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-cream truncate">{fullName}</p>
+                <button onClick={() => navigate('/profile')} className="text-[13px] font-bold text-cream truncate hover:text-rust transition-colors block">
+                  {fullName}
+                </button>
                 <button onClick={() => { clearUser(); navigate('/auth/login'); }} className="flex items-center gap-1 text-[11px] font-semibold text-cream/30 hover:text-danger transition-colors">
                   <LogOut size={11} /> Sign out
                 </button>
@@ -130,17 +132,7 @@ export default function AppShell(): React.JSX.Element {
 
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className={cn('max-w-[1100px] mx-auto', !isLogger && 'px-4 pb-24 lg:px-12 lg:pb-16')}>
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0.85 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0.85 }}
-                transition={{ duration: 0.1 }}
-              >
-                <Outlet />
-              </motion.div>
-            </AnimatePresence>
+            <Outlet />
           </div>
         </main>
       </div>

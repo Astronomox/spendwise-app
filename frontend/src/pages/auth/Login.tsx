@@ -25,6 +25,11 @@ const FEATURES: readonly Feature[] = [
   { title: 'Savings goals',      body: 'Set targets and track your progress every day.'          },
 ] as const;
 
+function getStoredBudget(): number {
+  const raw = localStorage.getItem('sw_budget');
+  return raw ? Number(raw) : 0;
+}
+
 export default function Login(): React.JSX.Element {
   const navigate = useNavigate();
   const setUser  = useAppStore((s) => s.setUser);
@@ -44,6 +49,15 @@ export default function Login(): React.JSX.Element {
     return Object.keys(e).length === 0;
   };
 
+  const navigateAfterAuth = (): void => {
+    const onboarded = localStorage.getItem('sw_onboarded');
+    if (onboarded === 'true') {
+      navigate('/dashboard', { replace: true });
+    } else {
+      navigate('/onboarding', { replace: true });
+    }
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!validate()) return;
@@ -57,15 +71,15 @@ export default function Login(): React.JSX.Element {
       // Persist token for authenticated API requests
       localStorage.setItem('sw_token', data.token);
 
-      // Save user to global store
+      // Save user to global store — read budget from localStorage (set during onboarding)
       setUser({
         id:            data.id,
         fullName:      data.fullName,
         email:         data.email,
-        monthlyBudget: 150_000,
+        monthlyBudget: getStoredBudget(),
       });
 
-      navigate('/dashboard', { replace: true });
+      navigateAfterAuth();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Invalid email or password';
       setErrors({ form: message });
@@ -93,9 +107,9 @@ export default function Login(): React.JSX.Element {
             id:            data.id,
             fullName:      data.fullName,
             email:         data.email,
-            monthlyBudget: 0,
+            monthlyBudget: getStoredBudget(),
           });
-          navigate('/dashboard', { replace: true });
+          navigateAfterAuth();
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Google sign-in failed';
           setErrors({ form: message });
@@ -111,7 +125,7 @@ export default function Login(): React.JSX.Element {
   return (
     <div className="flex min-h-screen w-full">
 
-      {/* —— Left hero panel (desktop) —— */}
+      {/* — Left hero panel (desktop) — */}
       <div className="hidden lg:flex w-1/2 relative flex-col justify-between p-12 overflow-hidden bg-[#0D0906]">
         <div
           className="absolute inset-0 pointer-events-none"
@@ -151,7 +165,7 @@ export default function Login(): React.JSX.Element {
         </div>
       </div>
 
-      {/* —— Right form panel —— */}
+      {/* — Right form panel — */}
       <div className="flex-1 flex items-center justify-center p-6 bg-[#FAF8F5]">
         <motion.div
           initial={{ opacity: 0, y: 14 }}

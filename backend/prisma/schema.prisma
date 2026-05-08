@@ -3,29 +3,39 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
+  id           String  @id @default(uuid())
+  email        String  @unique
   passwordHash String?
   fullName     String
-  createdAt    DateTime      @default(now())
+
   provider     String        @default("local")
   providerId   String?
+  createdAt    DateTime      @default(now())
+
+  // ── New fields ──
+  monthlyBudgetKobo Int      @default(0)
+  primaryBank       String?
+  smsEnabled        Boolean  @default(true)
+  onboardingDone    Boolean  @default(false)
+
   transactions Transaction[]
+  savingsGoals SavingsGoal[]
+  alerts       Alert[]
 }
 
 model Category {
-  id               String            @id @default(uuid())
-  name             String            @unique
-  isSystem         Boolean           @default(false)
+  id           String        @id @default(uuid())
+  name         String        @unique
+  isSystem     Boolean       @default(false)
+  transactions Transaction[]
+
   keywords         CategoryKeyword[]
   merchantKeywords MerchantKeyword[]
-  transactions     Transaction[]
 }
 
 model CategoryKeyword {
@@ -35,7 +45,6 @@ model CategoryKeyword {
   category   Category @relation(fields: [categoryId], references: [id])
 
   @@index([keyword])
-  @@index([categoryId])
 }
 
 model Transaction {
@@ -47,8 +56,9 @@ model Transaction {
   description     String?
   transactionDate DateTime        @default(now())
   createdAt       DateTime        @default(now())
-  category        Category?       @relation(fields: [categoryId], references: [id])
-  user            User            @relation(fields: [userId], references: [id])
+
+  user     User      @relation(fields: [userId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
 
   @@index([userId])
   @@index([userId, transactionDate])
@@ -56,17 +66,63 @@ model Transaction {
   @@index([userId, type])
 }
 
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
 model MerchantKeyword {
   id         String   @id @default(uuid())
   keyword    String   @unique
   categoryId String
-  createdAt  DateTime @default(now())
   category   Category @relation(fields: [categoryId], references: [id])
-
-  @@index([categoryId])
+  createdAt  DateTime @default(now())
 }
 
-enum TransactionType {
-  INCOME
-  EXPENSE
+// ── Savings Goals ──
+
+model SavingsGoal {
+  id                String        @id @default(uuid())
+  userId            String
+  name              String
+  targetAmountKobo  Int
+  currentAmountKobo Int           @default(0)
+  deadline          DateTime
+  icon              String        @default("savings")
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  user     User           @relation(fields: [userId], references: [id])
+  deposits GoalDeposit[]
+
+  @@index([userId])
+}
+
+model GoalDeposit {
+  id         String      @id @default(uuid())
+  goalId     String
+  amountKobo Int
+  note       String?
+  createdAt  DateTime    @default(now())
+
+  goal SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+}
+
+// ── Alerts ──
+
+model Alert {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([userId, read])
 }

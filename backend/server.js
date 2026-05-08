@@ -1,15 +1,9 @@
-// IMPORTS
+// server.js
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import "./config/redis.js";
 import { requestLogger } from "./middleware/requestLogger.js";
-import { responseTimeMiddleware } from "./middleware/responseTime.js";
 import { setupSwagger } from "./swagger.js";
-import compression from "compression";
-import rateLimit from "express-rate-limit";
-
-
 
 // LOAD ENV VARIABLES
 dotenv.config();
@@ -19,39 +13,29 @@ const app = express();
 
 // MIDDLEWARE
 app.use(cors());
-app.use(express.json({ limit: "256kb" }));
-app.use(compression());
+app.use(express.json());
 
-app.use(
-    rateLimit({
-        windowMs: 60 * 1000,
-        limit: 300,
-        standardHeaders: true,
-        legacyHeaders: false,
-    })
-);
-
-app.use(responseTimeMiddleware);
-app.use(requestLogger);
 // ROUTES
 import authRoutes from "./routes/authRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import smsRoutes from "./routes/smsRoutes.js";
 import savingsRoutes from "./routes/savingsRoutes.js";
-import dashboardRoutes from "./routes/dashboardRoutes.js";
+import goalsRoutes from "./routes/goalsRoutes.js";
+import alertsRoutes from "./routes/alertsRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
-// Route registration
-app.use("/api/auth", authRoutes); // AUTH ROUTES
-app.use("/api/transactions", transactionRoutes); // TRANSACTION ROUTES
-app.use("/api/analytics", analyticsRoutes); // ANALYTICS ROUTES
-app.use("/api/sms", smsRoutes); // SMS INGESTION ROUTES
-app.use("/api/savings", savingsRoutes); // SAVINGS PLAN ROUTES
-app.use("/api/dashboard", dashboardRoutes); // DASHBOARD ROUTES
-
-if (process.env.NODE_ENV !== "production") {
-    setupSwagger(app); // Setup Swagger documentation
-}
+// GLOBAL MIDDLEWARE AND ROUTE REGISTRATION
+app.use(requestLogger);
+app.use("/api/auth", authRoutes);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/sms", smsRoutes);
+app.use("/api/savings", savingsRoutes);
+app.use("/api/goals", goalsRoutes);
+app.use("/api/alerts", alertsRoutes);
+app.use("/api/users", userRoutes);
+setupSwagger(app);
 
 // HEALTH CHECK ENDPOINT
 app.get("/", (req, res) => {

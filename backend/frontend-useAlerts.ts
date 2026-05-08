@@ -1,14 +1,9 @@
 // src/hooks/useAlerts.ts
+// Rewired to use real backend API endpoints
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Alert } from '@/types/alerts';
 import { useToastStore } from '@/components/ui/Toast';
-import { hasToken } from '@/lib/api';
-import {
-  fetchAlerts,
-  markAlertRead,
-  markAllRead,
-  clearAlerts,
-} from '@/lib/alertsStore';
+import { alerts as alertsApi } from '@/lib/api';
 
 interface UseAlertsOptions {
   enabled?: boolean;
@@ -20,21 +15,24 @@ export function useAlerts({ enabled = true }: UseAlertsOptions = {}) {
 
   const alertsQuery = useQuery<Alert[]>({
     queryKey: ['alerts'],
-    enabled: enabled && hasToken(),  // ← don't fire before login
-    queryFn:  fetchAlerts,
-    staleTime: 30_000,
-    refetchInterval: 60_000,
+    enabled,
+    queryFn:  async () => {
+      const res = await alertsApi.list();
+      return res.data ?? [];
+    },
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
   });
 
   const markReadMutation = useMutation({
-    mutationFn: markAlertRead,
+    mutationFn: (id: string) => alertsApi.markRead(id),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['alerts'] });
     },
   });
 
   const markAllReadMutation = useMutation({
-    mutationFn: markAllRead,
+    mutationFn: () => alertsApi.markAllRead(),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['alerts'] });
       addToast('All alerts marked as read', 'success');
@@ -42,7 +40,7 @@ export function useAlerts({ enabled = true }: UseAlertsOptions = {}) {
   });
 
   const clearMutation = useMutation({
-    mutationFn: clearAlerts,
+    mutationFn: () => alertsApi.clear(),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['alerts'] });
     },

@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Share2, ArrowUpRight } from 'lucide-react';
 import { useDashboardSummary } from '@/hooks/useDashboard';
-import { useTransactions }     from '@/hooks/useTransactions';
 import { useGoals }            from '@/hooks/useGoals';
 import { useAppStore }         from '@/lib/store';
 import { formatNaira, getGreeting, cn } from '@/lib/utils';
 import { generateSmartAlerts } from '@/lib/alertsStore';
 import type { DashboardData } from '@/types/user';
+import type { Transaction }   from '@/types/transactions';
 import Card from '@/components/ui/Card';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
 import WeeklyBarChart from '@/components/charts/WeeklyBarChart';
@@ -61,7 +61,6 @@ export default function Dashboard(): React.JSX.Element {
   const navigate = useNavigate();
 
   const dashQuery = useDashboardSummary();
-  const txQuery   = useTransactions();
   const goalQuery = useGoals();
   const user      = useAppStore((s) => s.user);
 
@@ -69,27 +68,27 @@ export default function Dashboard(): React.JSX.Element {
   const [showDeposit,  setShowDeposit]  = useState(false);
   const [depositGoal,  setDepositGoal]  = useState<typeof goalQuery.goals[0] | null>(null);
 
-  const data: DashboardData   = dashQuery.data ?? emptyDashboard;
-  const allTransactions       = txQuery.transactions;
-  const allGoals              = goalQuery.goals;
-  const displayName           = user?.fullName ?? 'User';
+  const data: DashboardData        = dashQuery.data ?? emptyDashboard;
+  const recentTransactions: Transaction[] = dashQuery.data?.recentTransactions ?? [];
+  const allGoals                   = goalQuery.goals;
+  const displayName                = user?.fullName ?? 'User';
 
   // Generate smart alerts when data changes
   useEffect(() => {
-    if (allTransactions.length > 0 || allGoals.length > 0) {
-      generateSmartAlerts(allTransactions, allGoals, data.monthlyBudget);
+    if (recentTransactions.length > 0 || allGoals.length > 0) {
+      generateSmartAlerts(recentTransactions, allGoals, data.monthlyBudget);
     }
-  }, [allTransactions.length, allGoals.length, data.totalSpent]);
+  }, [recentTransactions.length, allGoals.length, data.totalSpent]);
 
   const budgetPct = Math.min(100, (data.totalSpent / (data.monthlyBudget || 1)) * 100);
   const remaining = data.monthlyBudget - data.totalSpent;
 
   const spentToday = useMemo<number>(() => {
     const today = new Date().toDateString();
-    return allTransactions
+    return recentTransactions
       .filter(t => new Date(t.date).toDateString() === today && t.direction === 'debit')
       .reduce((sum, t) => sum + t.amount, 0);
-  }, [allTransactions]);
+  }, [recentTransactions]);
 
   const progressClass =
     budgetPct >= 90 ? 'bg-danger' :
@@ -196,17 +195,17 @@ export default function Dashboard(): React.JSX.Element {
               </button>
             </div>
             <Card variant="default" className="!p-0 overflow-hidden">
-              {txQuery.isLoading
+              {dashQuery.isLoading
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="h-[68px] border-b border-white/[0.04] bg-forge-surface animate-pulse last:border-0" />
                   ))
-                : allTransactions.length === 0
+                : recentTransactions.length === 0
                   ? <p className="p-6 text-center text-cream/40 text-sm">No transactions yet. Log your first expense!</p>
-                  : allTransactions.slice(0, 5).map((t, i) => (
+                  : recentTransactions.slice(0, 5).map((t, i) => (
                     <TransactionItem
                       key={t.id}
                       transaction={t}
-                      isLast={i === Math.min(allTransactions.length, 5) - 1}
+                      isLast={i === Math.min(recentTransactions.length, 5) - 1}
                     />
                   ))}
             </Card>

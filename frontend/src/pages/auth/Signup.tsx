@@ -63,7 +63,7 @@ export default function Signup(): React.JSX.Element {
       // Persist token
       localStorage.setItem('sw_token', data.token);
 
-      // Save user to global store
+      // Save user to global store (budget starts at 0, onboarding will set it)
       setUser({
         id:            data.id,
         fullName:      data.fullName,
@@ -71,7 +71,8 @@ export default function Signup(): React.JSX.Element {
         monthlyBudget: 0,
       });
 
-      navigate('/dashboard', { replace: true });
+      // New users go to onboarding to set up bank, budget, categories
+      navigate('/onboarding', { replace: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Signup failed. Please try again.';
       setErrors({ form: message });
