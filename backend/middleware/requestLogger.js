@@ -13,8 +13,8 @@ export const requestLogger = (req, res, next) => {
             durationMs: timeInMs.toFixed(2),
         };
 
-        // highlight slow requests
-        if (timeInMs > 300) {
+        // highlight slow requests (SLO: p95 < 100ms)
+        if (timeInMs > 100) {
             console.warn("SLOW REQUEST:", log);
         } else {
             console.log("FAST REQUEST:", log);

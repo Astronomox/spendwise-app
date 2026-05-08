@@ -1,6 +1,7 @@
 import prisma from "../config/prisma.js";
 import { parseBankSMS } from "../services/sms/smsParser.js";
 import { detectCategoryFromText } from "../services/merchant/merchantService.js";
+import { invalidateAnalyticsCache } from "../services/analytics/analyticsCacheService.js";
 
 export const ingestSMS = async (req, res) => {
     try {
@@ -46,6 +47,8 @@ export const ingestSMS = async (req, res) => {
                 transactionDate: parsed.transactionDate,
             },
         });
+
+        await invalidateAnalyticsCache(userId);
 
         res.json({
             success: true,

@@ -1,6 +1,7 @@
 import { getSpendingAnalytics } from "../services/analytics/analyticsService.js";
 import { getBurnRate } from "../services/analytics/burnrateService.js";
 import { getAnalyticsSummary } from "../services/analytics/summaryService.js";
+import { getCachedAnalyticsSummary } from "../services/analytics/analyticsCacheService.js";
 
 // Funtion to get analytics data within a specified date range for the authenticated user
 export const getAnalytics = async (req, res) => {
@@ -73,11 +74,7 @@ export const getSummary = async (req, res) => {
 
         const userId = req.user.id;
 
-        const data = await getAnalyticsSummary(
-            userId,
-            new Date(startDate),
-            new Date(endDate)
-        );
+        const data = await getCachedAnalyticsSummary(userId);
 
         return res.status(200).json({
             success: true,

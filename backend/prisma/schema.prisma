@@ -3,30 +3,29 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id           String  @id @default(uuid())
-  email        String  @unique
+  id           String        @id @default(uuid())
+  email        String        @unique
   passwordHash String?
   fullName     String
-
-  provider     String        @default("local") // "google" | "apple" | "local"
-  providerId   String? // googleId or apple sub
   createdAt    DateTime      @default(now())
+  provider     String        @default("local")
+  providerId   String?
   transactions Transaction[]
 }
 
 model Category {
-  id           String        @id @default(uuid())
-  name         String        @unique
-  isSystem     Boolean       @default(false)
-  transactions Transaction[]
-
+  id               String            @id @default(uuid())
+  name             String            @unique
+  isSystem         Boolean           @default(false)
   keywords         CategoryKeyword[]
   merchantKeywords MerchantKeyword[]
+  transactions     Transaction[]
 }
 
 model CategoryKeyword {
@@ -36,6 +35,7 @@ model CategoryKeyword {
   category   Category @relation(fields: [categoryId], references: [id])
 
   @@index([keyword])
+  @@index([categoryId])
 }
 
 model Transaction {
@@ -47,9 +47,8 @@ model Transaction {
   description     String?
   transactionDate DateTime        @default(now())
   createdAt       DateTime        @default(now())
-
-  user     User      @relation(fields: [userId], references: [id])
-  category Category? @relation(fields: [categoryId], references: [id])
+  category        Category?       @relation(fields: [categoryId], references: [id])
+  user            User            @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([userId, transactionDate])
@@ -57,15 +56,17 @@ model Transaction {
   @@index([userId, type])
 }
 
-enum TransactionType {
-  INCOME
-  EXPENSE
-}
-
 model MerchantKeyword {
   id         String   @id @default(uuid())
   keyword    String   @unique
   categoryId String
-  category   Category @relation(fields: [categoryId], references: [id])
   createdAt  DateTime @default(now())
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
 }
