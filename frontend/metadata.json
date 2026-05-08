@@ -1,6 +1,0 @@
-{
-  "name": "SpendWise",
-  "description": "Nigerian-first personal finance app. Track every naira. Build real wealth.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["auth", "database"]
-}

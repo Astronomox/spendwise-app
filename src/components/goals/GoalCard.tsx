@@ -73,9 +73,9 @@ export default function GoalCard({ goal, onEdit, onDelete, onDeposit, onView }: 
         </p>
       </div>
 
-      {/* Progress bar with milestone ticks */}
+      {/* Progress bar */}
       <div className="mb-3">
-        <div className="relative h-2.5 rounded-full bg-forge-muted overflow-hidden">
+        <div className="h-2.5 rounded-full bg-forge-muted overflow-hidden">
           <motion.div
             className="h-full rounded-full"
             initial={{ width: 0 }}
@@ -87,17 +87,6 @@ export default function GoalCard({ goal, onEdit, onDelete, onDeposit, onView }: 
                 : 'linear-gradient(90deg, #D4541A, #B87333)',
             }}
           />
-          {/* 25/50/75 ticks — visible only over the unfilled portion */}
-          {[25, 50, 75].map(t => (
-            <div
-              key={t}
-              className="absolute top-0 bottom-0 w-px"
-              style={{
-                left: `${t}%`,
-                background: pct >= t ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.08)',
-              }}
-            />
-          ))}
         </div>
         <div className="flex justify-between mt-1.5">
           <span className="text-[11px] font-bold text-cream/30">{pct}%</span>
