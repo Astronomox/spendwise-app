@@ -6,4 +6,3 @@ coverage/
 *.log
 .env*
 !.env.example
-_backup_from_main/
