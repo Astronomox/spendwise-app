@@ -1,11 +1,11 @@
 // src/components/goals/GoalModal.tsx
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input  from '@/components/ui/Input';
 import { CATEGORIES } from '@/lib/categories';
-import { Goal, GoalFormValues } from '@/types/goals';
+import type { Goal, GoalFormValues } from '@/types/goals';
 
 interface GoalModalProps {
   goal:    Goal | null;
@@ -17,39 +17,74 @@ interface GoalModalProps {
 export function GoalModal({ goal, isOpen, onClose, onSave }: GoalModalProps): React.JSX.Element {
   const [name,         setName]         = useState('');
   const [targetAmount, setTargetAmount] = useState('');
+  const [deadline,     setDeadline]     = useState('');
+  const [icon,         setIcon]         = useState('savings');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error,        setError]        = useState<string | null>(null);
+
+  // Default deadline: 3 months from now
+  const defaultDeadline = () => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 3);
+    return d.toISOString().split('T')[0];
+  };
 
   useEffect(() => {
     if (goal && isOpen) {
       setName(goal.name);
       setTargetAmount(goal.targetAmount.toString());
+      setDeadline(goal.deadline.split('T')[0]);
+      setIcon(goal.icon);
     } else if (isOpen) {
       setName('');
       setTargetAmount('');
+      setDeadline(defaultDeadline());
+      setIcon('savings');
     }
     setError(null);
   }, [goal, isOpen]);
 
   const handleSave = async () => {
-    if (!name || !targetAmount) {
-      setError('Please fill in all required fields.');
+    if (!name.trim()) {
+      setError('Give your goal a name.');
       return;
     }
-    if (Number(targetAmount) <= 0) {
+    if (!targetAmount || Number(targetAmount) <= 0) {
       setError('Target amount must be greater than 0.');
       return;
     }
+    if (!deadline) {
+      setError('Pick a deadline.');
+      return;
+    }
+    if (new Date(deadline) <= new Date()) {
+      setError('Deadline must be in the future.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     try {
-      await onSave({ name, targetAmount: Number(targetAmount) });
+      await onSave({
+        name:         name.trim(),
+        targetAmount: Number(targetAmount),
+        deadline:     new Date(deadline).toISOString(),
+        icon,
+      });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save goal.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Compute days until deadline for preview
+  const daysUntil = deadline
+    ? Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / 86_400_000))
+    : 0;
+  const dailySave = daysUntil > 0 && Number(targetAmount) > 0
+    ? Math.ceil(Number(targetAmount) / daysUntil)
+    : 0;
 
   return (
     <AnimatePresence>
@@ -101,8 +136,9 @@ export function GoalModal({ goal, isOpen, onClose, onSave }: GoalModalProps): Re
                 label="Goal Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., New Laptop"
+                placeholder="e.g., New Laptop, Emergency Fund"
               />
+
               <Input
                 label="Target Amount (₦)"
                 type="number"
@@ -111,26 +147,67 @@ export function GoalModal({ goal, isOpen, onClose, onSave }: GoalModalProps): Re
                 placeholder="e.g., 500000"
               />
 
-              {/* Icon hint row */}
+              {/* Deadline picker */}
+              <div>
+                <label className="text-[12px] font-bold text-cream/40 uppercase tracking-widest block mb-2">
+                  Deadline
+                </label>
+                <input
+                  type="date"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full h-12 px-4 rounded-2xl bg-forge-elevated border border-white/[0.06] text-cream text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-rust/30 focus:border-rust transition-all"
+                  style={{ colorScheme: 'dark' }}
+                />
+              </div>
+
+              {/* Icon selector */}
               <div>
                 <label className="text-[12px] font-bold text-cream/40 uppercase tracking-widest block mb-3">
-                  Category Icon (visual only)
+                  Category Icon
                 </label>
                 <div className="grid grid-cols-5 gap-2">
                   {CATEGORIES.map((cat) => {
-                    const Icon = cat.Icon;
+                    const CatIcon = cat.Icon;
+                    const selected = icon === cat.id;
                     return (
-                      <div
+                      <button
                         key={cat.id}
-                        className="h-11 flex items-center justify-center rounded-xl border border-white/[0.06] bg-forge-elevated"
+                        type="button"
+                        onClick={() => setIcon(cat.id)}
+                        className={`h-12 flex items-center justify-center rounded-xl border transition-all ${
+                          selected
+                            ? 'border-rust bg-rust/15 ring-1 ring-rust/40'
+                            : 'border-white/[0.06] bg-forge-elevated hover:border-white/[0.12]'
+                        }`}
                         title={cat.label}
                       >
-                        <Icon size={18} style={{ color: cat.color }} />
-                      </div>
+                        <CatIcon size={18} style={{ color: selected ? cat.color : `${cat.color}80` }} />
+                        {selected && (
+                          <Check size={10} className="absolute top-0.5 right-0.5 text-rust" />
+                        )}
+                      </button>
                     );
                   })}
                 </div>
               </div>
+
+              {/* Preview card */}
+              {Number(targetAmount) > 0 && daysUntil > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-2xl bg-rust/8 border border-rust/15"
+                >
+                  <p className="text-[12px] text-cream/50 font-medium mb-1">
+                    To hit your goal in {daysUntil} days, save
+                  </p>
+                  <p className="text-[20px] font-extrabold font-display text-rust-light">
+                    ₦{dailySave.toLocaleString('en-NG')}<span className="text-[13px] text-cream/40 font-normal">/day</span>
+                  </p>
+                </motion.div>
+              )}
 
               {error && (
                 <p className="text-danger text-[13px] font-semibold text-center">{error}</p>

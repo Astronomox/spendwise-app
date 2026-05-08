@@ -1,13 +1,13 @@
 // src/pages/Alerts.tsx
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Bell, Flame, AlertTriangle, TrendingUp, Sparkles, type LucideIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bell, Flame, AlertTriangle, TrendingUp, Sparkles, CheckCheck, Trash2, type LucideIcon } from 'lucide-react';
 import { useAlerts } from '@/hooks/useAlerts';
 import { getTimeAgo, cn } from '@/lib/utils';
 import type { Alert, AlertType } from '@/types/alerts';
 import Badge from '@/components/ui/Badge';
 
-// ——— Alert metadata ———
+// ── Alert metadata ───
 
 interface AlertMeta {
   Icon:   LucideIcon;
@@ -21,7 +21,7 @@ const ALERT_META: Record<AlertType, AlertMeta> = {
   goal_reached:   { Icon: Sparkles,      color: '#2DB37A' },
 };
 
-// ——— Alert card ———
+// ── Alert card ───
 
 interface AlertCardProps {
   alert:   Alert;
@@ -34,6 +34,10 @@ function AlertCard({ alert, onRead }: AlertCardProps): React.JSX.Element {
 
   return (
     <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -20 }}
       whileHover={!alert.read ? { x: 2 } : undefined}
       onClick={() => { if (!alert.read) onRead(alert.id); }}
       className={cn(
@@ -76,28 +80,13 @@ function AlertCard({ alert, onRead }: AlertCardProps): React.JSX.Element {
   );
 }
 
-// ——— Alerts page ———
+// ── Alerts page ───
 
 export default function Alerts(): React.JSX.Element {
-  const { alerts, isLoading, markRead: markReadApi } = useAlerts();
+  const { alerts, isLoading, markRead, markAllRead, clearAlerts } = useAlerts();
   const unread = alerts.filter(a => !a.read).length;
 
-  const [localReadIds, setLocalReadIds] = useState<Set<string>>(new Set());
-
-  const displayAlerts = alerts.map(a =>
-    localReadIds.has(a.id) ? { ...a, read: true } : a
-  );
-
-  const markRead = async (id: string): Promise<void> => {
-    setLocalReadIds(prev => new Set(prev).add(id));
-    try {
-      await markReadApi(id);
-    } catch {
-      // API not available yet — local state already updated
-    }
-  };
-
-  const sorted = [...displayAlerts].sort((a, b) => {
+  const sorted = [...alerts].sort((a, b) => {
     if (a.read !== b.read) return a.read ? 1 : -1;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
@@ -110,8 +99,30 @@ export default function Alerts(): React.JSX.Element {
           <h1 className="text-[28px] font-extrabold font-display text-cream tracking-tight">Alerts</h1>
           <p className="text-[14px] text-cream/40 font-medium mt-1">Stay on top of your finances.</p>
         </div>
-        {unread > 0 && <Badge preset="danger">{unread} new</Badge>}
+        <div className="flex items-center gap-2">
+          {unread > 0 && <Badge preset="danger">{unread} new</Badge>}
+        </div>
       </div>
+
+      {/* Action bar */}
+      {alerts.length > 0 && (
+        <div className="flex gap-2 mb-4">
+          {unread > 0 && (
+            <button
+              onClick={() => { void markAllRead(); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-forge-surface border border-white/[0.06] text-cream/50 text-[12px] font-bold hover:text-cream hover:border-white/[0.12] transition-all"
+            >
+              <CheckCheck size={13} /> Mark all read
+            </button>
+          )}
+          <button
+            onClick={() => { void clearAlerts(); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-forge-surface border border-white/[0.06] text-cream/50 text-[12px] font-bold hover:text-danger hover:border-danger/20 transition-all"
+          >
+            <Trash2 size={13} /> Clear all
+          </button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-3">
@@ -120,20 +131,32 @@ export default function Alerts(): React.JSX.Element {
           ))}
         </div>
       ) : sorted.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-          <div className="w-16 h-16 rounded-3xl bg-forge-elevated border border-white/[0.06] flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center justify-center py-20 text-center gap-4"
+        >
+          <motion.div
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-16 h-16 rounded-3xl bg-forge-elevated border border-white/[0.06] flex items-center justify-center"
+          >
             <Bell size={28} className="text-cream/20" />
-          </div>
+          </motion.div>
           <div>
             <p className="text-[16px] font-bold text-cream mb-1">All caught up</p>
-            <p className="text-[14px] text-cream/40">No alerts right now. Keep it up!</p>
+            <p className="text-[14px] text-cream/40">
+              Alerts will appear here as you use SpendWise — budget warnings, spending spikes, and streaks.
+            </p>
           </div>
-        </div>
+        </motion.div>
       ) : (
         <div className="space-y-3">
-          {sorted.map(alert => (
-            <AlertCard key={alert.id} alert={alert} onRead={(id) => { void markRead(id); }} />
-          ))}
+          <AnimatePresence mode="popLayout">
+            {sorted.map(alert => (
+              <AlertCard key={alert.id} alert={alert} onRead={(id) => { void markRead(id); }} />
+            ))}
+          </AnimatePresence>
         </div>
       )}
     </div>

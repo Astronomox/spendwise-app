@@ -12,6 +12,8 @@ import Profile    from '@/pages/Profile';
 import Login      from '@/pages/auth/Login';
 import Signup     from '@/pages/auth/Signup';
 import Landing    from '@/pages/Landing';
+import GoalDetail from '@/pages/GoalDetail';
+
 
 function PrivateRoute({ element }: { element: React.JSX.Element }): React.JSX.Element {
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
@@ -37,6 +39,7 @@ export default function App(): React.JSX.Element {
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/sms-queue" element={<SmsQueue />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/goals/:id" element={<GoalDetail />} />
         </Route>
 
         {/* Catch-all: Send unknown paths back to Landing */}

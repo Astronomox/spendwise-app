@@ -10,7 +10,28 @@ export interface Goal {
   /** Maps to a CATEGORIES id — used to pick the icon */
   icon:          string;
   userId:        string;
+  /** Deposit history (local-only until BE ships) */
+  deposits:      GoalDeposit[];
+}
+
+export interface GoalDeposit {
+  id:        string;
+  amount:    number;
+  date:      string;
+  note?:     string;
 }
 
 /** Shape accepted by the create / edit form */
-export type GoalFormValues = Pick<Goal, 'name' | 'targetAmount'>;
+export interface GoalFormValues {
+  name:         string;
+  targetAmount: number;
+  deadline:     string;
+  icon:         string;
+}
+
+/** Milestones for progress visualization */
+export interface GoalMilestone {
+  label:   string;
+  percent: number;
+  reached: boolean;
+}

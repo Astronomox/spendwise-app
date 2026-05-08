@@ -1,9 +1,10 @@
 // src/pages/History.tsx
 import { useState, useMemo } from 'react';
-import { Search, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Search, X, Download, TrendingDown, TrendingUp } from 'lucide-react';
 import { useTransactions } from '@/hooks/useTransactions';
 import { CATEGORIES } from '@/lib/categories';
-import { cn } from '@/lib/utils';
+import { formatNaira, cn } from '@/lib/utils';
 import type { Transaction } from '@/types/transactions';
 import Card from '@/components/ui/Card';
 import TransactionItem from '@/components/transactions/TransactionItem';
@@ -28,7 +29,7 @@ function applyTimeFilter(txns: Transaction[], filter: TimeFilter): Transaction[]
   });
 }
 
-// ——— Filter chip ———
+// ── Filter chip ───
 
 interface ChipProps {
   active:    boolean;
@@ -65,7 +66,7 @@ function Chip({ active, onClick, color, children }: ChipProps): React.JSX.Elemen
   );
 }
 
-// ——— History page ———
+// ── History page ───
 
 const TIME_FILTERS: readonly TimeFilter[] = ['all', 'today', 'week', 'month'] as const;
 
@@ -95,10 +96,21 @@ export default function History(): React.JSX.Element {
     return list;
   }, [transactions, search, timeFilter, catFilter]);
 
+  // Summary stats for filtered results
+  const stats = useMemo(() => {
+    const debits = filtered.filter(t => t.direction === 'debit');
+    const credits = filtered.filter(t => t.direction === 'credit');
+    return {
+      totalSpent:  debits.reduce((s, t) => s + t.amount, 0),
+      totalIncome: credits.reduce((s, t) => s + t.amount, 0),
+      count:       filtered.length,
+    };
+  }, [filtered]);
+
   return (
     <div className="flex flex-col pt-4">
 
-      {/* —— Sticky filter header —— */}
+      {/* ── Sticky filter header ── */}
       <div className="sticky top-0 z-20 bg-forge-bg/90 backdrop-blur-md pb-3 border-b border-white/[0.06] mb-4 space-y-3">
 
         <div className="relative pt-4">
@@ -154,7 +166,31 @@ export default function History(): React.JSX.Element {
         </div>
       </div>
 
-      {/* —— Results —— */}
+      {/* ── Summary bar ── */}
+      {filtered.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-2 gap-2 mb-4"
+        >
+          <div className="flex items-center gap-2 p-3 rounded-2xl bg-forge-surface border border-white/[0.06]">
+            <TrendingDown size={14} className="text-danger flex-shrink-0" />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-cream/30">Spent</p>
+              <p className="text-[14px] font-bold font-display text-cream">{formatNaira(stats.totalSpent)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 p-3 rounded-2xl bg-forge-surface border border-white/[0.06]">
+            <TrendingUp size={14} className="text-success flex-shrink-0" />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-cream/30">Income</p>
+              <p className="text-[14px] font-bold font-display text-cream">{formatNaira(stats.totalIncome)}</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── Results ── */}
       {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (

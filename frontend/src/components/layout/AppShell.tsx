@@ -1,3 +1,4 @@
+// src/components/layout/AppShell.tsx
 import { useLocation, useNavigate, NavLink, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Clock, Target, Bell, Plus, LogOut, MessageSquare, type LucideIcon } from 'lucide-react';

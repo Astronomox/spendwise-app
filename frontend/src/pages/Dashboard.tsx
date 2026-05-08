@@ -1,13 +1,14 @@
 // src/pages/Dashboard.tsx
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Share2 } from 'lucide-react';
+import { Share2, ArrowUpRight } from 'lucide-react';
 import { useDashboardSummary } from '@/hooks/useDashboard';
 import { useTransactions }     from '@/hooks/useTransactions';
 import { useGoals }            from '@/hooks/useGoals';
 import { useAppStore }         from '@/lib/store';
 import { formatNaira, getGreeting, cn } from '@/lib/utils';
+import { generateSmartAlerts } from '@/lib/alertsStore';
 import type { DashboardData } from '@/types/user';
 import Card from '@/components/ui/Card';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
@@ -15,8 +16,10 @@ import WeeklyBarChart from '@/components/charts/WeeklyBarChart';
 import TopCategories from '@/components/dashboard/TopCategories';
 import TransactionItem from '@/components/transactions/TransactionItem';
 import GoalCard from '@/components/goals/GoalCard';
+import { ShareableSummaryCard } from '@/components/share/ShareableSummaryCard';
+import { DepositModal } from '@/components/goals/DepositModal';
 
-// ——— Stat card ———
+// ── Stat card ───
 
 interface StatCardProps {
   label:  string;
@@ -39,7 +42,7 @@ function StatCard({ label, value, accent }: StatCardProps): React.JSX.Element {
   );
 }
 
-// ——— Empty state defaults ———
+// ── Empty state defaults ───
 
 const emptyDashboard: DashboardData = {
   totalSpent: 0,
@@ -52,7 +55,7 @@ const emptyDashboard: DashboardData = {
   spendByCategory: {},
 };
 
-// ——— Dashboard ———
+// ── Dashboard ───
 
 export default function Dashboard(): React.JSX.Element {
   const navigate = useNavigate();
@@ -62,10 +65,21 @@ export default function Dashboard(): React.JSX.Element {
   const goalQuery = useGoals();
   const user      = useAppStore((s) => s.user);
 
+  const [showShare,    setShowShare]    = useState(false);
+  const [showDeposit,  setShowDeposit]  = useState(false);
+  const [depositGoal,  setDepositGoal]  = useState<typeof goalQuery.goals[0] | null>(null);
+
   const data: DashboardData   = dashQuery.data ?? emptyDashboard;
   const allTransactions       = txQuery.transactions;
   const allGoals              = goalQuery.goals;
   const displayName           = user?.fullName ?? 'User';
+
+  // Generate smart alerts when data changes
+  useEffect(() => {
+    if (allTransactions.length > 0 || allGoals.length > 0) {
+      generateSmartAlerts(allTransactions, allGoals, data.monthlyBudget);
+    }
+  }, [allTransactions.length, allGoals.length, data.totalSpent]);
 
   const budgetPct = Math.min(100, (data.totalSpent / (data.monthlyBudget || 1)) * 100);
   const remaining = data.monthlyBudget - data.totalSpent;
@@ -82,10 +96,14 @@ export default function Dashboard(): React.JSX.Element {
     budgetPct >= 70 ? 'bg-warning' :
     'bg-progress-rust';
 
+  const handleDeposit = async (goalId: string, amount: number, note?: string) => {
+    await goalQuery.deposit({ goalId, amount, note });
+  };
+
   return (
     <div className="space-y-6 pt-6 lg:pt-8">
 
-      {/* —— Hero card —— */}
+      {/* ── Hero card ── */}
       <section>
         <div className="relative rounded-4xl overflow-hidden bg-hero-mesh border border-rust/[0.22] shadow-card-lg p-7">
           <div className="absolute inset-0 hero-glow-1 pointer-events-none" />
@@ -93,7 +111,6 @@ export default function Dashboard(): React.JSX.Element {
           <div className="absolute -bottom-10 -right-10 w-44 h-44 rounded-full bg-rust/[0.07] pointer-events-none" />
 
           <div className="relative z-10">
-            {/* Top row */}
             <div className="flex items-start justify-between mb-7">
               <div>
                 <p className="text-[13px] text-cream/50 font-medium mb-1">
@@ -105,6 +122,7 @@ export default function Dashboard(): React.JSX.Element {
               </div>
               <button
                 type="button"
+                onClick={() => setShowShare(true)}
                 className="w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.12] flex items-center justify-center text-cream/60 hover:bg-white/[0.10] transition-colors"
                 aria-label="Share summary"
               >
@@ -112,7 +130,6 @@ export default function Dashboard(): React.JSX.Element {
               </button>
             </div>
 
-            {/* Big spend number */}
             <p className={cn(
               'text-[54px] font-extrabold font-display tracking-[-0.04em] leading-none mb-7',
               budgetPct >= 100 ? 'text-danger' : 'text-cream'
@@ -121,7 +138,6 @@ export default function Dashboard(): React.JSX.Element {
               <AnimatedNumber value={data.totalSpent} />
             </p>
 
-            {/* Budget progress bar */}
             <div className="space-y-2.5">
               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                 <motion.div
@@ -142,19 +158,15 @@ export default function Dashboard(): React.JSX.Element {
         </div>
       </section>
 
-      {/* —— Two-column grid (desktop) —— */}
+      {/* ── Two-column grid ── */}
       <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-8 lg:items-start space-y-6 lg:space-y-0">
 
-        {/* Left column */}
         <div className="space-y-6">
-
-          {/* Quick stats */}
           <div className="grid grid-cols-2 gap-3">
             <StatCard label="Spent Today"      value={spentToday}          accent={false} />
             <StatCard label="Daily Safe Spend" value={data.dailySafeSpend} accent={true}  />
           </div>
 
-          {/* Weekly chart */}
           <Card variant="default" className="p-5">
             <div className="flex justify-between items-start mb-5">
               <h3 className="text-[17px] font-bold font-display text-cream">This Week</h3>
@@ -167,13 +179,11 @@ export default function Dashboard(): React.JSX.Element {
             </div>
           </Card>
 
-          {/* Top categories */}
           <div>
             <h3 className="text-[17px] font-bold font-display text-cream mb-3">Top Categories</h3>
             <TopCategories spendByCategory={data.spendByCategory} />
           </div>
 
-          {/* Recent transactions */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-[17px] font-bold font-display text-cream">Recent</h3>
@@ -219,18 +229,45 @@ export default function Dashboard(): React.JSX.Element {
             <div className="space-y-3">
               {allGoals.length === 0
                 ? <p className="text-center text-cream/40 text-sm py-6">No goals yet. Set your first savings target!</p>
-                : allGoals.map(g => (
+                : allGoals.slice(0, 3).map(g => (
                   <GoalCard
                     key={g.id}
                     goal={g}
                     onEdit={() => navigate('/goals')}
                     onDelete={() => undefined}
+                    onDeposit={() => { setDepositGoal(g); setShowDeposit(true); }}
+                    onView={() => navigate(`/goals/${g.id}`)}
                   />
                 ))}
+              {allGoals.length > 3 && (
+                <button
+                  onClick={() => navigate('/goals')}
+                  className="w-full h-10 flex items-center justify-center gap-1.5 rounded-2xl bg-forge-elevated border border-white/[0.06] text-cream/40 text-[12px] font-bold hover:text-cream transition-all"
+                >
+                  <ArrowUpRight size={13} /> View all {allGoals.length} goals
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Share modal */}
+      <ShareableSummaryCard
+        isOpen={showShare}
+        onClose={() => setShowShare(false)}
+        data={data}
+        goals={allGoals}
+        userName={displayName}
+      />
+
+      {/* Deposit modal */}
+      <DepositModal
+        goal={depositGoal}
+        isOpen={showDeposit}
+        onClose={() => setShowDeposit(false)}
+        onDeposit={handleDeposit}
+      />
     </div>
   );
 }
