@@ -25,8 +25,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Share2, Check, Copy, Download, Loader2, MessageCircle,
-  Shield, Clock, TrendingDown, Target, Wallet, ChevronDown,
+  X, Share2, Check, Copy, Download, Loader2, MessageCircle, Shield,
 } from 'lucide-react';
 import { formatNaira } from '@/lib/utils';
 import { getCategoryById } from '@/lib/categories';
@@ -141,7 +140,7 @@ export function ShareableSummaryCard({
   const budgetPct    = data.monthlyBudget > 0 ? Math.round((data.totalSpent / data.monthlyBudget) * 100) : 0;
   const totalSaved   = goals.reduce((s, g) => s + g.currentAmount, 0);
   const completedGoals = goals.filter(g => g.currentAmount >= g.targetAmount).length;
-  const txnCount     = data.transactionCount ?? topCats.reduce((s, c) => s + 1, 0);
+  const txnCount     = topCats.length;
 
   const qrMatrix = useMemo(
     () => generateQRMatrix(`https://spendwise-app-snowy.vercel.app/r/${refNumber}`),
@@ -641,7 +640,7 @@ export function ShareableSummaryCard({
                             {topCats.map(cat => (
                               <ItemRow
                                 key={cat.id}
-                                label={`${cat.emoji || '•'} ${cat.label}`}
+                                label={cat.label}
                                 value={fmtNaira(cat.amount)}
                                 bold={false}
                               />
