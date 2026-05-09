@@ -185,15 +185,9 @@ All schema is managed via Prisma migrations in `backend/prisma/`.
 | `alerts` | System-generated spend warnings and streaks |
 
 ---
-
 ## Project Structure
 
-
-
-
-
-
-
+```
 spendwise-app/
 ├── backend/
 │   ├── prisma/
@@ -208,27 +202,22 @@ spendwise-app/
 │   │   └── utils/
 │   └── server.js
 └── frontend/
-└── src/
-├── components/
-│   ├── layout/       # AppShell, navigation
-│   ├── ui/           # Button, Card, Input, Toast, Icons
-│   ├── charts/       # WeeklyBarChart
-│   ├── dashboard/    # ShareableSummaryCard, TopCategories
-│   ├── logger/       # CategoryPicker, AmountInput
-│   ├── transactions/ # TransactionFeed, TransactionItem, EditModal
-│   └── goals/        # GoalCard, GoalModal
-├── hooks/            # useTransactions, useGoals, useAlerts, useDashboard
-├── lib/              # api client, Zustand store, query client, utils
-├── pages/            # Dashboard, History, Logger, Goals, Alerts, SmsQueue
-│   └── auth/         # Login, Signup, Onboarding
-├── types/            # TypeScript interfaces
-└── index.css         # Design tokens and global styles
-
-
-
-
-
-
+    └── src/
+        ├── components/
+        │   ├── layout/       # AppShell, navigation
+        │   ├── ui/           # Button, Card, Input, Toast, Icons
+        │   ├── charts/       # WeeklyBarChart
+        │   ├── dashboard/    # ShareableSummaryCard, TopCategories
+        │   ├── logger/       # CategoryPicker, AmountInput
+        │   ├── transactions/ # TransactionFeed, TransactionItem, EditModal
+        │   └── goals/        # GoalCard, GoalModal
+        ├── hooks/            # useTransactions, useGoals, useAlerts, useDashboard
+        ├── lib/              # api client, Zustand store, query client, utils
+        ├── pages/            # Dashboard, History, Logger, Goals, Alerts, SmsQueue
+        │   └── auth/         # Login, Signup, Onboarding
+        ├── types/            # TypeScript interfaces
+        └── index.css         # Design tokens and global styles
+```
 
 ---
 
