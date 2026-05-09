@@ -118,45 +118,82 @@ Full interactive docs available at `/api/docs` (Swagger UI).
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 18+
-- pnpm
-- PostgreSQL (local or hosted)
-
 ### 1. Clone the repo
 
-
+```bash
 git clone https://github.com/Astronomox/spendwise-app.git
 cd spendwise-app
-2. Backend setup
+```
+
+### 2. Backend setup
+
+```bash
 cd backend
 npm install
-Create a .env file in backend/:
+```
+
+Create a `.env` file in `backend/`:
+
+```env
 DATABASE_URL=postgresql://user:password@host:5432/spendwise
 JWT_SECRET=your-long-random-secret
 GOOGLE_CLIENT_ID=your-google-oauth-client-id
 PORT=4000
-Run migrations and seed:
+```
+
+Run migrations, seed the database, and start the server:
+
+```bash
 npx prisma migrate deploy
 npx prisma db seed
 npm run dev
-3. Frontend setup
+```
+
+### 3. Frontend setup
+
+```bash
 cd ../frontend
 pnpm install
-Create a .env.local file in frontend/:
+```
+
+Create a `.env.local` file in `frontend/`:
+
+```env
 VITE_API_URL=http://localhost:4000
+```
+
 Run the app:
+
+```bash
 pnpm dev
-Open http://localhost:3000
-Database Schema
-profiles — user settings, monthly budget, bank preferences
-transactions — all income/expense entries (manual + SMS), amounts in kobo
-categories — transaction categories (food, transport, bills, etc.)
-savings_goals — user savings targets with deadlines
-alerts — system-generated spend warnings and streaks
-Schema is managed via Prisma migrations in backend/prisma/.
-Project Structure
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## Database Schema
+
+All schema is managed via Prisma migrations in `backend/prisma/`.
+
+| Table | Description |
+|---|---|
+| `profiles` | User settings, monthly budget, bank preferences |
+| `transactions` | All income/expense entries (manual + SMS), amounts in kobo |
+| `categories` | Transaction categories (food, transport, bills, etc.) |
+| `savings_goals` | User savings targets with deadlines |
+| `alerts` | System-generated spend warnings and streaks |
+
+---
+
+## Project Structure
+
+
+
+
+
+
+
 spendwise-app/
 ├── backend/
 │   ├── prisma/
@@ -164,38 +201,58 @@ spendwise-app/
 │   │   ├── migrations/
 │   │   └── seed.js
 │   ├── src/
-│   │   ├── routes/        # auth, transactions, analytics
+│   │   ├── routes/          # auth, transactions, analytics
 │   │   ├── controllers/
-│   │   ├── middleware/    # auth, error handling
-│   │   ├── lib/           # prisma client, jwt, google auth
+│   │   ├── middleware/       # auth, error handling
+│   │   ├── lib/             # prisma client, jwt, google auth
 │   │   └── utils/
 │   └── server.js
 └── frontend/
-    └── src/
-        ├── components/
-        │   ├── layout/        # AppShell, navigation
-        │   ├── ui/            # Button, Card, Input, Toast, Icons
-        │   ├── charts/        # WeeklyBarChart
-        │   ├── dashboard/     # ShareableSummaryCard, TopCategories
-        │   ├── logger/        # CategoryPicker, AmountInput
-        │   ├── transactions/  # TransactionFeed, TransactionItem, EditModal
-        │   └── goals/         # GoalCard, GoalModal
-        ├── hooks/             # useTransactions, useGoals, useAlerts, useDashboard
-        ├── lib/               # api client, Zustand store, query client, utils
-        ├── pages/             # Dashboard, History, Logger, Goals, Alerts, SmsQueue
-        │   └── auth/          # Login, Signup, Onboarding
-        ├── types/             # TypeScript interfaces
-        └── index.css          # Design tokens and global styles
-Design System
+└── src/
+├── components/
+│   ├── layout/       # AppShell, navigation
+│   ├── ui/           # Button, Card, Input, Toast, Icons
+│   ├── charts/       # WeeklyBarChart
+│   ├── dashboard/    # ShareableSummaryCard, TopCategories
+│   ├── logger/       # CategoryPicker, AmountInput
+│   ├── transactions/ # TransactionFeed, TransactionItem, EditModal
+│   └── goals/        # GoalCard, GoalModal
+├── hooks/            # useTransactions, useGoals, useAlerts, useDashboard
+├── lib/              # api client, Zustand store, query client, utils
+├── pages/            # Dashboard, History, Logger, Goals, Alerts, SmsQueue
+│   └── auth/         # Login, Signup, Onboarding
+├── types/            # TypeScript interfaces
+└── index.css         # Design tokens and global styles
+
+
+
+
+
+
+
+---
+
+## Design System
+
 SpendWise uses a dark navy + green fintech palette with a consistent 8px spacing grid.
-Display font — Syne (headings, amounts, brand)
-Body font — DM Sans (UI text, descriptions)
-Primary colour — #008751 (Nigerian green)
-All colours via CSS custom properties — no hardcoded hex in components
-Built By
-Adeola — Frontend / Full Stack
-Semilore — Backend / Data
-Oreoluwa — Project Manager
-Built in a 14-day sprint. Bismillah.
-License
+
+- **Display font** — Syne (headings, amounts, brand)
+- **Body font** — DM Sans (UI text, descriptions)
+- **Primary colour** — `#008751` (Nigerian green)
+- All colours via CSS custom properties — no hardcoded hex in components
+
+---
+
+## Built By
+
+- **Adeola** — Frontend / Full Stack
+- **Semilore** — Backend / Data
+- **Oreoluwa** — Project Manager
+
+Built in a 14-day sprint. *Bismillah.*
+
+---
+
+## License
+
 Private repository. All rights reserved.
